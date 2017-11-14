@@ -1,25 +1,28 @@
 package goss
 
-import "errors"
-
+// SimpleRule basic simple css property. Contains key/value .
 type SimpleRule struct {
 	Key   string
 	Value string
 }
 
+// Type returns Simple rule type
 func (s *SimpleRule) Type() RuleType {
 	return Simple
 }
-func (s *SimpleRule) STring() string {
+
+// ToString returns string representation of the rule.
+func (s *SimpleRule) ToString(opts *Options) string {
 	return s.Key + " " + s.Value
 }
 
-func (s *SimpleRule) Valid() (bool, error) {
+// Valid returns false and an error when key/value is an empty string.
+func (s *SimpleRule) Valid() (bool, string) {
 	if s.Key == "" {
-		return false, errors.New("can't use empty string as key")
+		return false, "can't use empty string as key"
 	}
 	if s.Value == "" {
-		return false, errors.New("can't use empty string as calue")
+		return false, "can't use empty string as calue"
 	}
-	return true, nil
+	return true, ""
 }

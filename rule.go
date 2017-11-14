@@ -1,11 +1,11 @@
 package goss
 
 type Item interface {
-	String() string
+	ToString(opts *Options) string
 }
 
 type Validator interface {
-	Valid() (bool, error)
+	Valid() (bool, string)
 }
 
 type RuleType uint
@@ -13,12 +13,13 @@ type RuleType uint
 const (
 	Simple RuleType = iota + 1
 	KeyFrame
-	Conditional
+	ConditionalRule
 	StyleRule
-	Viewport
+	ViewportRule
 )
 
 type Rule interface {
+	Item
 	Validator
 	Type() RuleType
 }

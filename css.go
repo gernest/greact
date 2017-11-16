@@ -21,7 +21,7 @@ func ParseCSS(css CSS) (*Style, error) {
 				return nil, err
 			}
 			s.Rules = append(s.Rules, r)
-		case k == "fallback":
+		case k == "fallbacks":
 			r, err := parseFallBack(v)
 			if err != nil {
 				return nil, err

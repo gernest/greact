@@ -15,9 +15,9 @@ func TestParseSimpleRules(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, ok := s.Rules[0].(*SimpleRule)
-	if !ok {
-		t.Error("expected SimpleRule")
+	o := s.Rules[0]
+	if o.Type() != StyleRule {
+		t.Error("expected StyleRule")
 	}
 
 	str := ToCSS("simple", s, &Options{})

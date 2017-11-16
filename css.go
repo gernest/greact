@@ -42,6 +42,17 @@ func ParseCSS(css CSS) (*Style, error) {
 }
 
 func parseSpecialRule(key string, value interface{}) (Rule, error) {
+	switch key {
+	case "@viewport":
+		if v, ok := value.(CSS); ok {
+			s, err := ParseCSS(v)
+			if err != nil {
+				return nil, err
+			}
+			return &ViewPort{Key: key, Style: s}, nil
+		}
+		return nil, errors.New("@viewport accepts only CSS object")
+	}
 	return nil, nil
 }
 

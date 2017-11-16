@@ -13,7 +13,7 @@ func (s *SimpleRule) Type() RuleType {
 
 // ToString returns string representation of the rule.
 func (s *SimpleRule) ToString(opts *Options) string {
-	return s.Key + " " + s.Value
+	return s.Key + ": " + s.Value + ";"
 }
 
 // Valid returns false and an error when key/value is an empty string.

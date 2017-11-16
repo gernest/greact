@@ -29,10 +29,10 @@ func ToCSS(selector string, style *Style, opts *Options) string {
 	indent := opts.Indent
 	indent++
 	for _, v := range style.Fallbacks {
-		r += IndentStr(BeginNewLine(v.ToString(opts)), indent)
+		r += IndentStr(EndNewLine(v.ToString(opts)), indent)
 	}
 	for _, v := range style.Rules {
-		r += IndentStr(BeginNewLine(v.ToString(opts)), indent)
+		r += IndentStr(EndNewLine(v.ToString(opts)), indent)
 	}
 	indent--
 	return IndentStr(EndNewLine(selector+" {")+r, indent) + IndentStr("}", indent)

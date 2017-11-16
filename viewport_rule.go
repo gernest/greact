@@ -10,7 +10,7 @@ func (v *ViewPort) Type() RuleType {
 }
 
 func (v *ViewPort) Valid() (bool, string) {
-	if v.Key != " @viewport" {
+	if v.Key != "@viewport" {
 		return false, v.Key + " is a wrong viewport key"
 	}
 	return false, ""

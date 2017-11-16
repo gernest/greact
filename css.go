@@ -28,7 +28,7 @@ func ParseCSS(css CSS) (*Style, error) {
 			}
 			s.Fallbacks = append(s.Fallbacks, r...)
 		case cssprops[k]:
-			r, err := parseSimpleRule(k, v)
+			r, err := parseBaseStyleRule(k, v)
 			if err != nil {
 				return nil, err
 			}
@@ -60,8 +60,8 @@ func parseFallBack(v interface{}) ([]Rule, error) {
 	return nil, nil
 }
 
-func parseSimpleRule(key string, value interface{}) (Rule, error) {
-	r := &SimpleRule{Key: key}
+func parseBaseStyleRule(key string, value interface{}) (Rule, error) {
+	r := &BaseStyleRule{Key: key}
 	v, err := toString(value)
 	if err != nil {
 		return nil, err
@@ -81,16 +81,28 @@ func toString(value interface{}) (string, error) {
 	case bool:
 		return strconv.FormatBool(v), nil
 	case []string:
-		r := ""
-		for i, item := range v {
-			if i == 0 {
-				r += item
-			} else {
-				r += ", " + item
-			}
+		r := join(", ", v)
+		return r, nil
+	case [][]string:
+		var i []string
+		for _, item := range v {
+			i = append(i, join(" ", item))
 		}
+		r := join(", ", i)
 		return r, nil
 	default:
 		return "", errors.New("Value not supported")
 	}
+}
+
+func join(sep string, v []string) string {
+	r := ""
+	for i, item := range v {
+		if i == 0 {
+			r += item
+		} else {
+			r += sep + item
+		}
+	}
+	return r
 }

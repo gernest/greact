@@ -57,7 +57,26 @@ func parseSpecialRule(key string, value interface{}) (Rule, error) {
 }
 
 func parseFallBack(v interface{}) ([]Rule, error) {
-	return nil, nil
+	switch t := v.(type) {
+	case CSS:
+		s, err := ParseCSS(t)
+		if err != nil {
+			return nil, err
+		}
+		return s.Rules, nil
+	case []CSS:
+		var o []Rule
+		for _, c := range t {
+			r, err := ParseCSS(c)
+			if err != nil {
+				return nil, err
+			}
+			o = append(o, r.Rules...)
+		}
+		return o, nil
+	default:
+		return nil, errors.New("unsporrted fallback")
+	}
 }
 
 func parseBaseStyleRule(key string, value interface{}) (Rule, error) {

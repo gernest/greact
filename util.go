@@ -1,5 +1,7 @@
 package goss
 
+import "strings"
+
 func IndentStr(src string, indent int) string {
 	r := ""
 	for i := 0; i < indent; i++ {
@@ -59,4 +61,12 @@ func hasPrefix(str string, prefix string) bool {
 		}
 	}
 	return true
+}
+
+func replace(str string, old, new string) string {
+	return strings.Replace(str, old, new, -1)
+}
+
+type match struct {
+	begin, end int
 }

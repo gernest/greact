@@ -39,9 +39,7 @@ func ParseCSS(parent string, css CSS) (*Style, error) {
 		default:
 			if vt, ok := v.(CSS); ok {
 				vk := k
-				if hasPrefix(vk, "&") {
-					vk = parent + vk[1:]
-				}
+				vk = replace(vk, "&", parent)
 				r, err := ParseCSS(vk, vt)
 				if err != nil {
 					return nil, err
@@ -52,7 +50,6 @@ func ParseCSS(parent string, css CSS) (*Style, error) {
 				return nil, errors.New("Unknown format for " + k)
 			}
 		}
-
 	}
 	return s, nil
 }

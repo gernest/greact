@@ -6,6 +6,7 @@ import (
 )
 
 //go:generate go run bin/cssprops/main.go
+//go:generate go run bin/tags/main.go
 
 // CSS generic css representation
 type CSS map[string]interface{}

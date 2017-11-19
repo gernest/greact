@@ -20,7 +20,6 @@ const (
 
 type Rule interface {
 	Item
-	Validator
 	Type() RuleType
 }
 
@@ -29,6 +28,15 @@ type Sheet struct {
 }
 
 type Style struct {
+	Selector  string
 	Rules     []Rule
 	Fallbacks []Rule
+}
+
+func (s *Style) ToString(o *Options) string {
+	return ToCSS("", s, o)
+}
+
+func (s *Style) Type() RuleType {
+	return StyleRule
 }

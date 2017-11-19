@@ -26,14 +26,37 @@ func ToCSS(selector string, style *Style, opts *Options) string {
 	if style == nil {
 		return r
 	}
+	nested := ""
 	indent := opts.Indent
 	indent++
 	for _, v := range style.Fallbacks {
 		r += IndentStr(EndNewLine(v.ToString(opts)), indent)
 	}
 	for _, v := range style.Rules {
-		r += IndentStr(EndNewLine(v.ToString(opts)), indent)
+		if vt, ok := v.(*Style); ok {
+			nested += EndNewLine(ToCSS(vt.Selector, vt, opts))
+		} else {
+			r += IndentStr(EndNewLine(v.ToString(opts)), indent)
+		}
 	}
 	indent--
-	return IndentStr(EndNewLine(selector+" {")+r, indent) + IndentStr("}", indent)
+	result := IndentStr(EndNewLine(selector+" {")+r, indent) + IndentStr("}", indent)
+	if nested != "" {
+		return result + BeginNewLine(nested)
+	}
+	return result
+}
+
+func hasPrefix(str string, prefix string) bool {
+	if len(prefix) > len(str) || str == "" || prefix == "" {
+		return false
+	}
+	for i := 0; i < len(prefix); i++ {
+		v := prefix[i]
+		e := str[i]
+		if v != e {
+			return false
+		}
+	}
+	return true
 }

@@ -11,41 +11,54 @@ import (
 type CSS map[string]interface{}
 
 // ParseCSS takes a CSS object and transforms to Style.
-func ParseCSS(css CSS) (*Style, error) {
+func ParseCSS(parent string, css CSS) (*Style, error) {
 	s := &Style{}
 	for k, v := range css {
 		switch {
 		case k[0] == '@':
-			r, err := parseSpecialRule(k, v)
+			r, err := parseSpecialRule(parent, k, v)
 			if err != nil {
 				return nil, err
 			}
 			s.Rules = append(s.Rules, r)
 		case k == "fallbacks":
-			r, err := parseFallBack(v)
+			r, err := parseFallBack(parent, v)
 			if err != nil {
 				return nil, err
 			}
 			s.Fallbacks = append(s.Fallbacks, r...)
 		case cssprops[k]:
-			r, err := parseBaseStyleRule(k, v)
+			r, err := parseBaseStyleRule(parent, k, v)
 			if err != nil {
 				return nil, err
 			}
 			s.Rules = append(s.Rules, r)
 		default:
-			return nil, errors.New("Unknown format for " + k)
+			if vt, ok := v.(CSS); ok {
+				vk := k
+				if hasPrefix(vk, "&") {
+					vk = parent + vk[1:]
+				}
+				r, err := ParseCSS(vk, vt)
+				if err != nil {
+					return nil, err
+				}
+				r.Selector = vk
+				s.Rules = append(s.Rules, r)
+			} else {
+				return nil, errors.New("Unknown format for " + k)
+			}
 		}
 
 	}
 	return s, nil
 }
 
-func parseSpecialRule(key string, value interface{}) (Rule, error) {
+func parseSpecialRule(parent, key string, value interface{}) (Rule, error) {
 	switch key {
 	case "@viewport":
 		if v, ok := value.(CSS); ok {
-			s, err := ParseCSS(v)
+			s, err := ParseCSS(parent, v)
 			if err != nil {
 				return nil, err
 			}
@@ -56,10 +69,10 @@ func parseSpecialRule(key string, value interface{}) (Rule, error) {
 	return nil, nil
 }
 
-func parseFallBack(v interface{}) ([]Rule, error) {
+func parseFallBack(parent string, v interface{}) ([]Rule, error) {
 	switch t := v.(type) {
 	case CSS:
-		s, err := ParseCSS(t)
+		s, err := ParseCSS(parent, t)
 		if err != nil {
 			return nil, err
 		}
@@ -67,7 +80,7 @@ func parseFallBack(v interface{}) ([]Rule, error) {
 	case []CSS:
 		var o []Rule
 		for _, c := range t {
-			r, err := ParseCSS(c)
+			r, err := ParseCSS(parent, c)
 			if err != nil {
 				return nil, err
 			}
@@ -79,7 +92,7 @@ func parseFallBack(v interface{}) ([]Rule, error) {
 	}
 }
 
-func parseBaseStyleRule(key string, value interface{}) (Rule, error) {
+func parseBaseStyleRule(parent, key string, value interface{}) (Rule, error) {
 	r := &BaseStyleRule{Key: key}
 	v, err := toString(value)
 	if err != nil {

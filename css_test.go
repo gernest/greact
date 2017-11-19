@@ -7,6 +7,7 @@ import (
 
 func TestCSS(t *testing.T) {
 	s, err := ParseCSS(
+		"",
 		CSS{
 			"background": "blue",
 		},
@@ -27,6 +28,7 @@ func TestCSS(t *testing.T) {
 	}
 
 	s, err = ParseCSS(
+		"",
 		CSS{
 			"float": "left",
 			"width": "1px",
@@ -42,6 +44,7 @@ func TestCSS(t *testing.T) {
 	}
 
 	s, err = ParseCSS(
+		"",
 		CSS{
 			"display": "run-in",
 			"fallbacks": []CSS{
@@ -61,6 +64,7 @@ func TestCSS(t *testing.T) {
 	}
 
 	s, err = ParseCSS(
+		"",
 		CSS{
 			"border": []string{"1px solid red", "1px solid blue"},
 		},
@@ -75,6 +79,7 @@ func TestCSS(t *testing.T) {
 	}
 
 	s, err = ParseCSS(
+		"",
 		CSS{
 			"fallbacks": CSS{
 				"border": []string{"1px solid red", "1px solid blue"},
@@ -92,6 +97,7 @@ func TestCSS(t *testing.T) {
 	}
 
 	s, err = ParseCSS(
+		"",
 		CSS{
 			"margin": [][]string{
 				[]string{"5px", "10px"},
@@ -107,4 +113,21 @@ func TestCSS(t *testing.T) {
 		t.Errorf("expected %s got %s", e, str)
 	}
 
+	s, err = ParseCSS(
+		"a",
+		CSS{
+			"float": "left",
+			"& b": CSS{
+				"float": "left",
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	str = ToCSS("a", s, &Options{})
+	e = "a {\n  float: left;\n}\na b {\n  float: left;\n}\n"
+	if str != e {
+		t.Errorf("expected %s got %s", e, str)
+	}
 }

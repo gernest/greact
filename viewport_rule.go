@@ -17,5 +17,5 @@ func (v *ViewPort) Valid() (bool, string) {
 }
 
 func (v *ViewPort) ToString(opts *Options) string {
-	return ToCSS(v.Key, v.Style, opts)
+	return ToCSS(v.Style, opts)
 }

@@ -34,7 +34,7 @@ type Style struct {
 }
 
 func (s *Style) ToString(o *Options) string {
-	return ToCSS("", s, o)
+	return ToCSS(s, o)
 }
 
 func (s *Style) Type() RuleType {

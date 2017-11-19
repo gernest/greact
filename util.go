@@ -21,7 +21,7 @@ type Options struct {
 }
 
 // ToCSS returns css string representation for style
-func ToCSS(selector string, style *Style, opts *Options) string {
+func ToCSS(style *Style, opts *Options) string {
 	r := ""
 	if style == nil {
 		return r
@@ -34,13 +34,13 @@ func ToCSS(selector string, style *Style, opts *Options) string {
 	}
 	for _, v := range style.Rules {
 		if vt, ok := v.(*Style); ok {
-			nested += EndNewLine(ToCSS(vt.Selector, vt, opts))
+			nested += EndNewLine(ToCSS(vt, opts))
 		} else {
 			r += IndentStr(EndNewLine(v.ToString(opts)), indent)
 		}
 	}
 	indent--
-	result := IndentStr(EndNewLine(selector+" {")+r, indent) + IndentStr("}", indent)
+	result := IndentStr(EndNewLine(style.Selector+" {")+r, indent) + IndentStr("}", indent)
 	if nested != "" {
 		return result + BeginNewLine(nested)
 	}

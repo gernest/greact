@@ -28,7 +28,7 @@ func TestCSS(t *testing.T) {
 	}
 
 	s, err = ParseCSS(
-		"",
+		"a",
 		CSS{
 			"float": "left",
 			"width": "1px",
@@ -37,14 +37,14 @@ func TestCSS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	str = ToCSS("a", s, &Options{})
+	str = ToCSS(s, &Options{})
 	e = "a {\n  float: left;\n  width: 1px;\n}"
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
 
 	s, err = ParseCSS(
-		"",
+		"a",
 		CSS{
 			"display": "run-in",
 			"fallbacks": []CSS{
@@ -57,14 +57,14 @@ func TestCSS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	str = ToCSS("a", s, &Options{})
+	str = ToCSS(s, &Options{})
 	e = "a {\n  display: inline;\n  display: run-in;\n}"
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
 
 	s, err = ParseCSS(
-		"",
+		"a",
 		CSS{
 			"border": []string{"1px solid red", "1px solid blue"},
 		},
@@ -72,14 +72,14 @@ func TestCSS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	str = ToCSS("a", s, &Options{})
+	str = ToCSS(s, &Options{})
 	e = "a {\n  border: 1px solid red, 1px solid blue;\n}"
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
 
 	s, err = ParseCSS(
-		"",
+		"a",
 		CSS{
 			"fallbacks": CSS{
 				"border": []string{"1px solid red", "1px solid blue"},
@@ -90,14 +90,14 @@ func TestCSS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	str = ToCSS("a", s, &Options{})
+	str = ToCSS(s, &Options{})
 	e = "a {\n  border: 1px solid red, 1px solid blue;\n}"
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
 
 	s, err = ParseCSS(
-		"",
+		"a",
 		CSS{
 			"margin": [][]string{
 				[]string{"5px", "10px"},
@@ -107,7 +107,7 @@ func TestCSS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	str = ToCSS("a", s, &Options{})
+	str = ToCSS(s, &Options{})
 	e = "a {\n  margin: 5px 10px;\n}"
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
@@ -125,7 +125,7 @@ func TestCSS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	str = ToCSS("a", s, &Options{})
+	str = ToCSS(s, &Options{})
 	e = "a {\n  float: left;\n}\na b {\n  float: left;\n}\n"
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)

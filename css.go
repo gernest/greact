@@ -12,7 +12,9 @@ type CSS map[string]interface{}
 
 // ParseCSS takes a CSS object and transforms to Style.
 func ParseCSS(parent string, css CSS) (*Style, error) {
-	s := &Style{}
+	s := &Style{
+		Selector: parent,
+	}
 	for k, v := range css {
 		switch {
 		case k[0] == '@':

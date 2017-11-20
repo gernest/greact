@@ -126,7 +126,25 @@ func TestCSS(t *testing.T) {
 		t.Fatal(err)
 	}
 	str = ToCSS(s, &Options{})
-	e = "a {\n  float: left;\n}\na b {\n  float: left;\n}\n"
+	e = "a {\n  float: left;\n}\na b {\n  float: left;\n}"
+	if str != e {
+		t.Errorf("expected %s got %s", e, str)
+	}
+
+	s, err = ParseCSS(
+		"",
+		CSS{
+			"@import": []string{
+				`url("something") print`,
+				`url("something") screen`,
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	str = ToCSS(s, &Options{})
+	e = "@import url(\"something\") print;\n@import url(\"something\") screen;"
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}

@@ -65,8 +65,40 @@ func parseSpecialRule(parent, key string, value interface{}) (Rule, error) {
 			return &ViewPort{Key: key, Style: s}, nil
 		}
 		return nil, errors.New("@viewport accepts only CSS object")
+	case "@import":
+		switch v := value.(type) {
+		case []string:
+			var li RuleList
+			for _, item := range v {
+				li = append(li, &SimpleRule{
+					Key:   key,
+					Value: item,
+				})
+			}
+			return li, nil
+		default:
+			return nil, errors.New("Unknown value type for @import")
+		}
 	}
 	return nil, nil
+}
+
+type RuleList []Rule
+
+func (r RuleList) Type() RuleType {
+	return ListRule
+}
+
+func (r RuleList) ToString(opts *Options) string {
+	o := ""
+	for k, v := range r {
+		if k == 0 {
+			o += v.ToString(opts)
+		} else {
+			o += "\n" + v.ToString(opts)
+		}
+	}
+	return o
 }
 
 func parseFallBack(parent string, v interface{}) ([]Rule, error) {

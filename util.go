@@ -31,18 +31,41 @@ func ToCSS(style *Style, opts *Options) string {
 	nested := ""
 	indent := opts.Indent
 	indent++
-	for _, v := range style.Fallbacks {
-		r += IndentStr(EndNewLine(v.ToString(opts)), indent)
+	for k, v := range style.Fallbacks {
+		if k == 0 {
+			r = IndentStr(v.ToString(opts), indent)
+		} else {
+			r += "\n" + IndentStr(v.ToString(opts), indent)
+		}
 	}
 	for _, v := range style.Rules {
 		if vt, ok := v.(*Style); ok {
-			nested += EndNewLine(ToCSS(vt, opts))
+			if nested == "" {
+				nested = ToCSS(vt, opts)
+			} else {
+				nested += "\n" + ToCSS(vt, opts)
+			}
 		} else {
-			r += IndentStr(EndNewLine(v.ToString(opts)), indent)
+			if style.Selector == "" {
+				if r == "" {
+					r = v.ToString(opts)
+				} else {
+					r += "\n" + v.ToString(opts)
+				}
+			} else {
+				if r == "" {
+					r = IndentStr(v.ToString(opts), indent)
+				} else {
+					r += "\n" + IndentStr(v.ToString(opts), indent)
+				}
+			}
 		}
 	}
 	indent--
-	result := IndentStr(EndNewLine(style.Selector+" {")+r, indent) + IndentStr("}", indent)
+	result := r
+	if style.Selector != "" {
+		result = IndentStr(EndNewLine(style.Selector+" {")+r, indent) + IndentStr("\n}", indent)
+	}
 	if nested != "" {
 		return result + BeginNewLine(nested)
 	}

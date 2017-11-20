@@ -16,6 +16,7 @@ const (
 	ConditionalRule
 	StyleRule
 	ViewportRule
+	ListRule
 )
 
 type Rule interface {

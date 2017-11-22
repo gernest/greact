@@ -6,6 +6,7 @@ import (
 	"strconv"
 )
 
+// Item defines a css item.
 type Item interface {
 	ToString(opts *Options) string
 }
@@ -23,11 +24,13 @@ const (
 	ListRule
 )
 
+// Rule defines a css rule.
 type Rule interface {
 	Item
 	Type() RuleType
 }
 
+// Sheet defines a css sheet.
 type Sheet struct {
 	Styles   []Style
 	ClassMap ClassMap
@@ -83,16 +86,19 @@ func (s *Sheet) ShouldGenClass(c string) bool {
 	return false
 }
 
+// Style defines a css style.
 type Style struct {
 	Selector  string
 	Rules     []Rule
 	Fallbacks []Rule
 }
 
+// ToString implements Item interface.
 func (s *Style) ToString(o *Options) string {
 	return ToCSS(s, o)
 }
 
+// Type implements Rule interface.
 func (s *Style) Type() RuleType {
 	return StyleRule
 }

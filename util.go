@@ -1,6 +1,7 @@
 package goss
 
 import "strings"
+import "github.com/broci/classnames"
 
 func IndentStr(src string, indent int) string {
 	r := ""
@@ -10,16 +11,29 @@ func IndentStr(src string, indent int) string {
 	return r + src
 }
 
-func BeginNewLine(str string) string {
-	return "\n" + str
-}
-
-func EndNewLine(str string) string {
-	return str + "\n"
-}
-
 type Options struct {
-	Indent int
+	Indent     int
+	ClassNamer func(string) string
+	ClassMap   ClassMap
+}
+
+// NewOpts returns a new *Options instance with non nil CLassMap
+func NewOpts() *Options {
+	return &Options{
+		ClassMap: make(ClassMap),
+	}
+}
+
+// ClassMap is a map of selectors to generated classname
+type ClassMap map[string]string
+
+// Classes returns a string representation of css classes stored in this map.
+func (c ClassMap) Classes() string {
+	var v []interface{}
+	for _, i := range c {
+		v = append(v, i)
+	}
+	return classnames.Join(v...)
 }
 
 // ToCSS returns css string representation for style
@@ -40,6 +54,13 @@ func ToCSS(style *Style, opts *Options) string {
 	}
 	for _, v := range style.Rules {
 		if vt, ok := v.(*Style); ok {
+			if style.Selector == "root" || style.Selector == "" {
+				if opts.ClassNamer != nil && opts.ClassMap != nil {
+					n := opts.ClassNamer(vt.Selector)
+					opts.ClassMap[vt.Selector] = n
+					vt.Selector = n
+				}
+			}
 			if nested == "" {
 				nested = ToCSS(vt, opts)
 			} else {
@@ -64,10 +85,10 @@ func ToCSS(style *Style, opts *Options) string {
 	indent--
 	result := r
 	if style.Selector != "" {
-		result = IndentStr(EndNewLine(style.Selector+" {")+r, indent) + IndentStr("\n}", indent)
+		result = IndentStr(style.Selector+" {\n"+r, indent) + IndentStr("\n}", indent)
 	}
 	if nested != "" {
-		return result + BeginNewLine(nested)
+		return result + "\n" + nested
 	}
 	return result
 }

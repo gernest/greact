@@ -6,7 +6,10 @@ import (
 	"go/format"
 	"io/ioutil"
 	"log"
+	"strings"
 	"text/template"
+
+	"github.com/gernest/inflect"
 )
 
 func main() {
@@ -27,8 +30,23 @@ var cssprops=map[string]bool{
 	"{{$v}}": true,
 	{{end}}
 }
+
+// useful for avoiding typing strings all the time.
+const(
+	{{range $_,$v:= . -}}
+	{{$v|camel}} ="{{$v}}"
+	{{end}}
+)
 `
-	tpl, err := template.New("props").Parse(s)
+	fu := template.FuncMap{
+		"camel": func(a string) string {
+			if strings.HasPrefix(a, "@") {
+				return inflect.Camelize(a[1:])
+			}
+			return inflect.Camelize(a)
+		},
+	}
+	tpl, err := template.New("props").Funcs(fu).Parse(s)
 	if err != nil {
 		log.Fatal(err)
 	}

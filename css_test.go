@@ -175,4 +175,27 @@ func TestConditional(t *testing.T) {
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
+
+	s, err = ParseCSS(
+		"",
+		CSS{
+			"@media(max-width: 715px)": CSS{
+				"a": CSS{
+					Display: "none",
+				},
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	str = ToCSS(s, &Options{})
+	b, err = ioutil.ReadFile("fixture/css/media_01.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e = string(b)
+	if str != e {
+		t.Errorf("expected %s got %s", e, str)
+	}
 }

@@ -1,6 +1,6 @@
 # goss
 write css in go
 
-### Realted  projects
+### Related  projects
 
 - [jss](https://github.com/cssinjs/jss)

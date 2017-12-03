@@ -167,8 +167,11 @@ func TestConditional(t *testing.T) {
 		t.Fatal(err)
 	}
 	str := ToCSS(s, &Options{})
-	ioutil.WriteFile("media.css", []byte(str), 0600)
-	e := " "
+	b, err := ioutil.ReadFile("fixture/css/media.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := string(b)
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}

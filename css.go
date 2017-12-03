@@ -146,6 +146,10 @@ func parseBaseStyleRule(parent, key string, value interface{}) (Rule, error) {
 	return r, nil
 }
 
+type stringer interface {
+	String() string
+}
+
 func toString(value interface{}) (string, error) {
 	switch v := value.(type) {
 	case string:
@@ -166,6 +170,8 @@ func toString(value interface{}) (string, error) {
 		}
 		r := join(", ", i)
 		return r, nil
+	case stringer:
+		return v.String(), nil
 	default:
 		return "", errors.New("Value not supported")
 	}

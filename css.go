@@ -76,11 +76,23 @@ func parseSpecialRule(parent, key string, value interface{}) (Rule, error) {
 				})
 			}
 			return li, nil
-		default:
-			return nil, errors.New("Unknown value type for @import")
 		}
 	}
-	return nil, nil
+	if hasPrefix(key, "@media") {
+		val, ok := value.(CSS)
+		if !ok {
+			return nil, errors.New("@media must have CSS values")
+		}
+		t, err := ParseCSS("", val)
+		if err != nil {
+			return nil, err
+		}
+		return &Conditional{
+			Key:   key,
+			Rules: t,
+		}, nil
+	}
+	return nil, errors.New("unknown key")
 }
 
 type RuleList []Rule

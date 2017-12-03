@@ -1,6 +1,7 @@
 package goss
 
 import (
+	"io/ioutil"
 	"strings"
 	"testing"
 )
@@ -145,6 +146,29 @@ func TestCSS(t *testing.T) {
 	}
 	str = ToCSS(s, &Options{})
 	e = "@import url(\"something\") print;\n@import url(\"something\") screen;"
+	if str != e {
+		t.Errorf("expected %s got %s", e, str)
+	}
+
+}
+
+func TestConditional(t *testing.T) {
+	s, err := ParseCSS(
+		"",
+		CSS{
+			"@media print": CSS{
+				"a": CSS{
+					Display: "none",
+				},
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	str := ToCSS(s, &Options{})
+	ioutil.WriteFile("media.css", []byte(str), 0600)
+	e := " "
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}

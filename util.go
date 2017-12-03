@@ -1,7 +1,11 @@
 package goss
 
-import "strings"
-import "github.com/broci/classnames"
+import (
+	"strings"
+
+	"github.com/broci/classnames"
+	"github.com/kr/pretty"
+)
 
 func IndentStr(src string, indent int) string {
 	r := ""
@@ -52,6 +56,7 @@ func ToCSS(style *Style, opts *Options) string {
 			r += "\n" + IndentStr(v.ToString(opts), indent)
 		}
 	}
+	pretty.Println(style)
 	for _, v := range style.Rules {
 		if vt, ok := v.(*Style); ok {
 			if style.Selector == "root" || style.Selector == "" {
@@ -85,7 +90,11 @@ func ToCSS(style *Style, opts *Options) string {
 	indent--
 	result := r
 	if style.Selector != "" {
-		result = IndentStr(style.Selector+" {\n"+r, indent) + IndentStr("\n}", indent)
+		result = IndentStr(style.Selector+" {\n"+r, indent) + "\n" + IndentStr("}", indent)
+		pretty.Println(result)
+		pretty.Println(indent)
+		pretty.Println(IndentStr("}", indent))
+		pretty.Println(IndentStr(style.Selector, indent))
 	}
 	if nested != "" {
 		return result + "\n" + nested

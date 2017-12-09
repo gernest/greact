@@ -4,7 +4,6 @@ import "testing"
 
 func TestStyleSheets(t *testing.T) {
 	sh := &StyleSheet{}
-
 	shit := sh.NewSheet()
 	err := shit.Parse(CSS{
 		"a": CSS{

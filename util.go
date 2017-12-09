@@ -39,6 +39,12 @@ func (c ClassMap) Classes() string {
 	return classnames.Join(v...)
 }
 
+func (c ClassMap) Merge(cm ClassMap) {
+	for k, v := range cm {
+		c[k] = v
+	}
+}
+
 // ToCSS returns css string representation for style
 func ToCSS(style *Style, opts *Options) string {
 	r := ""
@@ -112,8 +118,4 @@ func hasPrefix(str string, prefix string) bool {
 
 func replace(str string, old, new string) string {
 	return strings.Replace(str, old, new, -1)
-}
-
-type match struct {
-	begin, end int
 }

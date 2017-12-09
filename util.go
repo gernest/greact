@@ -103,17 +103,7 @@ func ToCSS(style *Style, opts *Options) string {
 }
 
 func hasPrefix(str string, prefix string) bool {
-	if len(prefix) > len(str) || str == "" || prefix == "" {
-		return false
-	}
-	for i := 0; i < len(prefix); i++ {
-		v := prefix[i]
-		e := str[i]
-		if v != e {
-			return false
-		}
-	}
-	return true
+	return strings.HasPrefix(str, prefix)
 }
 
 func replace(str string, old, new string) string {

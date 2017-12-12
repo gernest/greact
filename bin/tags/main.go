@@ -46,6 +46,10 @@ var voidTags=map[string]bool{
 	"{{$v}}": true,
 	{{end}}
 }
+
+func IsHTMLTAG(tag string)bool{
+	return htmlTags[tag]||voidTags[tag]
+}
 `
 	tpl, err := template.New("tags").Parse(s)
 	if err != nil {

@@ -138,3 +138,7 @@ var voidTags = map[string]bool{
 	"track":    true,
 	"wbr":      true,
 }
+
+func IsHTMLTAG(tag string) bool {
+	return htmlTags[tag] || voidTags[tag]
+}

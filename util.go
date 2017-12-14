@@ -136,7 +136,9 @@ func (c *CSSTree) print(opts *Options) string {
 			if opts.ClassNamer != nil {
 				o = opts.ClassNamer(c.Selector)
 				if opts.ClassMap != nil {
-					opts.ClassMap[c.Selector] = o
+					if o != c.Selector {
+						opts.ClassMap[c.Selector] = o
+					}
 				}
 			}
 			o += "{"

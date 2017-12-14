@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -51,7 +52,7 @@ func (s *StyleSheet) getIndex() int64 {
 }
 
 func (s *StyleSheet) ClassNamer(c string) string {
-	if hasPrefix(c, "@") {
+	if strings.HasPrefix(c, "@") || c == "" || strings.Contains(c, "{{") {
 		return c
 	}
 	s.incr()

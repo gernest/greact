@@ -1,6 +1,8 @@
 package goss
 
 import (
+	"bytes"
+	"html/template"
 	"sort"
 	"strings"
 
@@ -148,6 +150,7 @@ func FormatCSS(style *Style, parent *CSSTree, opts *Options) *CSSTree {
 
 	}
 	sort.Sort(fallback)
+	sort.Sort(current.Children)
 	current.Children = append(current.Children, fallback...)
 	return current
 }
@@ -157,29 +160,51 @@ func hasPrefix(str string, prefix string) bool {
 }
 
 func replace(str string, old, new string) string {
-	return strings.Replace(str, old, new, -1)
+	return strings.Replace(str, old, new, 1)
 }
 
-func (c *CSSTree) Print(depth int) string {
+func (c *CSSTree) Print(opts *Options) (string, error) {
+	src := c.print(opts)
+	tpl, err := template.New("css").Parse(src)
+	if err != nil {
+		return "", err
+	}
+	var buf bytes.Buffer
+	if err = tpl.Execute(&buf, opts.ClassMap); err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(buf.String()), nil
+}
+
+func (c *CSSTree) print(opts *Options) string {
 	var values []string
 	if c.Selector != "" {
 		if len(c.Children) > 0 {
-			o := c.Selector + "{"
+			o := c.Selector
+			if opts.ClassNamer != nil {
+				o = opts.ClassNamer(c.Selector)
+				if opts.ClassMap != nil {
+					opts.ClassMap[c.Selector] = o
+				}
+			}
+			o += "{"
 			for _, v := range c.Children {
 				if v.Selector != "" {
-					values = append(values, v.Print(depth))
+					values = append(values, v.print(opts))
 				} else {
-					o += "\n" + v.Print(depth+2)
+					opts.Indent += 2
+					o += "\n" + v.print(opts)
+					opts.Indent -= 2
 				}
 			}
 			o += "\n}"
 			values = append(values, o)
 		}
 	} else if c.Text != "" {
-		values = append(values, IndentStr(c.Text, depth))
+		values = append(values, IndentStr(c.Text, opts.Indent))
 	} else {
 		for _, v := range c.Children {
-			values = append(values, v.Print(depth))
+			values = append(values, v.print(opts))
 		}
 	}
 	sort.Strings(values)

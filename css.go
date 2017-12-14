@@ -39,7 +39,6 @@ func ParseCSS(parent string, css CSS) (*Style, error) {
 		default:
 			if vt, ok := v.(CSS); ok {
 				vk := k
-				vk = replace(vk, "&", parent)
 				r, err := ParseCSS(vk, vt)
 				if err != nil {
 					return nil, err

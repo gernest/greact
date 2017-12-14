@@ -3,21 +3,31 @@ package goss
 import (
 	"io/ioutil"
 	"testing"
-
-	"github.com/kr/pretty"
 )
 
 func TestFormatCSS(t *testing.T) {
-	s, err := ParseCSS("", testSTyle())
+	s, err := ParseCSS("", testStyle())
 	if err != nil {
 		t.Fatal(err)
 	}
+	opts := NewOpts()
+	opts.ClassNamer = IDNamer
 	c := FormatCSS(s, nil, NewOpts())
-	ioutil.WriteFile("nested.css", []byte(c.Print(0)), 0600)
-	t.Error(pretty.Sprint(c))
+	v, err := c.Print(opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := ioutil.ReadFile("fixture/css/format.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := string(b)
+	if v != e {
+		t.Errorf("expected %s got %s", e, v)
+	}
 }
 
-func testSTyle() CSS {
+func testStyle() CSS {
 	return CSS{
 		"root": CSS{
 			LineHeight:   "1.4em",
@@ -25,9 +35,9 @@ func testSTyle() CSS {
 			MinWidth:     88,
 			MinHeight:    36,
 			BorderRadius: 2,
-			"&:hover": CSS{
+			"{{.root}}:hover": CSS{
 				TextDecoration: "none",
-				"& .disabled": CSS{
+				"{{.root}} {{.disabled}}": CSS{
 					Background: "transparent",
 				},
 			},

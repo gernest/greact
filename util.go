@@ -1,9 +1,10 @@
 package goss
 
 import (
+	"sort"
 	"strings"
 
-	"github.com/broci/classnames"
+	"github.com/gernest/classnames"
 )
 
 func IndentStr(src string, indent int) string {
@@ -43,6 +44,26 @@ func (c ClassMap) Merge(cm ClassMap) {
 	for k, v := range cm {
 		c[k] = v
 	}
+}
+
+type CSSTree struct {
+	Selector string
+	Parent   *CSSTree
+	Children TreeList
+	Text     string
+}
+
+type TreeList []*CSSTree
+
+func (t TreeList) Len() int {
+	return len(t)
+}
+func (t TreeList) Less(i, j int) bool {
+	return t[i].Text < t[j].Text
+}
+
+func (t TreeList) Swap(i, j int) {
+	t[i], t[j] = t[j], t[i]
 }
 
 // ToCSS returns css string representation for style
@@ -102,10 +123,65 @@ func ToCSS(style *Style, opts *Options) string {
 	return result
 }
 
+func FormatCSS(style *Style, parent *CSSTree, opts *Options) *CSSTree {
+	var fallback TreeList
+	for _, v := range style.Fallbacks {
+		fallback = append(fallback, &CSSTree{
+			Parent: parent,
+			Text:   v.ToString(opts),
+		})
+	}
+	current := &CSSTree{
+		Parent:   parent,
+		Selector: style.Selector,
+	}
+	for _, v := range style.Rules {
+		switch e := v.(type) {
+		case *Style:
+			current.Children = append(current.Children, FormatCSS(e, current, opts))
+		default:
+			current.Children = append(current.Children, &CSSTree{
+				Parent: current,
+				Text:   v.ToString(opts),
+			})
+		}
+
+	}
+	sort.Sort(fallback)
+	current.Children = append(current.Children, fallback...)
+	return current
+}
+
 func hasPrefix(str string, prefix string) bool {
 	return strings.HasPrefix(str, prefix)
 }
 
 func replace(str string, old, new string) string {
 	return strings.Replace(str, old, new, -1)
+}
+
+func (c *CSSTree) Print(depth int) string {
+	var values []string
+	if c.Selector != "" {
+		if len(c.Children) > 0 {
+			o := c.Selector + "{"
+			for _, v := range c.Children {
+				if v.Selector != "" {
+					values = append(values, v.Print(depth))
+				} else {
+					o += "\n" + v.Print(depth+2)
+				}
+			}
+			o += "\n}"
+			values = append(values, o)
+		}
+	} else if c.Text != "" {
+		values = append(values, IndentStr(c.Text, depth))
+	} else {
+		for _, v := range c.Children {
+			values = append(values, v.Print(depth))
+		}
+	}
+	sort.Strings(values)
+	return strings.Join(values, "\n")
 }

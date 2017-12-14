@@ -1,6 +1,7 @@
 package goss
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -39,7 +40,11 @@ func TestCSS(t *testing.T) {
 		t.Fatal(err)
 	}
 	str = ToCSS(s, &Options{})
-	e = "a {\n  float: left;\n  width: 1px;\n}"
+	b, err := ioutil.ReadFile("fixture/css/css_01.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e = string(b)
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
@@ -59,11 +64,14 @@ func TestCSS(t *testing.T) {
 		t.Fatal(err)
 	}
 	str = ToCSS(s, &Options{})
-	e = "a {\n  display: inline;\n  display: run-in;\n}"
+	b, err = ioutil.ReadFile("fixture/css/css_02.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e = string(b)
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
-
 	s, err = ParseCSS(
 		"a",
 		CSS{
@@ -74,7 +82,11 @@ func TestCSS(t *testing.T) {
 		t.Fatal(err)
 	}
 	str = ToCSS(s, &Options{})
-	e = "a {\n  border: 1px solid red, 1px solid blue;\n}"
+	b, err = ioutil.ReadFile("fixture/css/css_03.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e = string(b)
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
@@ -92,11 +104,14 @@ func TestCSS(t *testing.T) {
 		t.Fatal(err)
 	}
 	str = ToCSS(s, &Options{})
-	e = "a {\n  border: 1px solid red, 1px solid blue;\n}"
+	b, err = ioutil.ReadFile("fixture/css/css_4.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e = string(b)
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
-
 	s, err = ParseCSS(
 		"a",
 		CSS{
@@ -109,7 +124,11 @@ func TestCSS(t *testing.T) {
 		t.Fatal(err)
 	}
 	str = ToCSS(s, &Options{})
-	e = "a {\n  margin: 5px 10px;\n}"
+	b, err = ioutil.ReadFile("fixture/css/css_5.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e = string(b)
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
@@ -118,7 +137,7 @@ func TestCSS(t *testing.T) {
 		"a",
 		CSS{
 			"float": "left",
-			"& b": CSS{
+			"{{.a}} b": CSS{
 				"float": "left",
 			},
 		},
@@ -127,7 +146,11 @@ func TestCSS(t *testing.T) {
 		t.Fatal(err)
 	}
 	str = ToCSS(s, &Options{})
-	e = "a {\n  float: left;\n}\na b {\n  float: left;\n}"
+	b, err = ioutil.ReadFile("fixture/css/css_6.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e = string(b)
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
@@ -152,6 +175,12 @@ func TestCSS(t *testing.T) {
 
 }
 
+func writeSample(s string, n int, t *testing.T) {
+	err := ioutil.WriteFile(fmt.Sprintf("fixture/css/css_%d.css", n), []byte(s), 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 func TestConditional(t *testing.T) {
 	s, err := ParseCSS(
 		"",
@@ -167,7 +196,7 @@ func TestConditional(t *testing.T) {
 		t.Fatal(err)
 	}
 	str := ToCSS(s, &Options{})
-	b, err := ioutil.ReadFile("fixture/css/media.css")
+	b, err := ioutil.ReadFile("fixture/css/css_7.css")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,6 +204,7 @@ func TestConditional(t *testing.T) {
 	if str != e {
 		t.Errorf("expected %s got %s", e, str)
 	}
+	writeSample(str, 7, t)
 
 	s, err = ParseCSS(
 		"",
@@ -190,7 +220,7 @@ func TestConditional(t *testing.T) {
 		t.Fatal(err)
 	}
 	str = ToCSS(s, &Options{})
-	b, err = ioutil.ReadFile("fixture/css/media_01.css")
+	b, err = ioutil.ReadFile("fixture/css/css_8.css")
 	if err != nil {
 		t.Fatal(err)
 	}

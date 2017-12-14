@@ -70,59 +70,11 @@ func (t TreeList) Swap(i, j int) {
 
 // ToCSS returns css string representation for style
 func ToCSS(style *Style, opts *Options) string {
-	r := ""
-	if style == nil {
-		return r
+	v, err := FormatCSS(style, nil, opts).Print(opts)
+	if err != nil {
+		panic(err)
 	}
-	nested := ""
-	indent := opts.Indent
-	indent++
-	for k, v := range style.Fallbacks {
-		if k == 0 {
-			r = IndentStr(v.ToString(opts), indent)
-		} else {
-			r += "\n" + IndentStr(v.ToString(opts), indent)
-		}
-	}
-	for _, v := range style.Rules {
-		if vt, ok := v.(*Style); ok {
-			if style.Selector == "root" || style.Selector == "" {
-				if opts.ClassNamer != nil && opts.ClassMap != nil {
-					n := opts.ClassNamer(vt.Selector)
-					opts.ClassMap[vt.Selector] = n
-					vt.Selector = n
-				}
-			}
-			if nested == "" {
-				nested = ToCSS(vt, opts)
-			} else {
-				nested += "\n" + ToCSS(vt, opts)
-			}
-		} else {
-			if style.Selector == "" {
-				if r == "" {
-					r = v.ToString(opts)
-				} else {
-					r += "\n" + v.ToString(opts)
-				}
-			} else {
-				if r == "" {
-					r = IndentStr(v.ToString(opts), indent)
-				} else {
-					r += "\n" + IndentStr(v.ToString(opts), indent)
-				}
-			}
-		}
-	}
-	indent--
-	result := r
-	if style.Selector != "" {
-		result = IndentStr(style.Selector+" {\n"+r, indent) + "\n" + IndentStr("}", indent)
-	}
-	if nested != "" {
-		return result + "\n" + nested
-	}
-	return result
+	return v
 }
 
 func FormatCSS(style *Style, parent *CSSTree, opts *Options) *CSSTree {

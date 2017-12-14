@@ -1,7 +1,6 @@
 package goss
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -25,13 +24,6 @@ func TestStyleSheets(t *testing.T) {
 	if g != "a-1" {
 		t.Errorf("expected a-1 got %s", g)
 	}
-}
-
-func IDNamer(c string) string {
-	if strings.HasPrefix(c, "@") || c == "" || strings.Contains(c, "{{") {
-		return c
-	}
-	return c + "-id"
 }
 
 func TestSheet_ClassName(t *testing.T) {

@@ -164,3 +164,10 @@ func (c *CSSTree) print(opts *Options) string {
 	sort.Strings(values)
 	return strings.Join(values, "\n")
 }
+
+func IDNamer(c string) string {
+	if strings.HasPrefix(c, "@") || c == "" || strings.Contains(c, "{{") {
+		return c
+	}
+	return c + "-id"
+}

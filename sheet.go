@@ -32,6 +32,7 @@ func (s *Sheet) Parse(css CSS) error {
 
 type StyleSheet struct {
 	Sheets []*Sheet
+	Namer  func(string) string
 	index  int64
 	mu     sync.RWMutex
 }
@@ -59,9 +60,12 @@ func (s *StyleSheet) ClassNamer(c string) string {
 }
 
 func (s *StyleSheet) NewSheet() *Sheet {
+	if s.Namer == nil {
+		s.Namer = s.ClassNamer
+	}
 	shit := &Sheet{
 		Class:     make(ClassMap),
-		ClassFunc: s.ClassNamer,
+		ClassFunc: s.Namer,
 	}
 	s.Sheets = append(s.Sheets, shit)
 	return shit

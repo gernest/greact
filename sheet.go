@@ -14,14 +14,13 @@ type Sheet struct {
 	Src       bytes.Buffer
 }
 
-func (s *Sheet) Parse(css CSS) error {
+func (s *Sheet) Parse(css CSS, opts *Options, ctx ...map[string]interface{}) error {
 	style, err := ParseCSS("", css)
 	if err != nil {
 		return err
 	}
-	opts := NewOpts()
 	opts.ClassNamer = s.ClassFunc
-	out := ToCSS(style, opts)
+	out := ToCSS(style, opts, ctx...)
 	if s.Src.Len() == 0 {
 		s.Src.WriteString(out)
 	} else {

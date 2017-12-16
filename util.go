@@ -21,6 +21,7 @@ type Options struct {
 	Indent     int
 	ClassNamer func(string) string
 	ClassMap   ClassMap
+	FuncMap    template.FuncMap
 }
 
 // NewOpts returns a new *Options instance with non nil CLassMap
@@ -69,8 +70,8 @@ func (t TreeList) Swap(i, j int) {
 }
 
 // ToCSS returns css string representation for style
-func ToCSS(style *Style, opts *Options) string {
-	v, err := FormatCSS(style, nil, opts).Print(opts)
+func ToCSS(style *Style, opts *Options, ctx ...map[string]interface{}) string {
+	v, err := FormatCSS(style, nil, opts).Print(opts, ctx...)
 	if err != nil {
 		panic(err)
 	}
@@ -115,14 +116,25 @@ func replace(str string, old, new string) string {
 	return strings.Replace(str, old, new, 1)
 }
 
-func (c *CSSTree) Print(opts *Options) (string, error) {
+func (c *CSSTree) Print(opts *Options, ctx ...map[string]interface{}) (string, error) {
 	src := c.print(opts)
-	tpl, err := template.New("css").Parse(src)
+	tpl, err := template.New("css").Funcs(opts.FuncMap).Parse(src)
 	if err != nil {
 		return "", err
 	}
 	var buf bytes.Buffer
-	if err = tpl.Execute(&buf, opts.ClassMap); err != nil {
+	data := make(map[string]interface{})
+	for k, v := range opts.ClassMap {
+		data[k] = v
+	}
+	if len(ctx) > 0 {
+		for _, i := range ctx {
+			for k, v := range i {
+				data[k] = v
+			}
+		}
+	}
+	if err = tpl.Execute(&buf, data); err != nil {
 		return "", err
 	}
 	return strings.TrimSpace(buf.String()), nil

@@ -94,6 +94,9 @@ func FormatCSS(style *Style, parent *CSSTree, opts *Options) *CSSTree {
 		switch e := v.(type) {
 		case *Style:
 			current.Children = append(current.Children, FormatCSS(e, current, opts))
+		case *Conditional:
+			current.Selector = e.Key
+			current.Children = append(current.Children, FormatCSS(e.Rules, current, opts))
 		default:
 			current.Children = append(current.Children, &CSSTree{
 				Parent: current,
@@ -154,24 +157,27 @@ func (c *CSSTree) print(opts *Options) string {
 				}
 			}
 			o += "{"
+			o = IndentStr(o, opts.Indent)
 			for _, v := range c.Children {
 				if v.Selector != "" {
 					values = append(values, v.print(opts))
 				} else {
-					opts.Indent += 2
+					opts.Indent++
 					o += "\n" + v.print(opts)
-					opts.Indent -= 2
+					opts.Indent--
 				}
 			}
-			o += "\n}"
+			o += "\n" + IndentStr("}", opts.Indent)
 			values = append(values, o)
 		}
 	} else if c.Text != "" {
 		values = append(values, IndentStr(c.Text, opts.Indent))
 	} else {
+		opts.Indent++
 		for _, v := range c.Children {
 			values = append(values, v.print(opts))
 		}
+		opts.Indent--
 	}
 	sort.Strings(values)
 	return strings.Join(values, "\n")

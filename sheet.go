@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"honnef.co/go/js/dom"
 )
 
 type Sheet struct {
@@ -31,10 +33,12 @@ func (s *Sheet) Parse(css CSS, opts *Options, ctx ...map[string]interface{}) err
 }
 
 type StyleSheet struct {
-	Sheets []*Sheet
-	Namer  func(string) string
-	index  int64
-	mu     sync.RWMutex
+	Sheets      []*Sheet
+	Namer       func(string) string
+	index       int64
+	mu          sync.RWMutex
+	initialized bool
+	sheet       dom.Element
 }
 
 func (s *StyleSheet) incr() {
@@ -82,4 +86,12 @@ func (s *StyleSheet) String() string {
 		}
 	}
 	return o.String()
+}
+
+func (s *StyleSheet) Attach(sheet *Sheet, doc dom.Document) {
+	e := doc.CreateElement("style")
+	d := doc.(dom.HTMLDocument)
+	d.Head().AppendChild(e)
+	shit := e.Underlying().Call("sheet")
+	shit.Call("insertRule", sheet.Src.String())
 }

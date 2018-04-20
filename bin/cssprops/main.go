@@ -207,9 +207,12 @@ func main() {
 	}
 	s := `
 package goss
+import(
+	"github.com/gernest/goss"
+)
 {{range .}}
 func {{funcName .}}(value interface{})Styler{
-	return Prop("{{.}}",value)
+	return goss.Prop("{{.}}",value)
 }
 {{end}}
 
@@ -237,7 +240,7 @@ func {{funcName .}}(value interface{})Styler{
 	if err != nil {
 		log.Fatal(err)
 	}
-	ioutil.WriteFile("css_properties.go", f, 0600)
+	ioutil.WriteFile("css/properties.go", f, 0600)
 }
 func camel(a string) string {
 	if strings.HasPrefix(a, "@") {

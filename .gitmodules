@@ -1,6 +1,0 @@
-[submodule "css-properties"]
-	path = css-properties
-	url = git@github.com:johnotander/css-properties.git
-[submodule "html-tags"]
-	path = html-tags
-	url = git@github.com:sindresorhus/html-tags.git

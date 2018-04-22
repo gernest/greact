@@ -425,6 +425,10 @@ func execMatchers(src string, fn ...func(string) *matchedColor) *matchedColor {
 //     "hsla(0, 100%, 50%, 1)" or "hsla 0 100% 50%, 1"
 //     "hsv(0, 100%, 100%)" or "hsv 0 100% 100%"
 //
-func InputToRGB(in string) {
+func InputToRGB(in string) *Color {
+	return nil
+}
 
+func Palette(c *Color, index int) *Color {
+	return nil
 }

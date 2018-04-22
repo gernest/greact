@@ -238,7 +238,12 @@ func (c *Color) Hex() string {
 func (c *Color) HSV() (h, s, v float64) {
 	factor := 1.0 / 255.0
 	r, g, b := factor*float64(c.r), factor*float64(c.g), factor*float64(c.b)
-
+	defer func() {
+		h = math.Round(h)
+		s = math.Round(s * 100)
+		v = math.Round(v * 100)
+		h = float64(int64(h))
+	}()
 	min := math.Min(math.Min(r, g), g)
 	v = math.Max(math.Max(r, g), b)
 	C := v - min
@@ -543,6 +548,11 @@ func Palette(c *Color, index int) *Color {
 }
 
 func HSV(h, s, v float64) *Color {
+	// s,v are represented as percentage so, we need to bring them back to decimal
+	// before using.
+	s /= 100
+	v /= 100
+
 	Hp := h / 60.0
 	C := v * s
 	X := C * (1.0 - math.Abs(math.Mod(Hp, 2.0)-1.0))

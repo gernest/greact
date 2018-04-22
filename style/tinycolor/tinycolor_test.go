@@ -140,3 +140,68 @@ func TestParseRGB(t *testing.T) {
 		}
 	}
 }
+
+type hsvSample struct {
+	index   int
+	isLight bool
+	h       float64
+	s       float64
+	v       float64
+}
+
+func TestPalette(t *testing.T) {
+	s := []struct {
+		base string
+		h    float64
+		s    float64
+		v    float64
+		hues []hsvSample
+	}{
+		{base: "#f5222d",
+			h: 357, s: 86, v: 96,
+			hues: []hsvSample{
+				{index: 5, isLight: true, h: 4, s: 6, v: 100},
+				{index: 4, isLight: true, h: 5, s: 22, v: 100},
+				{index: 3, isLight: true, h: 3, s: 38, v: 100},
+				{index: 2, isLight: true, h: 1, s: 54, v: 100},
+				{index: 1, isLight: true, h: 359, s: 70, v: 100},
+				{index: 1, isLight: false, h: 355, s: 91, v: .81},
+				{index: 2, isLight: false, h: 363, s: 96, v: 66},
+				{index: 4, isLight: false, h: 351, s: 100, v: 51},
+				{index: 5, isLight: false, h: 349, s: 100, v: 36},
+			}},
+	}
+
+	for _, v := range s {
+		t.Run(v.base, func(ts *testing.T) {
+			o := InputToRGB(v.base)
+			h, s, ve := o.HSV()
+			if h != v.h {
+				t.Errorf("expected %v got %v", v.h, h)
+			}
+			if s != v.s {
+				t.Errorf("expected %v got %v", v.s, s)
+			}
+			if ve != v.v {
+				t.Errorf("expected %v got %v", v.v, ve)
+			}
+			testHSV(ts, o, v.hues)
+		})
+	}
+}
+
+func testHSV(t *testing.T, base *Color, s []hsvSample) {
+	for _, v := range s {
+		g := Palette(base, v.index)
+		h, s, ve := g.HSV()
+		if h != v.h {
+			t.Errorf("expected %v got %v", v.h, h)
+		}
+		if s != v.s {
+			t.Errorf("expected %v got %v", v.s, s)
+		}
+		if ve != v.v {
+			t.Errorf("expected %v got %v", v.v, ve)
+		}
+	}
+}

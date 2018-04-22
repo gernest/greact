@@ -2,6 +2,7 @@ package tinycolor
 
 import (
 	"encoding/hex"
+	"errors"
 	"regexp"
 	"strings"
 )
@@ -192,13 +193,18 @@ type matchedColor struct {
 	matches []string
 }
 
-func (m *matchedColor) toColor() *Color {
+func (m *matchedColor) toColor() (*Color, error) {
 	switch m.name {
 	case "rgb":
+		return nil, nil
 	case "rgba":
+		return nil, nil
 	case "hsl":
+		return nil, nil
 	case "hslq":
+		return nil, nil
 	case "hsv":
+		return nil, nil
 	case "hex3":
 		return parseHex3(m.matches[0])
 	case "hex4":
@@ -208,12 +214,11 @@ func (m *matchedColor) toColor() *Color {
 	case "hex8":
 		return parseHex8(m.matches[0])
 	default:
-		return &Color{}
+		return nil, errors.New("Unknown color type")
 	}
-	return nil
 }
 
-func parseHex3(src string) *Color {
+func parseHex3(src string) (*Color, error) {
 	if src[0] == '#' {
 		src = src[1:]
 	}
@@ -222,23 +227,23 @@ func parseHex3(src string) *Color {
 	return parseHex(n)
 }
 
-func parseHex6(src string) *Color {
+func parseHex6(src string) (*Color, error) {
 	if src[0] == '#' {
 		src = src[1:]
 	}
 	return parseHex(src)
 }
 
-func parseHex8(src string) *Color {
+func parseHex8(src string) (*Color, error) {
 	if src[0] == '#' {
 		src = src[1:]
 	}
 	h, _ := hex.DecodeString(src)
 	return &Color{r: uint8(h[0]), g: uint8(h[1]),
-		b: uint8(h[2]), a: uint8(h[3]), raw: true}
+		b: uint8(h[2]), a: uint8(h[3]), raw: true}, nil
 }
 
-func parseHex4(src string) *Color {
+func parseHex4(src string) (*Color, error) {
 	if src[0] == '#' {
 		src = src[1:]
 	}
@@ -247,9 +252,14 @@ func parseHex4(src string) *Color {
 	return parseHex8(n)
 }
 
-func parseHex(src string) *Color {
+func parseHex(src string) (*Color, error) {
 	h, _ := hex.DecodeString(src)
-	return &Color{r: uint8(h[0]), g: uint8(h[1]), b: uint8(h[2]), raw: true}
+	return &Color{r: uint8(h[0]), g: uint8(h[1]), b: uint8(h[2]), raw: true}, nil
+}
+
+func parseRGB(src string) *Color {
+	// parts := breadDown("rgb", src)
+	return nil
 }
 
 func breadDown(prefix string, src string) []string {

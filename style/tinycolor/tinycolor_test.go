@@ -94,7 +94,10 @@ func TestParseHex(t *testing.T) {
 	}
 	for _, v := range s {
 		o := matchColor(v.hex)
-		c := o.toColor()
+		c, err := o.toColor()
+		if err != nil {
+			t.Fatal(err)
+		}
 		if c.r != v.r {
 			t.Errorf("%s [R]: expected %v got %v", v.hex, v.r, c.r)
 		}

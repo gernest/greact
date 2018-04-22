@@ -190,6 +190,29 @@ type Color struct {
 	raw        bool
 }
 
+func (c *Color) Luminance() float64 {
+	var rs, gs, bs, r, g, b float64
+	rs = float64(c.r) / 255
+	gs = float64(c.g) / 255
+	bs = float64(c.g) / 255
+	if rs <= 0.03928 {
+		r = rs / 12.92
+	} else {
+		r = math.Pow(((rs + 0.055) / 1.055), 2.4)
+	}
+	if gs <= 0.03928 {
+		g = gs / 12.92
+	} else {
+		g = math.Pow(((gs + 0.055) / 1.055), 2.4)
+	}
+	if bs <= 0.03928 {
+		b = bs / 12.92
+	} else {
+		b = math.Pow(((bs + 0.055) / 1.055), 2.4)
+	}
+	return (0.2126 * r) + (0.7152 * g) + (0.0722 * b)
+}
+
 type matchedColor struct {
 	name    string
 	matches []string

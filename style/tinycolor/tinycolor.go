@@ -3,6 +3,7 @@ package tinycolor
 import (
 	"encoding/hex"
 	"errors"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -266,7 +267,11 @@ func parseRGB(src string) (*Color, error) {
 	color := &Color{raw: true}
 	a := strings.TrimSpace(parts[0])
 	if a[len(a)-1] == '%' {
-		println(a[:len(a)-1])
+		r, err := precentToUint(a[:len(a)-1])
+		if err != nil {
+			return nil, err
+		}
+		color.r = r
 	} else {
 		r, err := strconv.ParseUint(a, 10, 8)
 		if err != nil {
@@ -276,7 +281,11 @@ func parseRGB(src string) (*Color, error) {
 	}
 	b := strings.TrimSpace(parts[1])
 	if b[len(b)-1] == '%' {
-		println(a[:len(a)-1])
+		g, err := precentToUint(b[:len(a)-1])
+		if err != nil {
+			return nil, err
+		}
+		color.g = g
 	} else {
 		g, err := strconv.ParseUint(b, 10, 8)
 		if err != nil {
@@ -286,7 +295,11 @@ func parseRGB(src string) (*Color, error) {
 	}
 	c := strings.TrimSpace(parts[2])
 	if c[len(c)-1] == '%' {
-		println(a[:len(a)-1])
+		b, err := precentToUint(c[:len(a)-1])
+		if err != nil {
+			return nil, err
+		}
+		color.b = b
 	} else {
 		b, err := strconv.ParseUint(c, 10, 8)
 		if err != nil {
@@ -295,6 +308,16 @@ func parseRGB(src string) (*Color, error) {
 		color.b = uint8(b)
 	}
 	return color, nil
+}
+
+func precentToUint(v string) (uint8, error) {
+	a, err := strconv.ParseUint(v, 10, 8)
+	if err != nil {
+		return 0, err
+	}
+	r := float64(a) * .01 * 255
+	r = math.Round(r)
+	return uint8(r), nil
 }
 
 func breadDown(prefix string, src string) []string {

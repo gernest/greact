@@ -211,6 +211,22 @@ func (c *Color) Luminance() float64 {
 	return (0.2126 * r) + (0.7152 * g) + (0.0722 * b)
 }
 
+func (c *Color) Brightness() float64 {
+	r := float64(c.r)
+	g := float64(c.g)
+	b := float64(c.b)
+	return math.Sqrt(0.299*math.Pow(r, 2) +
+		0.587*math.Pow(g, 2) + 0.114*math.Pow(b, 2))
+}
+
+func (c *Color) IsLight() bool {
+	return c.Brightness() > 130
+}
+
+func (c *Color) IsDark() bool {
+	return !c.IsLight()
+}
+
 type matchedColor struct {
 	name    string
 	matches []string

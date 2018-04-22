@@ -37,7 +37,6 @@ func TestRegex(t *testing.T) {
 		if o.name != v.name {
 			t.Errorf("%s: expected %s got %s", v.src, v.name, o.name)
 		}
-		o.toColor()
 	}
 }
 
@@ -91,6 +90,35 @@ func TestParseHex(t *testing.T) {
 	}{
 		{"#5f5", 85, 255, 85, 0},
 		{"#5f55f5", 95, 85, 245, 0},
+	}
+	for _, v := range s {
+		o := matchColor(v.hex)
+		c, err := o.toColor()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if c.r != v.r {
+			t.Errorf("%s [R]: expected %v got %v", v.hex, v.r, c.r)
+		}
+		if c.g != v.g {
+			t.Errorf("%s [G]: expected %v got %v", v.hex, v.g, c.g)
+		}
+		if c.b != v.b {
+			t.Errorf("%s [B]: expected %v got %v", v.hex, v.b, c.b)
+		}
+		if c.a != v.a {
+			t.Errorf("%s [A]: expected %v got %v", v.hex, v.a, c.a)
+		}
+	}
+}
+
+func TestParseRGB(t *testing.T) {
+	s := []struct {
+		hex        string
+		r, g, b, a uint8
+	}{
+		{"rgb (85,255,85)", 85, 255, 85, 0},
+		{"rgb 95,85,245", 95, 85, 245, 0},
 	}
 	for _, v := range s {
 		o := matchColor(v.hex)

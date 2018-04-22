@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -196,7 +197,7 @@ type matchedColor struct {
 func (m *matchedColor) toColor() (*Color, error) {
 	switch m.name {
 	case "rgb":
-		return nil, nil
+		return parseRGB(m.matches[0])
 	case "rgba":
 		return nil, nil
 	case "hsl":
@@ -257,9 +258,43 @@ func parseHex(src string) (*Color, error) {
 	return &Color{r: uint8(h[0]), g: uint8(h[1]), b: uint8(h[2]), raw: true}, nil
 }
 
-func parseRGB(src string) *Color {
-	// parts := breadDown("rgb", src)
-	return nil
+func parseRGB(src string) (*Color, error) {
+	parts := breadDown("rgb", src)
+	if len(parts) != 3 {
+		return nil, errors.New("Invalid rgb string")
+	}
+	color := &Color{raw: true}
+	a := strings.TrimSpace(parts[0])
+	if a[len(a)-1] == '%' {
+		println(a[:len(a)-1])
+	} else {
+		r, err := strconv.ParseUint(a, 10, 8)
+		if err != nil {
+			return nil, err
+		}
+		color.r = uint8(r)
+	}
+	b := strings.TrimSpace(parts[1])
+	if b[len(b)-1] == '%' {
+		println(a[:len(a)-1])
+	} else {
+		g, err := strconv.ParseUint(b, 10, 8)
+		if err != nil {
+			return nil, err
+		}
+		color.g = uint8(g)
+	}
+	c := strings.TrimSpace(parts[2])
+	if c[len(c)-1] == '%' {
+		println(a[:len(a)-1])
+	} else {
+		b, err := strconv.ParseUint(c, 10, 8)
+		if err != nil {
+			return nil, err
+		}
+		color.b = uint8(b)
+	}
+	return color, nil
 }
 
 func breadDown(prefix string, src string) []string {

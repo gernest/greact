@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>color palette</title>
+    <style>
+        .box {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <table>
+        <tr>
+            {{range $k,$v:=.Blue}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    blue-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.Purple}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    Purple-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.Cyan}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    Cyan-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.Green}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    Green-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.Magenta}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    Magenta-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.Pink}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    Pink-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.Red}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    Red-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.Orange}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    Orange-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.Yellow}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    Yellow-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.Volcano}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    Volcano-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.GeekBlue}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    GeekBlue-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.Lime}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    Lime-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        <tr>
+            {{range $k,$v:=.Gold}}
+            <td>
+                <div class="box" style="background: {{$v.Hex}}">
+                    Gold-{{$k}}
+                </div>
+            </td>
+            {{end}}
+        </tr>
+    </table>
+
+</body>
+
+</html>

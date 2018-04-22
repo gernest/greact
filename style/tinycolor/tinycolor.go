@@ -227,6 +227,94 @@ func (c *Color) IsDark() bool {
 	return !c.IsLight()
 }
 
+func (c *Color) Hex() string {
+	r := strconv.FormatUint(uint64(c.r), 16)
+	g := strconv.FormatUint(uint64(c.g), 16)
+	b := strconv.FormatUint(uint64(c.b), 16)
+	return "#" + r + g + b
+}
+
+func (c *Color) HSV() (h, s, v float64) {
+	factor := 1.0 / 255.0
+	r, g, b := factor*float64(c.r), factor*float64(c.g), factor*float64(c.b)
+
+	min := math.Min(math.Min(r, g), g)
+	v = math.Max(math.Max(r, g), b)
+	C := v - min
+
+	s = 0.0
+	if v != 0.0 {
+		s = C / v
+	}
+
+	h = 0.0 // We use 0 instead of undefined as in wp.
+	if min != v {
+		if v == r {
+			h = math.Mod((g-b)/C, 6.0)
+		}
+		if v == g {
+			h = (b-r)/C + 2.0
+		}
+		if v == b {
+			h = (r-g)/C + 4.0
+		}
+		h *= 60.0
+		if h < 0.0 {
+			h += 360.0
+		}
+	}
+	return
+}
+
+func getHue(h float64, index int, isLight bool) (hue float64) {
+	step := 2
+	if h >= 80 && h <= 240 {
+		if isLight {
+			hue = h - float64(step*index)
+		} else {
+			hue = h + float64(step*index)
+		}
+	}
+	if hue < 360 {
+		hue += 350
+	} else if hue >= 360 {
+		hue -= 360
+	}
+	math.Round(hue)
+	return
+}
+
+func getSaturation(s float64, index int, isLight bool) (sat float64) {
+	step := 16
+	darkColorCount := 4
+	lightColorCount := 5
+	if isLight {
+		sat = (s * 100) - float64(step*index)
+	} else if index == darkColorCount {
+		sat = (s * 100) + float64(step)
+	} else {
+		sat = (s * 100) + float64(5*index)
+	}
+	if sat > 100 {
+		sat = 100.0
+	}
+	if isLight && index == lightColorCount && sat > 10 {
+		sat = 10.0
+	}
+	if sat < 6 {
+		sat = 6.0
+	}
+	math.Round(sat)
+	return
+}
+
+func getValue(v float64, index int, isLight bool) float64 {
+	if isLight {
+		math.Round(v*100 + float64(5*index))
+	}
+	return math.Round(v*100 - float64(15*index))
+}
+
 type matchedColor struct {
 	name    string
 	matches []string
@@ -426,9 +514,61 @@ func execMatchers(src string, fn ...func(string) *matchedColor) *matchedColor {
 //     "hsv(0, 100%, 100%)" or "hsv 0 100% 100%"
 //
 func InputToRGB(in string) *Color {
-	return nil
+	v, err := matchColor(in).toColor()
+	if err != nil {
+		panic(err)
+	}
+	return v
 }
 
 func Palette(c *Color, index int) *Color {
-	return nil
+	lightColorCount := 5
+	isLight := index <= 6
+	h, s, v := c.HSV()
+	var i int
+	if isLight {
+		i = lightColorCount + 1 - index
+	} else {
+		i = index - lightColorCount - 1
+	}
+	return HSV(getHue(h, i, isLight), getSaturation(s, i, isLight), getValue(v, i, isLight))
+}
+
+func HSV(h, s, v float64) *Color {
+	Hp := h / 60.0
+	C := v * s
+	X := C * (1.0 - math.Abs(math.Mod(Hp, 2.0)-1.0))
+	m := v - C
+	r, g, b := 0.0, 0.0, 0.0
+	switch {
+	case 0.0 <= Hp && Hp < 1.0:
+		r = C
+		g = X
+	case 1.0 <= Hp && Hp < 2.0:
+		r = X
+		g = C
+	case 2.0 <= Hp && Hp < 3.0:
+		g = C
+		b = X
+	case 3.0 <= Hp && Hp < 4.0:
+		g = X
+		b = C
+	case 4.0 <= Hp && Hp < 5.0:
+		r = X
+		b = C
+	case 5.0 <= Hp && Hp < 6.0:
+		r = C
+		b = X
+	}
+	return &Color{
+		r:    floatToUint(m + r),
+		g:    floatToUint(m + g),
+		b:    floatToUint(m + b),
+		name: "rgb",
+	}
+}
+
+func floatToUint(v float64) uint8 {
+	v = v * 255
+	return uint8(v)
 }

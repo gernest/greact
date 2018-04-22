@@ -1,29 +1,10 @@
 package tinycolor
 
-import "regexp"
-
-type Color struct {
-	R uint16
-	G uint16
-	B uint16
-}
-
-// InputToRGB converts a string to RGB
-//     "red"
-//     "#f00" or "f00"
-//     "#ff0000" or "ff0000"
-//     "#ff000000" or "ff000000"
-//     "rgb 255 0 0" or "rgb (255, 0, 0)"
-//     "rgb 1.0 0 0" or "rgb (1, 0, 0)"
-//     "rgba (255, 0, 0, 1)" or "rgba 255, 0, 0, 1"
-//     "rgba (1.0, 0, 0, 1)" or "rgba 1.0, 0, 0, 1"
-//     "hsl(0, 100%, 50%)" or "hsl 0 100% 50%"
-//     "hsla(0, 100%, 50%, 1)" or "hsla 0 100% 50%, 1"
-//     "hsv(0, 100%, 100%)" or "hsv 0 100% 100%"
-//
-func InputToRGB(in string) {
-
-}
+import (
+	"encoding/hex"
+	"regexp"
+	"strings"
+)
 
 const (
 	cssInt           = "[-\\+]?\\d+%?"
@@ -46,11 +27,6 @@ var (
 	matchHex6 = regexp.MustCompile("^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$")
 	matchHex8 = regexp.MustCompile("^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$")
 )
-
-type matchedColor struct {
-	name    string
-	matches []string
-}
 
 var colorNames = map[string]string{
 	"aliceblue":            "f0f8ff",
@@ -204,6 +180,93 @@ var colorNames = map[string]string{
 	"yellowgreen":          "9acd32",
 }
 
+type Color struct {
+	R, G, B, A float64
+
+	r, g, b, a uint8
+	raw        bool
+}
+
+type matchedColor struct {
+	name    string
+	matches []string
+}
+
+func (m *matchedColor) toColor() *Color {
+	switch m.name {
+	case "rgb":
+	case "rgba":
+	case "hsl":
+	case "hslq":
+	case "hsv":
+	case "hex3":
+		return parseHex3(m.matches[0])
+	case "hex4":
+		return parseHex4(m.matches[0])
+	case "hex6":
+		return parseHex6(m.matches[0])
+	case "hex8":
+		return parseHex8(m.matches[0])
+	default:
+		return &Color{}
+	}
+	return nil
+}
+
+func parseHex3(src string) *Color {
+	if src[0] == '#' {
+		src = src[1:]
+	}
+	x, y, z := string(src[0]), string(src[1]), string(src[2])
+	n := x + x + y + y + z + z
+	return parseHex(n)
+}
+
+func parseHex6(src string) *Color {
+	if src[0] == '#' {
+		src = src[1:]
+	}
+	return parseHex(src)
+}
+
+func parseHex8(src string) *Color {
+	if src[0] == '#' {
+		src = src[1:]
+	}
+	h, _ := hex.DecodeString(src)
+	return &Color{r: uint8(h[0]), g: uint8(h[1]),
+		b: uint8(h[2]), a: uint8(h[3]), raw: true}
+}
+
+func parseHex4(src string) *Color {
+	if src[0] == '#' {
+		src = src[1:]
+	}
+	x, y, z, e := string(src[0]), string(src[1]), string(src[2]), string(src[2])
+	n := x + x + y + y + z + z + e + e
+	return parseHex8(n)
+}
+
+func parseHex(src string) *Color {
+	h, _ := hex.DecodeString(src)
+	return &Color{r: uint8(h[0]), g: uint8(h[1]), b: uint8(h[2]), raw: true}
+}
+
+func breadDown(prefix string, src string) []string {
+	if len(prefix) > len(src) {
+		return nil
+	}
+	s := src[len(prefix):]
+	s = strings.TrimSpace(s)
+	if s[0] == '(' && s[len(s)-1] == ')' {
+		s = s[1 : len(s)-1]
+	}
+	if strings.Contains(s, ",") {
+		return strings.Split(s, ",")
+	}
+	return strings.Split(s, " ")
+}
+
 func matchColor(c string) *matchedColor {
 	if n, ok := colorNames[c]; ok {
 		return matchColor(n)
@@ -242,4 +305,21 @@ func execMatchers(src string, fn ...func(string) *matchedColor) *matchedColor {
 		}
 	}
 	return nil
+}
+
+// InputToRGB converts a string to RGB
+//     "red"
+//     "#f00" or "f00"
+//     "#ff0000" or "ff0000"
+//     "#ff000000" or "ff000000"
+//     "rgb 255 0 0" or "rgb (255, 0, 0)"
+//     "rgb 1.0 0 0" or "rgb (1, 0, 0)"
+//     "rgba (255, 0, 0, 1)" or "rgba 255, 0, 0, 1"
+//     "rgba (1.0, 0, 0, 1)" or "rgba 1.0, 0, 0, 1"
+//     "hsl(0, 100%, 50%)" or "hsl 0 100% 50%"
+//     "hsla(0, 100%, 50%, 1)" or "hsla 0 100% 50%, 1"
+//     "hsv(0, 100%, 100%)" or "hsv 0 100% 100%"
+//
+func InputToRGB(in string) {
+
 }

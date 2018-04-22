@@ -184,10 +184,8 @@ var colorNames = map[string]string{
 }
 
 type Color struct {
-	R, G, B, A float64
-
 	r, g, b, a uint8
-	raw        bool
+	name       string
 }
 
 func (c *Color) Luminance() float64 {
@@ -231,55 +229,55 @@ func (m *matchedColor) toColor() (*Color, error) {
 	case "hsv":
 		return nil, nil
 	case "hex3":
-		return parseHex3(m.matches[0])
+		return parseHex3(m.matches[0], m.name)
 	case "hex4":
-		return parseHex4(m.matches[0])
+		return parseHex4(m.matches[0], m.name)
 	case "hex6":
-		return parseHex6(m.matches[0])
+		return parseHex6(m.matches[0], m.name)
 	case "hex8":
-		return parseHex8(m.matches[0])
+		return parseHex8(m.matches[0], m.name)
 	default:
 		return nil, errors.New("Unknown color type")
 	}
 }
 
-func parseHex3(src string) (*Color, error) {
+func parseHex3(src string, name string) (*Color, error) {
 	if src[0] == '#' {
 		src = src[1:]
 	}
 	x, y, z := string(src[0]), string(src[1]), string(src[2])
 	n := x + x + y + y + z + z
-	return parseHex(n)
+	return parseHex(n, name)
 }
 
-func parseHex6(src string) (*Color, error) {
+func parseHex6(src string, name string) (*Color, error) {
 	if src[0] == '#' {
 		src = src[1:]
 	}
-	return parseHex(src)
+	return parseHex(src, name)
 }
 
-func parseHex8(src string) (*Color, error) {
+func parseHex8(src string, name string) (*Color, error) {
 	if src[0] == '#' {
 		src = src[1:]
 	}
 	h, _ := hex.DecodeString(src)
 	return &Color{r: uint8(h[0]), g: uint8(h[1]),
-		b: uint8(h[2]), a: uint8(h[3]), raw: true}, nil
+		b: uint8(h[2]), a: uint8(h[3]), name: name}, nil
 }
 
-func parseHex4(src string) (*Color, error) {
+func parseHex4(src string, name string) (*Color, error) {
 	if src[0] == '#' {
 		src = src[1:]
 	}
 	x, y, z, e := string(src[0]), string(src[1]), string(src[2]), string(src[2])
 	n := x + x + y + y + z + z + e + e
-	return parseHex8(n)
+	return parseHex8(n, name)
 }
 
-func parseHex(src string) (*Color, error) {
+func parseHex(src string, name string) (*Color, error) {
 	h, _ := hex.DecodeString(src)
-	return &Color{r: uint8(h[0]), g: uint8(h[1]), b: uint8(h[2]), raw: true}, nil
+	return &Color{r: uint8(h[0]), g: uint8(h[1]), b: uint8(h[2]), name: name}, nil
 }
 
 func parseRGB(src string) (*Color, error) {
@@ -287,7 +285,7 @@ func parseRGB(src string) (*Color, error) {
 	if len(parts) != 3 {
 		return nil, errors.New("Invalid rgb string")
 	}
-	color := &Color{raw: true}
+	color := &Color{}
 	a := strings.TrimSpace(parts[0])
 	if a[len(a)-1] == '%' {
 		r, err := precentToUint(a[:len(a)-1])

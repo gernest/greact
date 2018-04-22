@@ -3,6 +3,7 @@ package tinycolor
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math"
 	"regexp"
 	"strconv"
@@ -270,17 +271,24 @@ func getHue(h float64, index int, isLight bool) (hue float64) {
 	step := 2
 	if h >= 80 && h <= 240 {
 		if isLight {
-			hue = h - float64(step*index)
+			hue = h - float64(step)*float64(index)
 		} else {
-			hue = h + float64(step*index)
+			hue = h + float64(step)*float64(index)
+		}
+	} else {
+		if isLight {
+			hue = h + float64(step)*float64(index)
+		} else {
+			hue = h - float64(step)*float64(index)
 		}
 	}
-	if hue < 360 {
+	if hue < 0 {
 		hue += 350
 	} else if hue >= 360 {
 		hue -= 360
 	}
 	math.Round(hue)
+	fmt.Printf("HUE %v==>%v \n", h, hue)
 	return
 }
 

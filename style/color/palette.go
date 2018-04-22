@@ -57,7 +57,6 @@ func New() *Palette {
 func Generate(base *tinycolor.Color) [10]*tinycolor.Color {
 	var c [10]*tinycolor.Color
 	for i := 0; i < 10; i++ {
-		println(i)
 		if i == 5 {
 			c[i] = base
 		} else {

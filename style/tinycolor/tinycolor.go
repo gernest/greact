@@ -228,10 +228,15 @@ func (c *Color) IsDark() bool {
 }
 
 func (c *Color) Hex() string {
-	r := strconv.FormatUint(uint64(c.r), 16)
-	g := strconv.FormatUint(uint64(c.g), 16)
-	b := strconv.FormatUint(uint64(c.b), 16)
-	return "#" + r + g + b
+	return "#" + format(c.r) + format(c.g) + format(c.b)
+}
+
+func format(v uint8) string {
+	s := strconv.FormatUint(uint64(v), 16)
+	if len(s) == 1 {
+		return "0" + s
+	}
+	return s
 }
 
 func (c *Color) HSV() (h, s, v float64) {
@@ -592,6 +597,7 @@ func HSV(h, s, v float64) *Color {
 }
 
 func floatToUint(v float64) uint8 {
-	v = v * 255
+	v = v * 255.0
+	v = math.Round(v)
 	return uint8(v)
 }

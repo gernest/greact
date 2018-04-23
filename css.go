@@ -1,4 +1,4 @@
-package goss
+package gs
 
 import (
 	"bytes"

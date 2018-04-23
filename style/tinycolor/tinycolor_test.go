@@ -165,8 +165,8 @@ func TestPalette(t *testing.T) {
 				{index: 3, isLight: true, h: 3, s: 38, v: 100},
 				{index: 2, isLight: true, h: 1, s: 54, v: 100},
 				{index: 1, isLight: true, h: 359, s: 70, v: 100},
-				{index: 1, isLight: false, h: 355, s: 91, v: .81},
-				{index: 2, isLight: false, h: 363, s: 96, v: 66},
+				{index: 1, isLight: false, h: 355, s: 91, v: 81},
+				{index: 2, isLight: false, h: 353, s: 96, v: 66},
 				{index: 4, isLight: false, h: 351, s: 100, v: 51},
 				{index: 5, isLight: false, h: 349, s: 100, v: 36},
 			}},
@@ -191,17 +191,19 @@ func TestPalette(t *testing.T) {
 }
 
 func testHSV(t *testing.T, base *Color, s []hsvSample) {
+	hh, ss, vv := base.HSV()
 	for _, v := range s {
-		g := Palette(base, v.index)
-		h, s, ve := g.HSV()
+		h := getHue(hh, v.index, v.isLight)
 		if h != v.h {
-			t.Errorf("expected %v got %v", v.h, h)
+			t.Errorf("HUE [%v|%v] expected %v got %v", v.index, v.isLight, v.h, h)
 		}
+		s := getSaturation(ss, v.index, v.isLight)
 		if s != v.s {
-			t.Errorf("expected %v got %v", v.s, s)
+			t.Errorf("SATURATION [%v|%v] expected %v got %v", v.index, v.isLight, v.s, s)
 		}
+		ve := getValue(vv, v.index, v.isLight)
 		if ve != v.v {
-			t.Errorf("expected %v got %v", v.v, ve)
+			t.Errorf("VALUE [%v|%v] expected %v got %v", v.index, v.isLight, v.v, ve)
 		}
 	}
 }

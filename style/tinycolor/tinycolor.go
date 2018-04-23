@@ -3,7 +3,6 @@ package tinycolor
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"math"
 	"regexp"
 	"strconv"
@@ -292,8 +291,7 @@ func getHue(h float64, index int, isLight bool) (hue float64) {
 	} else if hue >= 360 {
 		hue -= 360
 	}
-	math.Round(hue)
-	fmt.Printf("HUE %v==>%v \n", h, hue)
+	// fmt.Printf("HUE %v==>%v  %v, %v\n", h, hue, index, isLight)
 	return
 }
 
@@ -302,11 +300,11 @@ func getSaturation(s float64, index int, isLight bool) (sat float64) {
 	darkColorCount := 4
 	lightColorCount := 5
 	if isLight {
-		sat = (s * 100) - float64(step*index)
+		sat = s - float64(step*index)
 	} else if index == darkColorCount {
-		sat = (s * 100) + float64(step)
+		sat = s + float64(step)
 	} else {
-		sat = (s * 100) + float64(5*index)
+		sat = s + float64(5*index)
 	}
 	if sat > 100 {
 		sat = 100.0
@@ -318,14 +316,21 @@ func getSaturation(s float64, index int, isLight bool) (sat float64) {
 		sat = 6.0
 	}
 	math.Round(sat)
+	// fmt.Printf("SAT %v==>%v  %v, %v\n", s, sat, index, isLight)
 	return
 }
 
-func getValue(v float64, index int, isLight bool) float64 {
+func getValue(v float64, index int, isLight bool) (value float64) {
 	if isLight {
-		math.Round(v*100 + float64(5*index))
+		value = v + float64(5*index)
+	} else {
+		value = v - float64(15*index)
 	}
-	return math.Round(v*100 - float64(15*index))
+	if value > 100 {
+		value = 100
+	}
+	// fmt.Printf("VAL %v==>%v  %v, %v\n", v, value, index, isLight)
+	return
 }
 
 type matchedColor struct {

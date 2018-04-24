@@ -39,12 +39,15 @@ type style struct {
 }
 
 func (s style) write(f func(string)) {
+	if s.rules == nil {
+		return
+	}
 	f(s.selector)
 	f(" {")
 	s.rules.write(func(v string) {
-		f("  " + v)
+		f("\n   " + v)
 	})
-	f("}")
+	f("\n}\n")
 }
 
 func (style) isRule() {}
@@ -123,6 +126,9 @@ func flatternStyle(s style) RuleList {
 }
 
 func replaceParent(parent, selector string) string {
+	if strings.Contains(selector, "&,") {
+		return strings.Replace(selector, "&,", parent+",\n", -1)
+	}
 	return strings.Replace(selector, "&", parent, -1)
 }
 

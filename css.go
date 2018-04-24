@@ -3,15 +3,17 @@ package gs
 import (
 	"bytes"
 	"strings"
+
+	"github.com/kr/pretty"
 )
 
 type RuleList []CSSRule
 
 func (RuleList) isRule() {}
 
-func (ls RuleList) write(f func(string)) {
+func (ls RuleList) write(f func(string), opts ...Options) {
 	for _, v := range ls {
-		v.write(f)
+		v.write(f, opts...)
 	}
 }
 
@@ -25,7 +27,14 @@ type simple struct {
 }
 
 func (simple) isRule() {}
-func (s simple) write(f func(string)) {
+func (s simple) write(f func(string), opts ...Options) {
+	if len(opts) > 0 {
+		o := opts[0]
+		if o.NoPretty {
+			f(s.key + ":" + s.value + ";")
+			return
+		}
+	}
 	f(s.key + " : " + s.value + ";")
 }
 
@@ -38,15 +47,27 @@ type style struct {
 	rules    RuleList
 }
 
-func (s style) write(f func(string)) {
+func (s style) write(f func(string), opts ...Options) {
 	if s.rules == nil {
 		return
 	}
+	pretty.Println(opts)
 	f(s.selector)
+	if len(opts) > 0 {
+		o := opts[0]
+		if o.NoPretty {
+			f("{")
+			s.rules.write(func(v string) {
+				f(v)
+			}, opts...)
+			f("}")
+			return
+		}
+	}
 	f(" {")
 	s.rules.write(func(v string) {
 		f("\n   " + v)
-	})
+	}, opts...)
 	f("\n}\n")
 }
 
@@ -61,8 +82,8 @@ type fontFace struct {
 	style RuleList
 }
 
-func (fontFace) isRule()              {}
-func (fontFace) write(f func(string)) {}
+func (fontFace) isRule()                               {}
+func (fontFace) write(f func(string), opts ...Options) {}
 
 func FontFace(rules ...CSSRule) CSSRule {
 	return fontFace{key: "@font-face", style: RuleList(rules)}
@@ -71,7 +92,7 @@ func FontFace(rules ...CSSRule) CSSRule {
 type CSSRule interface {
 	//we don't want users to implement this.
 
-	write(func(string))
+	write(func(string), ...Options)
 	isRule()
 }
 
@@ -137,11 +158,15 @@ func ToString(rule CSSRule, ts ...Transformer) string {
 	return toString(rule)
 }
 
-func toString(rule CSSRule) string {
+type Options struct {
+	NoPretty bool
+}
+
+func toString(rule CSSRule, opts ...Options) string {
 	var buf bytes.Buffer
 	rule.write(func(v string) {
 		buf.WriteString(v)
-	})
+	}, opts...)
 	return buf.String()
 }
 

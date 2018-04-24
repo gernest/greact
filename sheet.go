@@ -96,7 +96,7 @@ func (s *Sheet) ListRules() []string {
 		return s.list
 	}
 	for _, v := range s.rules {
-		s.list = append(s.list, toString(v))
+		s.list = append(s.list, toString(v, Options{NoPretty: true}))
 	}
 	return s.list
 }

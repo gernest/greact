@@ -23,19 +23,21 @@ func TestRegistry(t *testing.T) {
 		o = &mockSheetObject{}
 		return o
 	})
-
 	s := r.NewSheet()
 	s.AddRule(CSS(
 		S(".hello",
-			P("key", "value"),
+			P("key1", "value1"),
+			P("key2", "value2"),
 		),
 	))
-
 	s.Attach()
 	if o.detached {
 		t.Errorf("expected to be attached")
 	}
-
+	e := ".hello-1-1{key1:value1;key2:value2;}"
+	if o.rules[0] != e {
+		t.Errorf("expected %s got %s", e, o.rules[0])
+	}
 	s.Detach()
 	if !o.detached {
 		t.Errorf("expected to be detached")

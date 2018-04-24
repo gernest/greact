@@ -73,7 +73,9 @@ func (m *SimpleRegistry) Attach(s *Sheet) {
 	if !m.attached[s.id] {
 		r := m.sheets[s.id]
 		for _, v := range s.ListRules() {
-			r.node.InsertRule(v)
+			if v != "" {
+				r.node.InsertRule(v)
+			}
 		}
 		m.attached[s.id] = true
 	}

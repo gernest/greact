@@ -14,7 +14,11 @@ func (s *Sheet) AddRule(rules CSSRule) {
 	v := process(rules, classNamer(
 		namerFunc(s.CLasses, s.idGen),
 	))
-	s.rules = append(s.rules, v)
+	if ls, ok := v.(RuleList); ok {
+		s.rules = append(s.rules, ls...)
+	} else {
+		s.rules = append(s.rules, v)
+	}
 }
 
 func (s *Sheet) Text() string {

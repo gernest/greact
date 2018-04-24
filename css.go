@@ -3,8 +3,6 @@ package gs
 import (
 	"bytes"
 	"strings"
-
-	"github.com/kr/pretty"
 )
 
 type RuleList []CSSRule
@@ -51,7 +49,6 @@ func (s style) write(f func(string), opts ...Options) {
 	if s.rules == nil {
 		return
 	}
-	pretty.Println(opts)
 	f(s.selector)
 	if len(opts) > 0 {
 		o := opts[0]

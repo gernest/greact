@@ -5,7 +5,7 @@ import (
 )
 
 func TestSheet(t *testing.T) {
-	var dummyIdGen = func() string {
+	var dummyIDGen = func() string {
 		return "id"
 	}
 	s := CSS(
@@ -13,7 +13,8 @@ func TestSheet(t *testing.T) {
 			P("key", "value"),
 		),
 	)
-	sheet := NewSheet(s, dummyIdGen)
+	sheet := NewSheet(dummyIDGen)
+	sheet.AddRule(s)
 	e := ".hello-id"
 	g := sheet.CLasses["hello"]
 	if g != e {

@@ -1,18 +1,28 @@
 package gs
 
 type Sheet struct {
-	ID      string
-	CLasses ClassMap
-	Text    string
+	id       int64
+	CLasses  ClassMap
+	rules    RuleList
+	list     []string
+	idGen    func() string
+	attached bool
+	registry Registry
 }
 
-func NewSheet(rules CSSRule, idGen func() string) *Sheet {
-	s := &Sheet{CLasses: make(ClassMap)}
-	v := ToString(rules, classNamer(
-		namerFunc(s.CLasses, idGen),
+func (s *Sheet) AddRule(rules CSSRule) {
+	v := process(rules, classNamer(
+		namerFunc(s.CLasses, s.idGen),
 	))
-	s.Text = v
-	return s
+	s.rules = append(s.rules, v)
+}
+
+func (s *Sheet) Text() string {
+	return toString(s.rules)
+}
+
+func NewSheet(idGen func() string) *Sheet {
+	return &Sheet{CLasses: make(ClassMap), idGen: idGen}
 }
 
 func namerFunc(c ClassMap, idGen func() string) func(string) string {
@@ -65,4 +75,37 @@ func classNamer(namer func(string) string) Transformer {
 			return e
 		}
 	}
+}
+
+func (s *Sheet) Attach() {
+	if !s.attached {
+		s.registry.Attach(s)
+		s.attached = true
+	}
+}
+
+func (s *Sheet) Detach() {
+	if s.attached {
+		s.registry.Detach(s)
+		s.attached = false
+	}
+}
+
+func (s *Sheet) ListRules() []string {
+	if s.list != nil {
+		return s.list
+	}
+	for _, v := range s.rules {
+		s.list = append(s.list, toString(v))
+	}
+	return s.list
+}
+
+type Registry interface {
+	NewSheet() *Sheet
+	Attach(*Sheet)
+	Detach(*Sheet)
+
+	//again no user implementation
+	isRegistry()
 }

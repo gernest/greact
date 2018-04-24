@@ -133,13 +133,22 @@ func replaceParent(parent, selector string) string {
 }
 
 func ToString(rule CSSRule, ts ...Transformer) string {
+	rule = process(rule, ts...)
+	return toString(rule)
+}
+
+func toString(rule CSSRule) string {
 	var buf bytes.Buffer
-	ts = append(ts, fLattern)
-	for _, v := range ts {
-		rule = v(rule)
-	}
 	rule.write(func(v string) {
 		buf.WriteString(v)
 	})
 	return buf.String()
+}
+
+func process(rule CSSRule, ts ...Transformer) CSSRule {
+	ts = append(ts, fLattern)
+	for _, v := range ts {
+		rule = v(rule)
+	}
+	return rule
 }

@@ -1,7 +1,10 @@
 package normalize
 
 import (
+	"strings"
+
 	"github.com/gernest/gs"
+	"github.com/gopherjs/gopherjs/js"
 )
 
 func New() gs.CSSRule {
@@ -13,7 +16,7 @@ func New() gs.CSSRule {
 		removeMargins(), correctFont(), correctSizing(),
 		correctInheritance(), removeGray(), fixBorder(),
 		fontWeight(), scaling(), correctFontSize(), preventSub(),
-		fixImages(), forms(), interactives(), misc(),
+		fixImages(), forms(), interactives(), misc(), vendors(),
 	)
 }
 
@@ -125,7 +128,7 @@ func forms() gs.CSSRule {
 						gs.S("&,textarea",
 							gs.P("font-family", "inherit"),
 							gs.P("font-size", "100%"),
-							gs.P("line-heigh", "1.15"),
+							gs.P("line-height", "1.15"),
 							gs.P("margin", "0"),
 						),
 					),
@@ -143,25 +146,6 @@ func forms() gs.CSSRule {
 				gs.S(`&,[type="reset"]`,
 					gs.S(`&,[type="submit"]`,
 						gs.P("-webkit-appearance", "button"),
-					),
-				),
-			),
-		),
-		gs.S("button::-moz-focus-inner",
-			gs.S(`&,[type="button"]::-moz-focus-inner`,
-				gs.S(`&,[type="reset"]::-moz-focus-inner`,
-					gs.S(`&,[type="submit"]::-moz-focus-inner`,
-						gs.P("border-style", "none"),
-						gs.P("padding", "0"),
-					),
-				),
-			),
-		),
-		gs.S("button:-moz-focusring",
-			gs.S(`&,[type="button"]:-moz-focusring`,
-				gs.S(`&,[type="reset"]:-moz-focusring`,
-					gs.S(`&,[type="submit"]:-moz-focusring`,
-						gs.P("outline", "1px dotted ButtonText"),
 					),
 				),
 			),
@@ -185,14 +169,46 @@ func forms() gs.CSSRule {
 				gs.P("padding", "0"),
 			),
 		),
+		gs.S(`[type="search"]`,
+			gs.P("-webkit-appearance", "textfield"),
+			gs.P("outline-offset", "-2px"),
+		),
+	)
+}
+
+func agent() string {
+	if js.Global != nil {
+		txt := js.Global.Get("navigator").Get("userAgent").String()
+		if strings.Contains(txt, "Chrome") {
+			return "chrome"
+		}
+		if strings.Contains(txt, "Firefox") {
+			return "firefox"
+		}
+	}
+	return ""
+}
+
+func vendors() gs.CSSRule {
+	switch agent() {
+	case "chrome":
+		return chromePrefix()
+	case "firefox":
+		return mozPrefix()
+	default:
+		return gs.CSS(
+			chromePrefix(),
+			mozPrefix(),
+		)
+	}
+}
+
+func chromePrefix() gs.CSSRule {
+	return gs.CSS(
 		gs.S(`[type="number"]::-webkit-inner-spin-button`,
 			gs.S(`&,[type="number"]::-webkit-outer-spin-button`,
 				gs.P("height", "auto"),
 			),
-		),
-		gs.S(`[type="search"]`,
-			gs.P("-webkit-appearance", "textfield"),
-			gs.P("outline-offset", "-2px"),
 		),
 		gs.S(`[type="search"]::-webkit-search-decoration`,
 			gs.P("-webkit-appearance", "none"),
@@ -202,6 +218,28 @@ func forms() gs.CSSRule {
 			gs.P("font", "inherit"),
 		),
 	)
+}
+
+func mozPrefix() gs.CSSRule {
+	return gs.CSS(gs.S("button::-moz-focus-inner",
+		gs.S(`&,[type="button"]::-moz-focus-inner`,
+			gs.S(`&,[type="reset"]::-moz-focus-inner`,
+				gs.S(`&,[type="submit"]::-moz-focus-inner`,
+					gs.P("border-style", "none"),
+					gs.P("padding", "0"),
+				),
+			),
+		),
+	),
+		gs.S("button:-moz-focusring",
+			gs.S(`&,[type="button"]:-moz-focusring`,
+				gs.S(`&,[type="reset"]:-moz-focusring`,
+					gs.S(`&,[type="submit"]:-moz-focusring`,
+						gs.P("outline", "1px dotted ButtonText"),
+					),
+				),
+			),
+		))
 }
 
 func interactives() gs.CSSRule {

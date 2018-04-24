@@ -15,4 +15,5 @@ func TestNew(t *testing.T) {
 	if s != e {
 		t.Errorf("expected %s got %s", e, s)
 	}
+	// ioutil.WriteFile("normalize.css", []byte(s), 0600)
 }

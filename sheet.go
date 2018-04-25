@@ -40,6 +40,14 @@ func namerFunc(c ClassMap, idGen func() string) func(string) string {
 
 type ClassMap map[string]string
 
+// Classes to be compatible with vecty.ClassMap
+func (c ClassMap) Classes() map[string]bool {
+	o := make(map[string]bool)
+	for _, v := range c {
+		o[v] = true
+	}
+	return o
+}
 func isClass(s string) bool {
 	return s != "" && s[0] == '.'
 }

@@ -1,0 +1,16 @@
+instagram:before {
+   display : block;
+   font-family : "anticon" !important;
+   content : "\e70b";
+}
+instagram {
+   display : inline-block;
+   font-style : normal;
+   vertical-align : baseline;
+   text-align : center;
+   text-transform : none;
+   line-height : 1;
+   text-rendering : optimizeLegibility;
+   -webkit-font-smoothing : antialiased;
+   -moz-osx-font-smoothing : grayscale;
+}

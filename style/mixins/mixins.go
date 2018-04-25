@@ -107,6 +107,7 @@ func Square(size string) gs.CSSRule {
 	return Size(size, size)
 }
 
+// .iconfont-mixin
 func IconFont() gs.CSSRule {
 	return gs.CSS(
 		gs.P("display", "inline-block"),

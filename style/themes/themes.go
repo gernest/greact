@@ -11,4 +11,7 @@ type Theme struct {
 	FontSizeBase   string
 	LineHeightBase string
 	TextColor      tinycolor.Color
+
+	IconURL        string
+	IconFontPrefix string
 }

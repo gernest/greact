@@ -22,6 +22,15 @@ var (
 	XXL = MediaType(themes.Default.ScreenXXL)
 )
 
+const (
+	RowClass    = ".Row"
+	ColClass    = ".Col"
+	PushClass   = ".Push"
+	PullClass   = ".Pull"
+	OffsetClass = ".Offset"
+	OrderClass  = ".Order"
+)
+
 func (m MediaType) Screen() string {
 	return "@media (min-width:" + string(m) + ")"
 }
@@ -49,7 +58,7 @@ func formatFloat(v float64) string {
 
 func RowStyle() gs.CSSRule {
 	return gs.CSS(
-		gs.S(".rowFlex",
+		gs.S(RowClass,
 			gs.P("display", "flex"),
 			gs.P("flex-flow", "row wrap"),
 			gs.S("&:before", gs.P("display", "flex")),
@@ -60,7 +69,7 @@ func RowStyle() gs.CSSRule {
 
 func MakeColumn(index, gutter, numCols int64) gs.CSSRule {
 	return gs.CSS(
-		gs.S(".Col",
+		gs.S(ColClass,
 			gs.P("position", "relative"),
 			gs.P("display", "block"),
 			gs.P("min-height", "1px"),
@@ -75,25 +84,25 @@ func MakeColumn(index, gutter, numCols int64) gs.CSSRule {
 }
 
 func Push(index int64, numCols int64) gs.CSSRule {
-	return gs.S(".Push",
+	return gs.S(PushClass,
 		gs.P("left", precent(float64(index)/float64(numCols))),
 	)
 }
 
 func Pull(index int64, numCols int64) gs.CSSRule {
-	return gs.S(".Pull",
+	return gs.S(Pull,
 		gs.P("right", precent(float64(index)/float64(numCols))),
 	)
 }
 
 func Offset(index int64, numCols int64) gs.CSSRule {
-	return gs.S(".Offset",
+	return gs.S(OffsetClass,
 		gs.P("margin-left", precent(float64(index)/float64(numCols))),
 	)
 }
 
 func Order(index int64) gs.CSSRule {
-	return gs.S(".Order",
+	return gs.S(OrderClass,
 		gs.P("order", format(index)),
 	)
 }

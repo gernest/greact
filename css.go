@@ -74,16 +74,52 @@ func S(selector string, rules ...CSSRule) CSSRule {
 	return style{selector: selector, rules: RuleList(rules)}
 }
 
-type fontFace struct {
+type conditional struct {
 	key   string
-	style RuleList
+	rules RuleList
 }
 
-func (fontFace) isRule()                               {}
-func (fontFace) write(f func(string), opts ...Options) {}
+func (conditional) isRule() {}
+func (c conditional) write(f func(string), opts ...Options) {
+	f(c.key)
+	var buf bytes.Buffer
+	c.rules.write(func(v string) {
+		buf.WriteString(v)
+	}, opts...)
+	if len(opts) > 0 {
+		o := opts[0]
+		if o.NoPretty {
+			f("{")
+			f(buf.String())
+			f("}")
+			return
+		}
+	}
+	f(" {\n")
+	f(indent(buf.String(), 2))
+	f("\n}")
+}
 
+func indent(s string, by int) string {
+	p := strings.Split(s, "\n")
+	var o bytes.Buffer
+	idx := ""
+	for i := 0; i < by; i++ {
+		idx += " "
+	}
+	for _, v := range p {
+		o.WriteString(idx)
+		o.WriteString(v)
+		o.WriteString("\n")
+	}
+	return o.String()
+}
 func FontFace(rules ...CSSRule) CSSRule {
-	return fontFace{key: "@font-face", style: RuleList(rules)}
+	return S("@font-face", rules...)
+}
+
+func Cond(cond string, rules ...CSSRule) CSSRule {
+	return conditional{key: cond, rules: RuleList(rules)}
 }
 
 type CSSRule interface {

@@ -16,7 +16,7 @@ func TestSheet(t *testing.T) {
 	sheet := NewSheet(dummyIDGen)
 	sheet.AddRule(s)
 	e := ".hello-id"
-	g := sheet.CLasses["hello"]
+	g := sheet.CLasses[".hello"]
 	if g != e {
 		t.Errorf("expected %s got %s", e, g)
 	}

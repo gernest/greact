@@ -31,9 +31,11 @@ func NewSheet(idGen func() string) *Sheet {
 
 func namerFunc(c ClassMap, idGen func() string) func(string) string {
 	return func(s string) string {
-		name := s[1:]
+		if exist, ok := c[s]; ok {
+			return exist
+		}
 		gen := s + "-" + idGen()
-		c[name] = gen
+		c[s] = gen
 		return gen
 	}
 }

@@ -137,6 +137,8 @@ func fLattern(rule CSSRule) CSSRule {
 		return flatternRuleList(e)
 	case StyleRule:
 		return flatternStyle(e)
+	case Conditional:
+		return Conditional{Key: e.Key, Rules: flatternRuleList(e.Rules)}
 	default:
 		return e
 	}
@@ -150,6 +152,11 @@ func flatternRuleList(list RuleList) RuleList {
 			o = append(o, flatternRuleList(e)...)
 		case StyleRule:
 			o = append(o, flatternStyle(e)...)
+		case Conditional:
+			o = append(o, Conditional{
+				Key:   e.Key,
+				Rules: flatternRuleList(e.Rules),
+			})
 		default:
 			o = append(o, e)
 		}

@@ -3,11 +3,28 @@ package grid
 import (
 	"strconv"
 
+	"github.com/gernest/vected/style/themes"
+
 	"github.com/gernest/gs"
 	"github.com/gernest/vected/style/mixins"
 )
 
 type Number int64
+
+type MediaType string
+
+var (
+	XS  = MediaType(themes.Default.ScreenXS)
+	SM  = MediaType(themes.Default.ScreenSM)
+	MD  = MediaType(themes.Default.ScreenMD)
+	LG  = MediaType(themes.Default.ScreenLG)
+	XL  = MediaType(themes.Default.ScreenXL)
+	XXL = MediaType(themes.Default.ScreenXXL)
+)
+
+func (m MediaType) Screen() string {
+	return "@media (min-width:" + string(m) + ")"
+}
 
 type ColOptions struct {
 	Span, Order, Offset, Push, Pull Number
@@ -47,8 +64,8 @@ func MakeColumn(index, gutter, numCols int64) gs.CSSRule {
 			gs.P("position", "relative"),
 			gs.P("display", "block"),
 			gs.P("min-height", "1px"),
-			gs.P(" padding-left", format(gutter/2)),
-			gs.P(" padding-right", format(gutter/2)),
+			gs.P("padding-left", format(gutter/2)),
+			gs.P("padding-right", format(gutter/2)),
 			gs.P("float", "left"),
 			gs.P("flex", "0 0 auto"),
 			gs.P("box-sizing", "border-box"),
@@ -82,5 +99,42 @@ func Order(index int64) gs.CSSRule {
 }
 
 func precent(v float64) string {
-	return formatFloat(v) + "%"
+	return formatFloat(v*100) + "%"
+}
+
+func Column(opts *ColOptions, mediaQuery ...MediaOption) gs.CSSRule {
+	var rules gs.RuleList
+	index := int64(opts.Span)
+	cols := themes.Default.GridColumns
+	rules = append(rules, MakeColumn(index, themes.Default.GridGutterWidth,
+		cols))
+	if opts.Pull != 0 {
+		rules = append(rules, Pull(int64(opts.Pull), cols))
+	}
+	if opts.Push != 0 {
+		rules = append(rules, Push(int64(opts.Push), cols))
+	}
+	if opts.Offset != 0 {
+		rules = append(rules, Offset(int64(opts.Offset), cols))
+	}
+	if opts.Order != 0 {
+		rules = append(rules, Order(int64(opts.Order)))
+	}
+	for _, v := range mediaQuery {
+		rules = append(rules, Media(v.Type, v.Opts))
+	}
+	return rules
+}
+
+type MediaOption struct {
+	Type MediaType
+	Opts *ColOptions
+}
+
+func Media(cond MediaType, opts ...*ColOptions) gs.CSSRule {
+	var rules gs.RuleList
+	for _, v := range opts {
+		rules = append(rules, Column(v))
+	}
+	return gs.Cond(cond.Screen(), rules...)
 }

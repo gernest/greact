@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"regexp"
+	"sort"
+	"strings"
 
 	"github.com/magefile/mage/sh"
 )
@@ -49,13 +51,17 @@ func getstate(file string) Stats {
 
 var match = regexp.MustCompile(`\sx($|\s)`)
 
-func f(s Stats) []string {
+func f(s Stats, opts ...*regexp.Regexp) []string {
+	matcher := match
+	if len(opts) > 0 {
+		matcher = opts[0]
+	}
 	var need []string
 	for browser := range s.Stats {
 		versions := s.Stats[browser]
 		for version := range versions {
 			support := versions[version]
-			if match.Match([]byte(support)) {
+			if matcher.Match([]byte(support)) {
 				need = append(need, fmt.Sprintf("%s %s", browser, version))
 			}
 		}
@@ -64,6 +70,7 @@ func f(s Stats) []string {
 }
 
 type data struct {
+	Props    []string
 	Mistakes []string
 	Feature  string
 	Browsers []string
@@ -128,6 +135,103 @@ func Gen() error {
 		},
 			"transform", "transform-origin",
 		),
+		prefix(data{
+			Feature:  "transforms3d",
+			Browsers: f(getstate("caniuse/features-json/transforms3d.json")),
+		},
+			"perspective", "perspective-origin",
+		),
+		prefix(data{
+			Mistakes: []string{"-ms-", "-o-"},
+			Feature:  "transforms3d",
+			Browsers: f(getstate("caniuse/features-json/transforms3d.json")),
+		},
+			"transform-style",
+		),
+		prefix(data{
+			Mistakes: []string{"-ms-", "-o-"},
+			Feature:  "transforms3d",
+			Browsers: f(getstate("caniuse/features-json/transforms3d.json"),
+				regexp.MustCompile(`y\sx|y\s#2/`),
+			),
+		},
+			"backface-visibility",
+		),
+		gradients(),
+		prefix(data{
+			Feature:  "css3-boxsizing",
+			Browsers: f(getstate("caniuse/features-json/css3-boxsizing.json")),
+		},
+			"box-sizing",
+		),
+		prefix(data{
+			Feature:  "css-filters",
+			Browsers: f(getstate("caniuse/features-json/css-filters.json")),
+		},
+			"filter",
+		),
+		prefix(data{
+			Props:[]string{
+				"background", "background-image", "border-image", "mask",
+				"list-style", "list-style-image", "content", "mask-image",
+			}
+			Feature:  "css-filter-function",
+			Browsers: f(getstate("caniuse/features-json/css-filter-function.json")),
+		},
+			"filter-function",
+		),
+		prefix(data{
+			Feature:  "css-backdrop-filter",
+			Browsers: f(getstate("caniuse/features-json/css-backdrop-filter.json")),
+		},
+			"backdrop-filter",
+		),
+		prefix(data{
+			Props: []string{
+				"background", "background-image", "border-image", "mask",
+				"list-style", "list-style-image", "content", "mask-image",
+			},
+			Feature:  "css-element-function",
+			Browsers: f(getstate("caniuse/features-json/css-element-function.json")),
+		},
+			"element",
+		),
 	))
 	return nil
+}
+
+func gradients() map[string]data {
+	origin := prefix(data{
+		Mistakes: []string{"-ms-"},
+		Props: []string{"background", "background-image", "border-image", "mask",
+			"list-style", "list-style-image", "content", "mask-image"},
+		Feature: "css-gradients",
+		Browsers: f(getstate("caniuse/features-json/css-gradients.json"),
+			regexp.MustCompile(`y\sx`),
+		),
+	},
+		"linear-gradient", "repeating-linear-gradient",
+		"radial-gradient", "repeating-radial-gradient",
+	)
+
+	browsers := f(getstate("caniuse/features-json/css-gradients.json"),
+		regexp.MustCompile(`a\sx`),
+	)
+	for i := range browsers {
+		if !strings.Contains(browsers[i], "op") {
+			browsers[i] = fmt.Sprintf("%s old", browsers[i])
+		}
+	}
+
+	names := []string{
+		"linear-gradient", "repeating-linear-gradient",
+		"radial-gradient", "repeating-radial-gradient",
+	}
+	for _, name := range names {
+		odata := origin[name]
+		odata.Browsers = append(odata.Browsers, browsers...)
+		sort.Strings(odata.Browsers)
+		origin[name] = odata
+	}
+	return origin
 }

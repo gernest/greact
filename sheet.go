@@ -57,25 +57,25 @@ func isClass(s string) bool {
 func classNamer(namer func(string) string) Transformer {
 	return func(rules CSSRule) CSSRule {
 		switch e := rules.(type) {
-		case style:
-			if isClass(e.selector) {
-				e.selector = namer(e.selector)
+		case StyleRule:
+			if isClass(e.Selector) {
+				e.Selector = namer(e.Selector)
 			}
 			return e
 		case RuleList:
 			var o RuleList
 			for _, v := range e {
 				switch ne := v.(type) {
-				case style:
-					if isClass(ne.selector) {
-						ne.selector = namer(ne.selector)
+				case StyleRule:
+					if isClass(ne.Selector) {
+						ne.Selector = namer(ne.Selector)
 					}
 					o = append(o, ne)
 				case RuleList:
 					for _, value := range ne {
-						if st, ok := value.(style); ok {
-							if isClass(st.selector) {
-								st.selector = namer(st.selector)
+						if st, ok := value.(StyleRule); ok {
+							if isClass(st.Selector) {
+								st.Selector = namer(st.Selector)
 							}
 						}
 						o = append(o, value)

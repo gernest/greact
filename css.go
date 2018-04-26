@@ -19,42 +19,42 @@ func CSS(rules ...CSSRule) CSSRule {
 	return RuleList(rules)
 }
 
-type simple struct {
-	key   string
-	value string
+type SimpleRule struct {
+	Key   string
+	Value string
 }
 
-func (simple) isRule() {}
-func (s simple) write(f func(string), opts ...Options) {
+func (SimpleRule) isRule() {}
+func (s SimpleRule) write(f func(string), opts ...Options) {
 	if len(opts) > 0 {
 		o := opts[0]
 		if o.NoPretty {
-			f(s.key + ":" + s.value + ";")
+			f(s.Key + ":" + s.Value + ";")
 			return
 		}
 	}
-	f(s.key + " : " + s.value + ";")
+	f(s.Key + " : " + s.Value + ";")
 }
 
 func P(key, value string) CSSRule {
-	return simple{key: key, value: value}
+	return SimpleRule{Key: key, Value: value}
 }
 
-type style struct {
-	selector string
-	rules    RuleList
+type StyleRule struct {
+	Selector string
+	Rules    RuleList
 }
 
-func (s style) write(f func(string), opts ...Options) {
-	if s.rules == nil {
+func (s StyleRule) write(f func(string), opts ...Options) {
+	if s.Rules == nil {
 		return
 	}
-	f(s.selector)
+	f(s.Selector)
 	if len(opts) > 0 {
 		o := opts[0]
 		if o.NoPretty {
 			f("{")
-			s.rules.write(func(v string) {
+			s.Rules.write(func(v string) {
 				f(v)
 			}, opts...)
 			f("}")
@@ -62,28 +62,28 @@ func (s style) write(f func(string), opts ...Options) {
 		}
 	}
 	f(" {")
-	s.rules.write(func(v string) {
+	s.Rules.write(func(v string) {
 		f("\n   " + v)
 	}, opts...)
 	f("\n}\n")
 }
 
-func (style) isRule() {}
+func (StyleRule) isRule() {}
 
 func S(selector string, rules ...CSSRule) CSSRule {
-	return style{selector: selector, rules: RuleList(rules)}
+	return StyleRule{Selector: selector, Rules: RuleList(rules)}
 }
 
-type conditional struct {
-	key   string
-	rules RuleList
+type Conditional struct {
+	Key   string
+	Rules RuleList
 }
 
-func (conditional) isRule() {}
-func (c conditional) write(f func(string), opts ...Options) {
-	f(c.key)
+func (Conditional) isRule() {}
+func (c Conditional) write(f func(string), opts ...Options) {
+	f(c.Key)
 	var buf bytes.Buffer
-	c.rules.write(func(v string) {
+	c.Rules.write(func(v string) {
 		buf.WriteString(v)
 	}, opts...)
 	if len(opts) > 0 {
@@ -119,7 +119,7 @@ func FontFace(rules ...CSSRule) CSSRule {
 }
 
 func Cond(cond string, rules ...CSSRule) CSSRule {
-	return conditional{key: cond, rules: RuleList(rules)}
+	return Conditional{Key: cond, Rules: RuleList(rules)}
 }
 
 type CSSRule interface {
@@ -135,7 +135,7 @@ func fLattern(rule CSSRule) CSSRule {
 	switch e := rule.(type) {
 	case RuleList:
 		return flatternRuleList(e)
-	case style:
+	case StyleRule:
 		return flatternStyle(e)
 	default:
 		return e
@@ -148,7 +148,7 @@ func flatternRuleList(list RuleList) RuleList {
 		switch e := v.(type) {
 		case RuleList:
 			o = append(o, flatternRuleList(e)...)
-		case style:
+		case StyleRule:
 			o = append(o, flatternStyle(e)...)
 		default:
 			o = append(o, e)
@@ -157,22 +157,22 @@ func flatternRuleList(list RuleList) RuleList {
 	return o
 }
 
-func flatternStyle(s style) RuleList {
+func flatternStyle(s StyleRule) RuleList {
 	var o RuleList
-	baseStyle := style{selector: s.selector}
-	for _, v := range s.rules {
+	baseStyle := StyleRule{Selector: s.Selector}
+	for _, v := range s.Rules {
 		switch e := v.(type) {
-		case style:
+		case StyleRule:
 			ls := flatternStyle(
-				style{
-					selector: replaceParent(baseStyle.selector, e.selector),
-					rules:    e.rules,
+				StyleRule{
+					Selector: replaceParent(baseStyle.Selector, e.Selector),
+					Rules:    e.Rules,
 				})
 			for _, value := range ls {
 				o = append(o, value)
 			}
 		default:
-			baseStyle.rules = append(baseStyle.rules, e)
+			baseStyle.Rules = append(baseStyle.Rules, e)
 		}
 	}
 	o = append(o, baseStyle)

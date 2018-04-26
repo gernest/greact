@@ -1,22 +1,41 @@
 package grid
 
 import (
+	"github.com/gernest/vected/style/grid"
 	"github.com/gopherjs/vecty"
 )
 
-type Number uint
+type Number = grid.Number
 
 const (
 	Empty Number = iota
+	G1
+	G2
+	G3
+	G4
+	G5
+	G6
+	G7
+	G8
+	G9
+	G10
+	G11
+	G12
+	G13
+	G14
+	G15
+	G16
+	G17
+	G18
+	G19
+	G20
+	G21
+	G22
+	G23
+	G24
 )
 
-func (Number) String() string {
-	return ""
-}
-
-type ColOptions struct {
-	Span, Order, Offset, Push, Pull Number
-}
+type ColOptions = grid.ColOptions
 
 type Column struct {
 	vecty.Core
@@ -37,4 +56,8 @@ func join(s ...string) string {
 		o += v
 	}
 	return o
+}
+
+type Row struct {
+	vecty.Core
 }

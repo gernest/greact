@@ -601,3 +601,7 @@ func floatToUint(v float64) uint8 {
 	v = math.Round(v)
 	return uint8(v)
 }
+
+func Fade(c string, percent int64) *Color {
+	return nil
+}

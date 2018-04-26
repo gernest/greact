@@ -171,10 +171,10 @@ func Gen() error {
 			"filter",
 		),
 		prefix(data{
-			Props:[]string{
+			Props: []string{
 				"background", "background-image", "border-image", "mask",
 				"list-style", "list-style-image", "content", "mask-image",
-			}
+			},
 			Feature:  "css-filter-function",
 			Browsers: f(getstate("caniuse/features-json/css-filter-function.json")),
 		},

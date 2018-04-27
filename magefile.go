@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/magefile/mage/sh"
@@ -70,6 +71,7 @@ func f(s Stats, opts ...*regexp.Regexp) []string {
 }
 
 type data struct {
+	Selector bool
 	Props    []string
 	Mistakes []string
 	Feature  string
@@ -196,6 +198,111 @@ func Gen() error {
 		},
 			"element",
 		),
+		multiColumn(),
+		prefix(data{
+			Mistakes: []string{"-khtml-"},
+			Feature:  "user-select-none",
+			Browsers: f(getstate("caniuse/features-json//user-select-none.json")),
+		},
+			"user-select",
+		),
+		flexbox(),
+		prefix(data{
+			Props:    []string{"*"},
+			Feature:  "calc",
+			Browsers: f(getstate("caniuse/features-json//calc.json")),
+		},
+			"calc",
+		),
+		prefix(data{
+			Feature:  "background-img-opts",
+			Browsers: f(getstate("caniuse/features-json//background-img-opts.json")),
+		},
+			"background-clip", "background-origin", "background-size",
+		),
+		prefix(data{
+			Feature:  "font-feature",
+			Browsers: f(getstate("caniuse/features-json//font-feature.json")),
+		},
+			"font-feature-settings", "font-variant-ligatures",
+			"font-language-override",
+		),
+		prefix(data{
+			Feature:  "font-kerning",
+			Browsers: f(getstate("caniuse/features-json//font-kerning.json")),
+		},
+			"font-kerning",
+		),
+		prefix(data{
+			Feature:  "border-image",
+			Browsers: f(getstate("caniuse/features-json//border-image.json")),
+		},
+			"border-image",
+		),
+		prefix(data{
+			Selector: true,
+			Feature:  "css-selection",
+			Browsers: f(getstate("caniuse/features-json//css-selection.json")),
+		},
+			"::selection",
+		),
+		placeHolderSelector(),
+		prefix(data{
+			Feature:  "css-hyphens",
+			Browsers: f(getstate("caniuse/features-json//css-hyphens.json")),
+		},
+			"hyphens",
+		),
+		prefix(data{
+			Selector: true,
+			Feature:  "fullscreen",
+			Browsers: f(getstate("caniuse/features-json//fullscreen.json")),
+		},
+			":fullscreen",
+		),
+		prefix(data{
+			Selector: true,
+			Feature:  "fullscreen",
+			Browsers: f(getstate("caniuse/features-json//fullscreen.json"), regexp.MustCompile(`x(\s#2|$)`)),
+		},
+			"::backdrop",
+		),
+		prefix(data{
+			Feature:  "css3-tabsize",
+			Browsers: f(getstate("caniuse/features-json//css3-tabsize.json")),
+		},
+			"tab-size",
+		),
+		prefix(data{
+			Props: []string{
+				"width", "min-width", "max-width",
+				"height", "min-height", "max-height",
+				"inline-size", "min-inline-size", "max-inline-size",
+				"block-size", "min-block-size", "max-block-size",
+				"grid", "grid-template",
+				"grid-template-rows", "grid-template-columns",
+				"grid-auto-columns", "grid-auto-rows",
+			},
+			Feature:  "intrinsic-width",
+			Browsers: f(getstate("caniuse/features-json/intrinsic-width.json")),
+		},
+			"max-content", "min-content", "fit-content",
+			"fill", "fill-available", "stretch",
+		),
+		prefix(data{
+			Props:    []string{"cursor"},
+			Feature:  "css3-cursors-newer",
+			Browsers: f(getstate("caniuse/features-json/css3-cursors-newer.json")),
+		},
+			"zoom-in", "zoom-out",
+		),
+		prefix(data{
+			Props:    []string{"cursor"},
+			Feature:  "css3-cursors-grab",
+			Browsers: f(getstate("caniuse/features-json/css3-cursors-grab.json")),
+		},
+			"grab", "grabbing",
+		),
 	))
 	return nil
 }
@@ -234,4 +341,107 @@ func gradients() map[string]data {
 		origin[name] = odata
 	}
 	return origin
+}
+
+func multiColumn() map[string]data {
+	base := getstate("caniuse/features-json//multicolumn.json")
+	browsers := f(base)
+
+	od := prefix(data{
+		Feature:  "multicolumn",
+		Browsers: browsers,
+	},
+		"columns", "column-width", "column-gap",
+		"column-rule", "column-rule-color", "column-rule-width",
+		"column-count", "column-rule-style", "column-span", "column-fill",
+	)
+	var noff []string
+	for _, v := range browsers {
+		if !strings.Contains(v, "firefox") {
+			continue
+		}
+		noff = append(noff, v)
+	}
+	return mergeData(od, prefix(data{
+		Feature:  "multicolumn",
+		Browsers: noff,
+	},
+		"break-before", "break-after", "break-inside",
+	))
+}
+
+func flexbox() map[string]data {
+	ostat := getstate("caniuse/features-json/flexbox.json")
+	browsers := f(ostat, regexp.MustCompile(`a\sx`))
+	for i := range browsers {
+		v := browsers[i]
+		if strings.Contains(v, "ie") || strings.Contains(v, "firefox") {
+			continue
+		}
+		browsers[i] = fmt.Sprintf("%s 2009", v)
+	}
+	feature := "flexbox"
+	origin := mergeData(
+		prefix(data{
+			Props:    []string{"display"},
+			Feature:  feature,
+			Browsers: browsers,
+		},
+			"display-flex", "inline-flex",
+		),
+		prefix(data{
+			Feature:  feature,
+			Browsers: browsers,
+		},
+			"flex", "flex-grow", "flex-shrink", "flex-basis",
+		),
+		prefix(data{
+			Feature:  feature,
+			Browsers: browsers,
+		},
+			"flex-direction", "flex-wrap", "flex-flow", "justify-content",
+			"order", "align-items", "align-self", "align-content",
+		),
+	)
+	newBrowsers := f(ostat, regexp.MustCompile(`y\sx`))
+
+	add(origin, newBrowsers, "display-flex", "inline-flex")
+	add(origin, newBrowsers, "flex", "flex-grow", "flex-shrink", "flex-basis")
+	add(origin, newBrowsers,
+		"flex-direction", "flex-wrap", "flex-flow", "justify-content",
+		"order", "align-items", "align-self", "align-content",
+	)
+	return origin
+}
+
+func add(m map[string]data, browsers []string, names ...string) {
+	for _, name := range names {
+		v := m[name]
+		v.Browsers = append(v.Browsers, browsers...)
+		sort.Strings(v.Browsers)
+		m[name] = v
+	}
+}
+
+func placeHolderSelector() map[string]data {
+	browsers := f(getstate("caniuse/features-json/css-placeholder.json"))
+
+	for i := range browsers {
+		v := browsers[i]
+		p := strings.Split(v, " ")
+		name, version := p[0], p[1]
+		f, _ := strconv.ParseFloat(version, 64)
+		if name == "firefox" && f <= 18 {
+			browsers[i] = fmt.Sprintf("%s old", v)
+		} else if name == "ie" {
+			browsers[i] = fmt.Sprintf("%s old", v)
+		}
+	}
+	return prefix(data{
+		Selector: true,
+		Feature:  "css-placeholder",
+		Browsers: browsers,
+	},
+		"::placeholder",
+	)
 }

@@ -451,12 +451,13 @@ func placeHolderSelector() map[string]data {
 }
 
 type agent struct {
-	Browser     string             `json:"browser"`
-	Abbr        string             `json:"abbr"`
-	Prefix      string             `json:"prefix"`
-	Type        string             `json:"type"`
-	UsageGlobal map[string]float64 `json:"usage_global"`
-	Versions    []string           `json:"versions"`
+	Browser             string             `json:"browser"`
+	Abbr                string             `json:"abbr"`
+	Prefix              string             `json:"prefix"`
+	Type                string             `json:"type"`
+	UsageGlobal         map[string]float64 `json:"usage_global"`
+	Versions            []string           `json:"versions"`
+	DataPrefixEceptions map[string]string  `json:"prefix_exceptions"`
 }
 
 func Agents() error {
@@ -489,7 +490,8 @@ func Agents() error {
 		Prefix      string             
 		Type        string             
 		UsageGlobal map[string]float64 
-		Versions    []string           
+		Versions    []string       
+		DataPrefixEceptions map[string]string    
 	}
 	{{$ctx:=.}}
 	// AgentsMap is mapping of browser name to browser details.
@@ -543,11 +545,26 @@ func formatAgent(name string, a agent) string {
 	Type: "%s",
 	UsageGlobal: %s,
 	Versions: %s,
-},
 `
-	return fmt.Sprintf(s, name, a.Browser, a.Abbr, a.Prefix, a.Type,
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, s, name, a.Browser, a.Abbr, a.Prefix, a.Type,
 		formatMap(a.UsageGlobal), formatArray(a.Versions),
 	)
+	if a.DataPrefixEceptions != nil {
+		buf.WriteString("DataPrefixEceptions: map[string]string{")
+		var vk []string
+		for k := range a.DataPrefixEceptions {
+			vk = append(vk, k)
+		}
+		sort.Strings(vk)
+		for _, k := range vk {
+			v := a.DataPrefixEceptions[k]
+			fmt.Fprintf(&buf, `"%s":"%s",`, k, v)
+		}
+		buf.WriteString("}")
+	}
+	buf.WriteString("},")
+	return buf.String()
 }
 
 func formatMap(m map[string]float64) string {

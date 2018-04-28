@@ -1050,3 +1050,7 @@ func Complete() error {
 	}
 	return ioutil.WriteFile("complete/selectors.gen.go", o, 0600)
 }
+
+func Build() error {
+	return sh.RunV("go", "build", "./cmd/gss/")
+}

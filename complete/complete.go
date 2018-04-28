@@ -14,23 +14,40 @@ type Completer struct {
 }
 
 func New() (*Completer, error) {
+	hdx, err := newHTML()
+	if err != nil {
+		return nil, err
+	}
+	cdx, err := newCSS()
+	if err != nil {
+		return nil, err
+	}
+	return &Completer{htmlIndex: hdx, cssIndex: cdx}, nil
+}
+
+func newCSS() (bleve.Index, error) {
 	m := bleve.NewIndexMapping()
 	hdx, err := bleve.NewMemOnly(m)
 	if err != nil {
 		return nil, err
 	}
-	cdx, err := bleve.NewMemOnly(m)
+	AddCSSProps(hdx)
+	return hdx, nil
+}
+func newHTML() (bleve.Index, error) {
+	m := bleve.NewIndexMapping()
+	hdx, err := bleve.NewMemOnly(m)
 	if err != nil {
 		return nil, err
 	}
 	AddHTMLTags(hdx)
-	AddCSSProps(cdx)
-	return &Completer{htmlIndex: hdx, cssIndex: cdx}, nil
+	return hdx, nil
 }
 
 func find(idx bleve.Index, prefix string) (*bleve.SearchResult, error) {
 	q := bleve.NewPrefixQuery(prefix)
 	sq := bleve.NewSearchRequest(q)
+	sq.SortBy([]string{"Tag"})
 	return idx.Search(sq)
 }
 
@@ -84,6 +101,7 @@ func Command() cli.Command {
 				Name: "html",
 			},
 		},
+		Action: complete,
 	}
 }
 
@@ -103,7 +121,7 @@ func complete(ctx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(rs)
+		printSlice(rs)
 		return nil
 	}
 	if html {
@@ -111,13 +129,33 @@ func complete(ctx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(rs)
+		printSlice(rs)
 		return nil
 	}
 	rs, err := c.MultiSearch(a)
 	if err != nil {
 		return err
 	}
-	fmt.Println(rs)
+	printSlice(rs)
 	return nil
+}
+
+func printSlice(v []string) {
+	println(formatSlice(v))
+}
+
+func formatSlice(s []string) string {
+	if s == nil {
+		return ""
+	}
+	o := "["
+	for k, v := range s {
+		if k == 0 {
+			o += fmt.Sprintf(`"%s"`, v)
+		} else {
+			o += fmt.Sprintf(`,"%s"`, v)
+		}
+	}
+	o += "]"
+	return o
 }

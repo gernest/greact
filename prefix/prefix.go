@@ -114,3 +114,6 @@ func (b *Broswer) Prefix(name string) string {
 func (b *Broswer) IsSelected(name string) bool {
 	return sort.SearchStrings(b.Selected, name) != len(b.Selected)
 }
+
+type Prefixes struct {
+}

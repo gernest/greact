@@ -100,8 +100,9 @@ func mergeData(d ...map[string]data) map[string]data {
 	return o
 }
 
+// generates data package
 func Gen() error {
-	fmt.Println(mergeData(
+	ctx := mergeData(
 		prefix(data{
 			Mistakes: []string{"-khtml-", "-ms-", "-o-"},
 			Feature:  "border-radius",
@@ -307,8 +308,348 @@ func Gen() error {
 		},
 			"grab", "grabbing",
 		),
-	))
-	return nil
+		prefix(data{
+			Props:    []string{"position"},
+			Feature:  "css-sticky",
+			Browsers: f(getstate("caniuse/features-json/css-sticky.json")),
+		},
+			"sticky",
+		),
+		prefix(data{
+			Feature:  "pointer",
+			Browsers: f(getstate("caniuse/features-json/pointer.json")),
+		},
+			"touch-action",
+		),
+		prefix(data{
+			Feature:  "text-decoration",
+			Browsers: f(getstate("caniuse/features-json/text-decoration.json")),
+		},
+			"text-decoration-style",
+			"text-decoration-color",
+			"text-decoration-line",
+			"text-decoration",
+		),
+		prefix(data{
+			Feature: "text-decoration",
+			Browsers: f(getstate("caniuse/features-json/text-decoration.json"),
+				regexp.MustCompile(`x.*#[23]`),
+			),
+		},
+			"text-decoration-skip",
+		),
+		prefix(data{
+			Feature:  "text-size-adjust",
+			Browsers: f(getstate("caniuse/features-json/text-size-adjust.json")),
+		},
+			"text-size-adjust",
+		),
+		prefix(data{
+			Feature:  "css-masks",
+			Browsers: f(getstate("caniuse/features-json/css-masks.json")),
+		},
+			"mask-clip", "mask-composite", "mask-image",
+			"mask-origin", "mask-repeat", "mask-border-repeat",
+			"mask-border-source",
+		),
+		prefix(data{
+			Feature:  "css-masks",
+			Browsers: f(getstate("caniuse/features-json/css-masks.json")),
+		},
+			"mask", "mask-position", "mask-size",
+			"mask-border", "mask-border-outset", "mask-border-width",
+			"mask-border-slice",
+		),
+		prefix(data{
+			Feature:  "css-clip-path",
+			Browsers: f(getstate("caniuse/features-json/css-clip-path.json")),
+		},
+			"clip-path",
+		),
+		prefix(data{
+			Feature:  "css-boxdecorationbreak",
+			Browsers: f(getstate("caniuse/features-json/css-boxdecorationbreak.json")),
+		},
+			"box-decoration-break",
+		),
+		prefix(data{
+			Feature:  "object-fit",
+			Browsers: f(getstate("caniuse/features-json/object-fit.json")),
+		},
+			"object-fit", "object-position",
+		),
+		prefix(data{
+			Feature:  "css-shapes",
+			Browsers: f(getstate("caniuse/features-json/css-shapes.json")),
+		},
+			"shape-margin", "shape-outside", "shape-image-threshold",
+		),
+		prefix(data{
+			Feature:  "text-overflow",
+			Browsers: f(getstate("caniuse/features-json/text-overflow.json")),
+		},
+			"text-overflow",
+		),
+		prefix(data{
+			Feature:  "css-deviceadaptation",
+			Browsers: f(getstate("caniuse/features-json/css-deviceadaptation.json")),
+		},
+			"@viewport",
+		),
+		prefix(data{
+			Feature: "css-media-resolution",
+			Browsers: f(getstate("caniuse/features-json/css-media-resolution.json"),
+				regexp.MustCompile(`( x($| )|a #3)`),
+			),
+		},
+			"@resolution",
+		),
+		prefix(data{
+			Feature:  "css-text-align-last",
+			Browsers: f(getstate("caniuse/features-json/css-text-align-last.json")),
+		},
+			"text-align-last",
+		),
+		prefix(data{
+			Props:   []string{"image-rendering"},
+			Feature: "css-crisp-edges",
+			Browsers: f(getstate("caniuse/features-json/css-crisp-edges.json"),
+				regexp.MustCompile(`y x|a x #1`),
+			),
+		},
+			"pixelated",
+		),
+		prefix(data{
+			Feature: "css-crisp-edges",
+			Browsers: f(getstate("caniuse/features-json/css-crisp-edges.json"),
+				regexp.MustCompile(`a x #2`),
+			),
+		},
+			"image-rendering",
+		),
+		prefix(data{
+			Feature:  "css-logical-props",
+			Browsers: f(getstate("caniuse/features-json/css-logical-props.json")),
+		},
+			"border-inline-start", "border-inline-end",
+			"margin-inline-start", "margin-inline-end",
+			"padding-inline-start", "padding-inline-end",
+		),
+		prefix(data{
+			Feature: "css-logical-props",
+			Browsers: f(getstate("caniuse/features-json/css-logical-props.json"),
+				regexp.MustCompile(`x\s#2`),
+			),
+		},
+			"border-block-start", "border-block-end",
+			"margin-block-start", "margin-block-end",
+			"padding-block-start", "padding-block-end",
+		),
+		prefix(data{
+			Feature: "css-appearance",
+			Browsers: f(getstate("caniuse/features-json/css-appearance.json"),
+				regexp.MustCompile(`#2|x`),
+			),
+		},
+			"appearance",
+		),
+		prefix(data{
+			Feature:  "css-snappoints",
+			Browsers: f(getstate("caniuse/features-json/css-snappoints.json")),
+		},
+			"scroll-snap-type",
+			"scroll-snap-coordinate",
+			"scroll-snap-destination",
+			"scroll-snap-points-x", "scroll-snap-points-y",
+		),
+		prefix(data{
+			Feature:  "css-regions",
+			Browsers: f(getstate("caniuse/features-json/css-regions.json")),
+		},
+			"flow-into", "flow-from",
+			"region-fragment",
+		),
+		prefix(data{
+			Feature:  "css-image-set",
+			Browsers: f(getstate("caniuse/features-json/css-image-set.json")),
+		},
+			"background", "background-image", "border-image", "cursor",
+			"mask", "mask-image", "list-style", "list-style-image", "content",
+		),
+		prefix(data{
+			Feature: "css-writing-mode",
+			Browsers: f(getstate("caniuse/features-json/css-writing-mode.json"),
+				regexp.MustCompile(`a|x`),
+			),
+		},
+			"writing-mode",
+		),
+		prefix(data{
+			Props: []string{
+				"background", "background-image", "border-image", "mask",
+				"list-style", "list-style-image", "content", "mask-image",
+			},
+			Feature:  "css-cross-fade",
+			Browsers: f(getstate("caniuse/features-json/css-cross-fade.json")),
+		},
+			"cross-fade",
+		),
+		prefix(data{
+			Selector: true,
+			Feature:  "css-read-only-write",
+			Browsers: f(getstate("caniuse/features-json/css-read-only-write.json")),
+		},
+			":read-only", ":read-write",
+		),
+		prefix(data{
+			Feature:  "text-emphasis",
+			Browsers: f(getstate("caniuse/features-json/text-emphasis.json")),
+		},
+			"text-emphasis", "text-emphasis-position",
+			"text-emphasis-style", "text-emphasis-color",
+		),
+		prefix(data{
+			Props: []string{
+				"display",
+			},
+			Feature:  "css-grid",
+			Browsers: f(getstate("caniuse/features-json/css-grid.json")),
+		},
+			"display-grid", "inline-grid",
+		),
+		prefix(data{
+			Feature:  "css-grid",
+			Browsers: f(getstate("caniuse/features-json/css-grid.json")),
+		},
+			"grid-template-columns", "grid-template-rows",
+			"grid-row-start", "grid-column-start",
+			"grid-row-end", "grid-column-end",
+			"grid-row", "grid-column", "grid-area",
+			"grid-template", "grid-template-areas",
+		),
+		prefix(data{
+			Feature: "css-grid",
+			Browsers: f(getstate("caniuse/features-json/css-grid.json"),
+				regexp.MustCompile(`a x`),
+			),
+		},
+			"grid-column-align", "grid-row-align",
+		),
+		prefix(data{
+			Feature:  "css-text-spacing",
+			Browsers: f(getstate("caniuse/features-json/css-text-spacing.json")),
+		},
+			"text-spacing",
+		),
+		prefix(data{
+			Selector: true,
+			Feature:  "css-any-link",
+			Browsers: f(getstate("caniuse/features-json/css-any-link.json")),
+		},
+			":any-link",
+		),
+		prefix(data{
+			Props:    []string{"unicode-bidi"},
+			Feature:  "css-unicode-bidi",
+			Browsers: f(getstate("caniuse/features-json/css-unicode-bidi.json")),
+		},
+			"isolate",
+		),
+		prefix(data{
+			Props:   []string{"unicode-bidi"},
+			Feature: "css-unicode-bidi",
+			Browsers: f(getstate("caniuse/features-json/css-unicode-bidi.json"),
+				regexp.MustCompile(`y x|a x #2`),
+			),
+		},
+			"plaintext",
+		),
+		prefix(data{
+			Props:   []string{"unicode-bidi"},
+			Feature: "css-unicode-bidi",
+			Browsers: f(getstate("caniuse/features-json/css-unicode-bidi.json"),
+				regexp.MustCompile(`y x`),
+			),
+		},
+			"isolate-overrid",
+		),
+		prefix(data{
+			Feature: "css-overscroll-behavior",
+			Browsers: f(getstate("caniuse/features-json/css-overscroll-behavior.json"),
+				regexp.MustCompile(`a #1`),
+			),
+		},
+			"overscroll-behavior",
+		),
+		prefix(data{
+			Feature:  "css-color-adjust",
+			Browsers: f(getstate("caniuse/features-json/css-color-adjust.json")),
+		},
+			"color-adjust",
+		),
+	)
+	dataTpl := `
+	// DO NOT EDIT!
+	// Code generated by mage agents command
+
+	// Package data contains generated prefix data.
+	package data
+
+	// Data represents information about css prefix
+	type Data struct{
+		Selector bool
+		Props    []string
+		Mistakes []string
+		Feature  string
+		Browsers []string
+	}
+	{{$ctx :=.}}
+	// Map is a map of all available prefixes data.
+	var Map =map[string]Data{
+		{{range keys . -}}
+		{{$data :=index $ctx . -}}
+		"{{.}}":{{formatData $data}}
+		{{- end}}
+	}
+	`
+	tpl, err := template.New("data").Funcs(template.FuncMap{
+		"keys": func(v map[string]data) []string {
+			var o []string
+			for k := range v {
+				o = append(o, k)
+			}
+			sort.Strings(o)
+			return o
+		},
+		"formatData": formatData,
+	}).Parse(dataTpl)
+	if err != nil {
+		return err
+	}
+	var buf bytes.Buffer
+	err = tpl.Execute(&buf, ctx)
+	if err != nil {
+		return err
+	}
+	b, err := format.Source(buf.Bytes())
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile("data/data.go", b, 0600)
+}
+
+func formatData(d data) string {
+	s := `Data{
+	Selector: %v,
+	Props:%s,
+	Mistakes:%s,
+	Feature:"%s",
+	Browsers :%s,	
+},
+`
+	return fmt.Sprintf(s, d.Selector,
+		formatArray(d.Props), formatArray(d.Mistakes), d.Feature, formatArray(d.Browsers),
+	)
 }
 
 func gradients() map[string]data {
@@ -460,6 +801,7 @@ type agent struct {
 	DataPrefixEceptions map[string]string  `json:"prefix_exceptions"`
 }
 
+// generates agents package.
 func Agents() error {
 
 	ctx := struct {
@@ -587,6 +929,9 @@ func keys(m map[string]agent) []string {
 }
 
 func formatArray(s []string) string {
+	if s == nil {
+		return "nil"
+	}
 	var buf bytes.Buffer
 	buf.WriteString("[]string{")
 	for _, v := range s {

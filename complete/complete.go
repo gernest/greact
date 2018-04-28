@@ -1,6 +1,8 @@
 package complete
 
 import (
+	"context"
+
 	"github.com/blevesearch/bleve"
 )
 
@@ -44,6 +46,20 @@ func (c *Completer) FindHTML(prefix string) ([]string, error) {
 
 func (c *Completer) FindCSS(prefix string) ([]string, error) {
 	rs, err := find(c.cssIndex, prefix)
+	if err != nil {
+		return nil, err
+	}
+	var o []string
+	for _, hit := range rs.Hits {
+		o = append(o, hit.ID)
+	}
+	return o, nil
+}
+
+func (c *Completer) MultiSearch(prefix string) (matches []string, err error) {
+	q := bleve.NewPrefixQuery(prefix)
+	sq := bleve.NewSearchRequest(q)
+	rs, err := bleve.MultiSearch(context.Background(), sq, c.htmlIndex, c.cssIndex)
 	if err != nil {
 		return nil, err
 	}

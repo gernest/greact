@@ -932,6 +932,7 @@ func formatArray(s []string) string {
 	if s == nil {
 		return "nil"
 	}
+	sort.Strings(s)
 	var buf bytes.Buffer
 	buf.WriteString("[]string{")
 	for _, v := range s {

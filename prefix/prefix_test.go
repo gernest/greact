@@ -96,7 +96,7 @@ func TestBrowser_Selected(t *testing.T) {
 	}{
 		{nothing, nil},
 		{less, []string{"ie 5.5", "ie 6"}},
-		{combined, []string{"ie 10", "ie 5.5"}},
+		{combined, []string{"ie 5.5", "ie 10"}},
 	}
 
 	for _, v := range s {

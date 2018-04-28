@@ -1,8 +1,10 @@
 package prefix
 
 import (
+	"math"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/gernest/gs/agents"
@@ -55,7 +57,7 @@ func NewBrowser(filter ...func(name, version string) bool) *Broswer {
 			}
 		}
 		if len(b.Selected) > 0 {
-			sort.Strings(b.Selected)
+			sortBrowsers(b.Selected)
 		}
 	}
 	return b
@@ -71,6 +73,24 @@ func uniq(s []string) []string {
 		o = append(o, k)
 	}
 	return o
+}
+
+func splitBrowser(b string) (string, float64) {
+	parts := strings.Split(b, " ")
+	k := parts[0]
+	if len(parts) == 1 || parts[1] == "" {
+		return k, 0
+	}
+	v, _ := strconv.ParseFloat(parts[1], 64)
+	return k, v
+}
+
+func sortBrowsers(v []string) {
+	sort.SliceStable(v, func(i, j int) bool {
+		a, av := splitBrowser(v[i])
+		b, bv := splitBrowser(v[j])
+		return a > b || math.Signbit(av-bv)
+	})
 }
 
 func (b *Broswer) WithPrefix(value string) bool {

@@ -647,6 +647,9 @@ func formatData(d data) string {
 	Browsers :%s,	
 },
 `
+	sort.Strings(d.Props)
+	sort.Strings(d.Mistakes)
+	sort.Strings(d.Browsers)
 	return fmt.Sprintf(s, d.Selector,
 		formatArray(d.Props), formatArray(d.Mistakes), d.Feature, formatArray(d.Browsers),
 	)
@@ -932,7 +935,6 @@ func formatArray(s []string) string {
 	if s == nil {
 		return "nil"
 	}
-	sort.Strings(s)
 	var buf bytes.Buffer
 	buf.WriteString("[]string{")
 	for _, v := range s {

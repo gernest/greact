@@ -913,9 +913,15 @@ func formatAgent(name string, a agent) string {
 }
 
 func formatMap(m map[string]float64) string {
+	var keys []string
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 	var buf bytes.Buffer
 	buf.WriteString("map[string]float64{")
-	for k, v := range m {
+	for _, k := range keys {
+		v := m[k]
 		buf.WriteString(fmt.Sprintf(`"%s":%v,`, k, v))
 	}
 	buf.WriteString("}")

@@ -1016,20 +1016,19 @@ func Complete() error {
 	)
 
 	type Index struct{
-		Type string
 		Tag  string
 	}
     // AddHTMLTags add html tags to index
 	func AddHTMLTags(i bleve.Index)  {
 	{{range .html -}}
-	i.Index("{{.}}" ,Index{Type: "html", Tag: "{{.}}"})
+	i.Index("{{.}}" ,Index{Tag: "{{.}}"})
 	{{end -}}		
 	}
 
 	// AddCSSProps add css properties to index
 	func AddCSSProps(i bleve.Index)  {
 	{{range .css -}}
-	i.Index("{{.}}" ,Index{Type: "css", Tag: "{{.}}"})
+	i.Index("{{.}}" ,Index{Tag: "{{.}}"})
 	{{end -}}		
 	}
 	`

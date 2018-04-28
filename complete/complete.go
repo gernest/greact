@@ -2,8 +2,10 @@ package complete
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/blevesearch/bleve"
+	"github.com/urfave/cli"
 )
 
 type Completer struct {
@@ -68,4 +70,54 @@ func (c *Completer) MultiSearch(prefix string) (matches []string, err error) {
 		o = append(o, hit.ID)
 	}
 	return o, nil
+}
+
+func Command() cli.Command {
+	return cli.Command{
+		Name:  "complete",
+		Usage: "autocompletes html and css tags for gss",
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name: "css",
+			},
+			cli.BoolFlag{
+				Name: "html",
+			},
+		},
+	}
+}
+
+func complete(ctx *cli.Context) error {
+	c, err := New()
+	if err != nil {
+		return err
+	}
+	a := ctx.Args().First()
+	if a == "" {
+		return nil
+	}
+	css := ctx.Bool("css")
+	html := ctx.Bool("html")
+	if css {
+		rs, err := c.FindCSS(a)
+		if err != nil {
+			return err
+		}
+		fmt.Println(rs)
+		return nil
+	}
+	if html {
+		rs, err := c.FindHTML(a)
+		if err != nil {
+			return err
+		}
+		fmt.Println(rs)
+		return nil
+	}
+	rs, err := c.MultiSearch(a)
+	if err != nil {
+		return err
+	}
+	fmt.Println(rs)
+	return nil
 }

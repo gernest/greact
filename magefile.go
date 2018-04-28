@@ -988,3 +988,66 @@ func allAgents(names []string) string {
 	buf.WriteString("}")
 	return buf.String()
 }
+
+// generate html tags and css propertis fo use in autocompletion.
+func Complete() error {
+	b, err := ioutil.ReadFile("html-tags/html-tags.json")
+	if err != nil {
+		return err
+	}
+	tags := []string{}
+	err = json.Unmarshal(b, &tags)
+	if err != nil {
+		return err
+	}
+	b, err = ioutil.ReadFile("css-properties/w3c-css-properties.json")
+	if err != nil {
+		return err
+	}
+	csstags := []string{}
+	err = json.Unmarshal(b, &csstags)
+	if err != nil {
+		return err
+	}
+	tagsTpl := `
+	package complete
+	import(
+		"github.com/blevesearch/bleve"
+	)
+
+	type Index struct{
+		Type string
+		Tag  string
+	}
+    // AddHTMLTags add html tags to index
+	func AddHTMLTags(i bleve.Index)  {
+	{{range .html -}}
+	i.Index("{{.}}" ,Index{Type: "html", Tag: "{{.}}"})
+	{{end -}}		
+	}
+
+	// AddCSSProps add css properties to index
+	func AddCSSProps(i bleve.Index)  {
+	{{range .css -}}
+	i.Index("{{.}}" ,Index{Type: "css", Tag: "{{.}}"})
+	{{end -}}		
+	}
+	`
+	tpl, err := template.New("complete").Parse(tagsTpl)
+	if err != nil {
+		return err
+	}
+	var buf bytes.Buffer
+	err = tpl.Execute(&buf, map[string]interface{}{
+		"html": tags,
+		"css":  csstags,
+	})
+	if err != nil {
+		return err
+	}
+	o, err := format.Source(buf.Bytes())
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile("complete/selectors.gen.go", o, 0600)
+}

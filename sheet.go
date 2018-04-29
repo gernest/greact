@@ -46,9 +46,18 @@ type ClassMap map[string]string
 func (c ClassMap) Classes() map[string]bool {
 	o := make(map[string]bool)
 	for _, v := range c {
-		o[v] = true
+		o[toClassname(v)] = true
 	}
 	return o
+}
+func toClassname(c string) string {
+	if c == "" {
+		return c
+	}
+	if c[0] == '.' {
+		return c[1:]
+	}
+	return c
 }
 func isClass(s string) bool {
 	return s != "" && s[0] == '.'

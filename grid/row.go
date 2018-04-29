@@ -8,12 +8,15 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
+// Row is a vecty component using ant design to render a flex row grid layout.
+// This component uses gs library to bundle the styles with the component so no
+// need for external css.
 type Row struct {
 	vecty.Core
+
 	Style    vecty.Applyer
 	Children vecty.MarkupOrChild
 	sheet    *gs.Sheet
-	attached bool
 }
 
 func (r *Row) Render() vecty.ComponentOrHTML {

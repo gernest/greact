@@ -42,7 +42,7 @@ type ColOptions = grid.ColOptions
 
 type Column struct {
 	vecty.Core
-	*ColOptions
+	ColOptions
 
 	Style                   vecty.Applyer
 	Children                vecty.MarkupOrChild
@@ -52,6 +52,7 @@ type Column struct {
 }
 
 func (c *Column) Mount() {
+	println(c.sheet.CLasses)
 	c.sheet.Attach()
 }
 
@@ -103,7 +104,7 @@ func (c *Column) style() gs.CSSRule {
 			Opts: c.XXL,
 		})
 	}
-	return grid.Column(c.ColOptions, media...)
+	return grid.Column(&c.ColOptions, media...)
 }
 
 func join(s ...string) string {

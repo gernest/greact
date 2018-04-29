@@ -56,7 +56,7 @@ func formatFloat(v float64) string {
 	return strconv.FormatFloat(v, 'f', -1, 64)
 }
 
-func RowStyle() gs.CSSRule {
+func Row() gs.CSSRule {
 	return gs.CSS(
 		gs.S(RowClass,
 			gs.P("display", "flex"),
@@ -72,6 +72,7 @@ func MakeColumn(index, gutter, numCols int64) gs.CSSRule {
 		gs.S(ColClass,
 			gs.P("position", "relative"),
 			gs.P("display", "block"),
+			gs.P("background", "blue"),
 			gs.P("min-height", "1px"),
 			gs.P("padding-left", format(gutter/2)),
 			gs.P("padding-right", format(gutter/2)),

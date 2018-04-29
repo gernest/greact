@@ -11,7 +11,7 @@ var Global = Registry.NewSheet()
 
 func create() gs.SheetObject {
 	if js.Global == nil ||
-		js.Global != nil && js.Global.Get("document") != nil {
+		js.Global != nil && js.Global.Get("document") == nil {
 		return &mockSheetObject{}
 	}
 	return createStyle()
@@ -28,6 +28,7 @@ func createStyle() gs.SheetObject {
 	s.Call("appendChild", doc.Call("createTextNode", ""))
 	doc.Get("head").Call("appendChild", s)
 	sheet := s.Get("sheet")
+	doc.Set("mysheet", sheet)
 	return &sheetObject{Object: sheet}
 }
 
@@ -37,7 +38,9 @@ type sheetObject struct {
 }
 
 func (s *sheetObject) InsertRule(rule string) {
-	s.Call("insertRule", rule)
+	n := s.Get("cssRules").Get("length").Int64()
+	g := s.Call("insertRule", rule, n)
+	println(g, rule)
 }
 
 func (s *sheetObject) Detach() {

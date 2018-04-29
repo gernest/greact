@@ -11,6 +11,62 @@ import (
 
 type Number int64
 
+func (n Number) String() string {
+	b := "Col-"
+	switch int64(n) {
+	case 1:
+		return b + "1"
+	case 2:
+		return b + "2"
+	case 3:
+		return b + "3"
+	case 4:
+		return b + "4"
+	case 5:
+		return b + "5"
+	case 6:
+		return b + "6"
+	case 7:
+		return b + "7"
+	case 8:
+		return b + "8"
+	case 9:
+		return b + "9"
+	case 10:
+		return b + "10"
+	case 11:
+		return b + "11"
+	case 12:
+		return b + "12"
+	case 13:
+		return b + "13"
+	case 14:
+		return b + "14"
+	case 15:
+		return b + "15"
+	case 16:
+		return b + "16"
+	case 17:
+		return b + "17"
+	case 18:
+		return b + "18"
+	case 19:
+		return b + "19"
+	case 20:
+		return b + "20"
+	case 21:
+		return b + "21"
+	case 22:
+		return b + "22"
+	case 23:
+		return b + "23"
+	case 24:
+		return b + "24"
+	default:
+		return ""
+	}
+}
+
 type MediaType string
 
 var (

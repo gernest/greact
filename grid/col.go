@@ -8,9 +8,13 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
+// Number an alias for int64 used to represent a grid cell.
 type Number = grid.Number
 
+// helper keys for the 24 grid cells.You can use the keyscof column
+// span,offset,pull or push.
 const (
+	// Empty means display: none
 	Empty Number = iota
 	G1
 	G2
@@ -40,25 +44,65 @@ const (
 
 type ColOptions = grid.ColOptions
 
+// Column implements vecty.Component. This uses ant design language to style the
+// grid column offering 24 cells grid column.
+//
+// Styles are bundled with the component using gs library so no additional
+// dependency is required.
 type Column struct {
 	vecty.Core
+
+	// Options for the style of rendering the column. This uses flexbox for layout.
+	//
+	// Span : raster number of cells to occupy, 0 corresponds to display: none
+	// Offset: the number of cells to offset Col from the left
+	// Order: raster order, used in flex layout mode
+	// Pull : the number of cells that raster is moved to the left
+	// Push : the number of cells that raster is moved to the right
 	ColOptions
 
-	Style                   vecty.Applyer
-	Children                vecty.MarkupOrChild
-	XS, SM, MD, LG, XL, XXL *ColOptions
+	// The style will be applied in the column's dive inside vecty.Markup(). This
+	// is optional.
+	Style vecty.Applyer
+
+	// Provide optional styles using the the gs library. It makes more sense to
+	// define selectors (classes) which will be applied the the column's top level
+	// <div> element together with the default column styles.
+	//
+	// The styles will be cleared after the component has been unmounted.
+	CSS gs.CSSRule
+
+	// This component will be rendered as children of the column's <div>
+	// BUG(gernest): It is imposible to re render this component, vecty will
+	// complain that we stored a reference to a rendered component.
+	Children vecty.MarkupOrChild
+
+	// Media queries
+	XS  *ColOptions // <576px
+	SM  *ColOptions //≥576px,
+	MD  *ColOptions //≥768px
+	LG  *ColOptions //≥992px
+	XL  *ColOptions //≥1200px
+	XXL *ColOptions //≥1600px
 
 	sheet *gs.Sheet
 }
 
+// Mount attaches the loaded stylesheets for this component.
 func (c *Column) Mount() {
 	c.sheet.Attach()
 }
 
+// Render adds the default ant design styles for the column and options the
+// style rules provided in the CSS field. The stylesheet is not attached to the
+// dom until the component is mounted.
 func (c *Column) Render() vecty.ComponentOrHTML {
 	if c.sheet == nil {
 		c.sheet = ui.NewSheet()
 		c.sheet.AddRule(c.style())
+		if c.CSS != nil {
+			c.sheet.AddRule(c.CSS)
+		}
 	}
 	classes := vecty.ClassMap(c.sheet.CLasses.Classes())
 	return elem.Div(vecty.Markup(classes, c.Style), c.Children)
@@ -114,6 +158,7 @@ func join(s ...string) string {
 	return o
 }
 
+// Unmount cleanups by detaching the loaded styles for the component.
 func (c *Column) Unmount() {
 	c.sheet.Detach()
 }

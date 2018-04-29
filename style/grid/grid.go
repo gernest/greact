@@ -90,7 +90,7 @@ func Push(index int64, numCols int64) gs.CSSRule {
 }
 
 func Pull(index int64, numCols int64) gs.CSSRule {
-	return gs.S(Pull,
+	return gs.S(PullClass,
 		gs.P("right", precent(float64(index)/float64(numCols))),
 	)
 }

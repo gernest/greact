@@ -72,7 +72,6 @@ func MakeColumn(index, gutter, numCols int64) gs.CSSRule {
 		gs.S(ColClass,
 			gs.P("position", "relative"),
 			gs.P("display", "block"),
-			gs.P("background", "blue"),
 			gs.P("min-height", "1px"),
 			gs.P("padding-left", format(gutter/2)),
 			gs.P("padding-right", format(gutter/2)),

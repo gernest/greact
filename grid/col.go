@@ -52,7 +52,6 @@ type Column struct {
 }
 
 func (c *Column) Mount() {
-	println(c.sheet.CLasses)
 	c.sheet.Attach()
 }
 

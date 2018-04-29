@@ -30,3 +30,16 @@ func TestColumn(t *testing.T) {
 	}
 	// ioutil.WriteFile("grid.css", []byte(v), 0600)
 }
+
+type mockSheetObject struct {
+	rules    []string
+	detached bool
+}
+
+func (m *mockSheetObject) InsertRule(rule string) {
+	m.rules = append(m.rules, rule)
+}
+
+func (m *mockSheetObject) Detach() {
+	m.detached = true
+}

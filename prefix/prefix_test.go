@@ -1,10 +1,13 @@
 package prefix
 
 import (
+	"reflect"
+	"sort"
 	"strconv"
 	"testing"
 
 	"github.com/gernest/gs/agents"
+	"github.com/gernest/gs/data"
 )
 
 func TestPrefix(t *testing.T) {
@@ -149,5 +152,62 @@ func TestBrowser_IsSelected(t *testing.T) {
 	}
 	if b.IsSelected("ie 6") {
 		t.Error("expected to be false")
+	}
+}
+
+func TestPrefixex_Select(t *testing.T) {
+	tdata := struct {
+		prefixes map[string]data.Data
+	}{
+		prefixes: map[string]data.Data{
+			"a": data.Data{
+				Browsers: []string{"firefox 21", "firefox 20 old", "chrome 30", "ie 6"},
+			},
+			"b": data.Data{
+				Browsers: []string{"ie 7 new", "firefox 20"},
+				Mistakes: []string{"-webkit-"},
+				Props:    []string{"a", "*"},
+			},
+			"c": data.Data{
+				Browsers: []string{"ie 7", "firefox 20"},
+				Selector: true,
+			},
+		},
+	}
+
+	fill := &Prefixes{
+		browsers: NewBrowser(func(name, version string) bool {
+			return name == "firefox" && version == "21" ||
+				name == "ie" && version == "7"
+		}),
+		data: tdata.prefixes,
+	}
+
+	sample := []struct {
+		key   string
+		add   bool
+		value []string
+	}{
+		{key: "a", add: true, value: []string{"-moz-"}},
+		{key: "b", add: true, value: []string{"-ms- new"}},
+		{key: "c", add: true, value: []string{"-ms-"}},
+		{key: "a", add: false, value: []string{"-webkit-", "-ms-", "-moz- old"}},
+		{key: "b", add: false, value: []string{"-ms-", "-moz-", "-webkit-"}},
+		{key: "c", add: false, value: []string{"-moz-"}},
+	}
+
+	sel := fill.Select(tdata.prefixes)
+	for _, v := range sample {
+		var g []string
+		if v.add {
+			g = sel.add[v.key]
+		} else {
+			g = sel.remove[v.key]
+		}
+		sort.Strings(g)
+		sort.Strings(v.value)
+		if !reflect.DeepEqual(g, v.value) {
+			t.Errorf("expected %v got %v", v.value, g)
+		}
 	}
 }

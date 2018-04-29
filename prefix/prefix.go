@@ -1,6 +1,7 @@
 package prefix
 
 import (
+	"fmt"
 	"math"
 	"regexp"
 	"sort"
@@ -8,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gernest/gs/agents"
+	"github.com/gernest/gs/data"
 )
 
 var re = regexp.MustCompile(`^(-\w+-)`)
@@ -112,8 +114,139 @@ func (b *Broswer) Prefix(name string) string {
 }
 
 func (b *Broswer) IsSelected(name string) bool {
-	return sort.SearchStrings(b.Selected, name) != len(b.Selected)
+	if b.Selected != nil {
+		return sliceContains(b.Selected, name)
+	}
+	return false
+}
+
+type selectedOptions struct {
+	add    map[string][]string
+	remove map[string][]string
 }
 
 type Prefixes struct {
+	browsers *Broswer
+	data     map[string]data.Data
+	opts     *PrefixesOptions
+}
+
+type PrefixesOptions struct {
+	FlexBox string
+}
+
+type addOpts struct {
+	browser string
+	note    string
+}
+
+func (p *Prefixes) Select(list map[string]data.Data) *selectedOptions {
+	selected := &selectedOptions{
+		add:    make(map[string][]string),
+		remove: make(map[string][]string),
+	}
+	for name := range list {
+		data := list[name]
+		var add []addOpts
+		for _, v := range data.Browsers {
+			parts := strings.Split(v, " ")
+			o := addOpts{
+				browser: fmt.Sprintf("%s %s", parts[0], parts[1]),
+			}
+			if len(parts) == 3 {
+				o.note = parts[2]
+			}
+			add = append(add, o)
+		}
+		var notes []string
+		for _, v := range add {
+			if v.note != "" {
+				notes = append(notes,
+					fmt.Sprintf("%s %s", p.browsers.Prefix(v.browser), v.note),
+				)
+			}
+		}
+		notes = uniq(notes)
+		var addList []string
+		fadd := filterAddOptions(add, func(v addOpts) bool {
+			sl := p.browsers.IsSelected(v.browser)
+			return sl
+		})
+		for _, v := range fadd {
+			prefx := p.browsers.Prefix(v.browser)
+			if v.note != "" {
+				addList = append(addList,
+					fmt.Sprintf("%s %s", prefx, v.note),
+				)
+			} else {
+				addList = append(addList, prefx)
+			}
+		}
+		addList = uniq(addList)
+		sort.Strings(addList)
+		if p.opts != nil && p.opts.FlexBox == "no-2009" {
+			addList = filter(addList, func(v string) bool {
+				return !strings.Contains(v, "2009")
+			})
+		}
+		all := mapSlice(data.Browsers, func(v string) string {
+			return p.browsers.Prefix(v)
+		})
+		if data.Mistakes != nil {
+			all = append(all, data.Mistakes...)
+		}
+		if notes != nil {
+			all = append(all, notes...)
+		}
+		all = uniq(all)
+		if len(addList) > 0 {
+			selected.add[name] = addList
+			if len(addList) < len(all) {
+				rm := filter(all, func(v string) bool {
+					return !sliceContains(addList, v)
+				})
+				selected.remove[name] = rm
+			}
+		} else {
+			selected.remove[name] = all
+		}
+	}
+	return selected
+}
+
+func sliceContains(s []string, v string) bool {
+	for k := range s {
+		if s[k] == v {
+			return true
+		}
+	}
+	return false
+}
+
+func filter(src []string, fn func(string) bool) []string {
+	var ns []string
+	for _, v := range src {
+		if fn(v) {
+			ns = append(ns, v)
+		}
+	}
+	return ns
+}
+
+func filterAddOptions(src []addOpts, fn func(addOpts) bool) []addOpts {
+	var ns []addOpts
+	for _, v := range src {
+		if fn(v) {
+			ns = append(ns, v)
+		}
+	}
+	return ns
+}
+
+func mapSlice(m []string, fn func(string) string) []string {
+	var ns []string
+	for _, v := range m {
+		ns = append(ns, fn(v))
+	}
+	return ns
 }

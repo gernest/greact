@@ -65,24 +65,7 @@ func classNamer(namer func(string) string) Transformer {
 		case RuleList:
 			var o RuleList
 			for _, v := range e {
-				switch ne := v.(type) {
-				case StyleRule:
-					if isClass(ne.Selector) {
-						ne.Selector = namer(ne.Selector)
-					}
-					o = append(o, ne)
-				case RuleList:
-					for _, value := range ne {
-						if st, ok := value.(StyleRule); ok {
-							if isClass(st.Selector) {
-								st.Selector = namer(st.Selector)
-							}
-						}
-						o = append(o, value)
-					}
-				default:
-					o = append(o, ne)
-				}
+				o = append(o, classNamer(namer)(v))
 			}
 			return o
 		default:

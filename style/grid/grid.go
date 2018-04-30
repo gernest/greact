@@ -91,6 +91,13 @@ func (m MediaType) Screen() string {
 	return "@media (min-width:" + string(m) + ")"
 }
 
+// FlexStyle horizontal arrangement of the flex layout: start end center
+// space-around space-between
+type FlexStyle int64
+
+// FlexAlign the vertical alignment of the flex layout: top middle bottom
+type FlexAlign int64
+
 type ColOptions struct {
 	Span, Order, Offset, Push, Pull Number
 	Gutter                          int64
@@ -103,8 +110,30 @@ func formatFloat(v float64) string {
 	return strconv.FormatFloat(v, 'f', -1, 64)
 }
 
-func Row(gutter int64, flex bool) gs.CSSRule {
+func Row(gutter int64, flex bool, justify FlexStyle, align FlexAlign) gs.CSSRule {
 	if flex {
+		var s gs.CSSRule
+		switch int64(justify) {
+		case 1:
+			s = gs.P("justify-content", "flex-end")
+		case 2:
+			s = gs.P("justify-content", "center")
+		case 3:
+			s = gs.P("justify-content", "space-around")
+		case 4:
+			s = gs.P("justify-content", "space-between")
+		default:
+			s = gs.P("justify-content", "flex-start")
+		}
+		var a gs.CSSRule
+		switch int64(align) {
+		case 1:
+			a = gs.P("align-items", "center")
+		case 2:
+			a = gs.P("align-items", "flex-end")
+		default:
+			a = gs.P("align-items", "flex-start")
+		}
 		return gs.CSS(
 			gs.S(RowFLexClass,
 				gs.P("display", "flex"),
@@ -112,6 +141,7 @@ func Row(gutter int64, flex bool) gs.CSSRule {
 				gs.S("&:before", gs.P("display", "flex")),
 				gs.S("&:after", gs.P("display", "flex")),
 				gs.S("&:after", gs.P("display", "flex")),
+				s, a,
 			),
 		)
 	}

@@ -10,17 +10,64 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
+type FlexStyle = grid.FlexStyle
+
+const (
+	Start FlexStyle = iota
+	End
+	Center
+	SpaceAround
+	SpaceBetween
+)
+
+type FlexAlign = grid.FlexAlign
+
+const (
+	Top FlexAlign = iota
+	Middle
+	Bottom
+)
+
 // Row is a vecty component using ant design to render a flex row grid layout.
 // This component uses gs library to bundle the styles with the component so no
 // need for external css.
 type Row struct {
 	vecty.Core
-	Style    vecty.Applyer
-	CSS      gs.CSSRule
+
+	// This will be  appkied to the row's <div>
+	Style vecty.Applyer
+
+	// Optional styles to be attached to this component's style sheet. Forbetter
+	// results supply class selectors gs.S()
+	CSS gs.CSSRule
+
+	// Children is a function which returns components to be rendered inside to
+	// row.
+	// For consistency and better results this should return vecty.List of *Column
+	// component. It is fine to mix Columns with other components and they will be
+	// rendered correctly.
 	Children func() vecty.MarkupOrChild
-	Gutter   int64
-	Flex     bool
-	sheet    *gs.Sheet
+
+	// This is spacing between grids
+	Gutter int64
+
+	// Flex uses flex layout when this field is set to true. You can use Justify
+	// and Align to control the layout.
+	//
+	// Default is false.
+	Flex bool
+
+	// Justify is horizontal arrangement of the flex layout: tart end center
+	// space-around space-between
+	//
+	// Default is Start
+	Justify FlexStyle
+
+	// Align is the vertical alignment of the flex layout: top middle bottom
+	//
+	// Default is top
+	Align FlexAlign
+	sheet *gs.Sheet
 }
 
 func (r *Row) Render() vecty.ComponentOrHTML {
@@ -29,7 +76,6 @@ func (r *Row) Render() vecty.ComponentOrHTML {
 		r.sheet.AddRule(r.style())
 		if r.CSS != nil {
 			r.sheet.AddRule(r.CSS)
-			println(r.sheet.ListRules())
 		}
 	}
 	ch := r.getChildren()
@@ -39,17 +85,6 @@ func (r *Row) Render() vecty.ComponentOrHTML {
 			vecty.Style("margin-left", format(r.Gutter/-2)+"px"),
 			vecty.Style("margin-right", format(r.Gutter/-2)+"px"),
 		)
-	}
-	classes := vecty.ClassMap(r.sheet.CLasses.Classes())
-	return elem.Div(vecty.Markup(classes, style), ch)
-}
-
-func (r *Row) getChildren() vecty.MarkupOrChild {
-	if r.Children == nil {
-		return nil
-	}
-	ch := r.Children()
-	if r.Gutter > 0 {
 		if ls, ok := ch.(vecty.List); ok {
 			var o vecty.List
 			for _, v := range ls {
@@ -59,10 +94,18 @@ func (r *Row) getChildren() vecty.MarkupOrChild {
 				}
 				o = append(o, v)
 			}
-			return o
+			ch = o
 		}
 	}
-	return ch
+	classes := vecty.ClassMap(r.sheet.CLasses.Classes())
+	return elem.Div(vecty.Markup(classes, style), ch)
+}
+
+func (r *Row) getChildren() vecty.MarkupOrChild {
+	if r.Children != nil {
+		return r.Children()
+	}
+	return nil
 }
 
 func format(v int64) string {
@@ -70,7 +113,7 @@ func format(v int64) string {
 }
 
 func (c *Row) style() gs.CSSRule {
-	return grid.Row(c.Gutter, c.Flex)
+	return grid.Row(c.Gutter, c.Flex, c.Justify, c.Align)
 }
 
 func (r *Row) Mount() {

@@ -7,12 +7,6 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
-// Grid1 is a vecty componet showcasing the 24 column grid layout using the
-// vented library.
-type Grid1 struct {
-	vecty.Core
-}
-
 func col(span grid.Number, gutter int64, light bool) vecty.Component {
 	var m gs.CSSRule
 	if light {
@@ -31,7 +25,6 @@ func col(span grid.Number, gutter int64, light bool) vecty.Component {
 }
 
 func col2(span grid.Number, gutter int64, light bool) vecty.Component {
-
 	m := gs.S(".Style1",
 		gs.P("color", "#fff"),
 		gs.P("text-align", "center"),
@@ -94,41 +87,6 @@ func style2() gs.CSSRule {
 		gs.P("margin-top", "8px"),
 		gs.P("margin-bottom", "8px"),
 		gs.P("height", "15px"),
-	)
-}
-
-func (Grid1) Render() vecty.ComponentOrHTML {
-	return elem.Div(
-		&grid.Row{
-			CSS: codeBoxDemo(),
-			Children: func() vecty.MarkupOrChild {
-				return vecty.List{
-					col(grid.G12, 0, true),
-					col(grid.G12, 0, false),
-				}
-			},
-		},
-		&grid.Row{
-			CSS: codeBoxDemo(),
-			Children: func() vecty.MarkupOrChild {
-				return vecty.List{
-					col(grid.G8, 0, true),
-					col(grid.G8, 0, false),
-					col(grid.G8, 0, true),
-				}
-			},
-		},
-		&grid.Row{
-			CSS: codeBoxDemo(),
-			Children: func() vecty.MarkupOrChild {
-				return vecty.List{
-					col(grid.G6, 0, true),
-					col(grid.G6, 0, false),
-					col(grid.G6, 0, true),
-					col(grid.G6, 0, false),
-				}
-			},
-		},
 	)
 }
 

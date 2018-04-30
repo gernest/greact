@@ -16,8 +16,8 @@ type base struct {
 
 func (base) Render() vecty.ComponentOrHTML {
 	return elem.Body(
-		&components.Grid1{},
-		&components.Grid2{},
-		&components.Grid3{},
+		&components.BasicGrid{},
+		// &components.Grid2{},
+		// &components.Grid3{},
 	)
 }

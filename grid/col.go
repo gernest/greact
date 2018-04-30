@@ -42,6 +42,7 @@ const (
 	G24
 )
 
+// ColOptions options for styling a grid Column
 type ColOptions = grid.ColOptions
 
 // Column implements vecty.Component. This uses ant design language to style the
@@ -52,14 +53,19 @@ type ColOptions = grid.ColOptions
 type Column struct {
 	vecty.Core
 
-	// Options for the style of rendering the column. This uses flexbox for layout.
-	//
 	// Span : raster number of cells to occupy, 0 corresponds to display: none
-	// Offset: the number of cells to offset Col from the left
+	Span Number
 	// Order: raster order, used in flex layout mode
-	// Pull : the number of cells that raster is moved to the left
+	Order Number
+	// Offset: the number of cells to offset Col from the left
+	Offset Number
 	// Push : the number of cells that raster is moved to the right
-	ColOptions
+	Push Number
+	// Pull : the number of cells that raster is moved to the left
+	Pull Number
+
+	// Gutter is the space between grid cells
+	Gutter int64
 
 	// The style will be applied in the column's dive inside vecty.Markup(). This
 	// is optional.
@@ -73,9 +79,11 @@ type Column struct {
 	CSS gs.CSSRule
 
 	// This component will be rendered as children of the column's <div>
-	// BUG(gernest): It is imposible to re render this component, vecty will
-	// complain that we stored a reference to a rendered component.
-	Children vecty.MarkupOrChild
+	//
+	// This function will be called whenever this component is rendered. We don't
+	// want to store the child components so that we can avoid vecty complains that
+	// we stashed component address..
+	Children func() vecty.MarkupOrChild
 
 	// Media queries
 	XS  *ColOptions // <576px
@@ -105,7 +113,14 @@ func (c *Column) Render() vecty.ComponentOrHTML {
 		}
 	}
 	classes := vecty.ClassMap(c.sheet.CLasses.Classes())
-	return elem.Div(vecty.Markup(classes, c.Style), c.Children)
+	return elem.Div(vecty.Markup(classes, c.Style), c.getChildren())
+}
+
+func (c *Column) getChildren() vecty.MarkupOrChild {
+	if c.Children != nil {
+		return c.Children()
+	}
+	return nil
 }
 
 func (c *Column) style() gs.CSSRule {
@@ -147,7 +162,17 @@ func (c *Column) style() gs.CSSRule {
 			Opts: c.XXL,
 		})
 	}
-	return grid.Column(&c.ColOptions, media...)
+	return grid.Column(c.options(), media...)
+}
+
+func (c *Column) options() *ColOptions {
+	return &ColOptions{
+		Span:   c.Span,
+		Order:  c.Order,
+		Offset: c.Offset,
+		Push:   c.Push,
+		Pull:   c.Pull,
+	}
 }
 
 func join(s ...string) string {

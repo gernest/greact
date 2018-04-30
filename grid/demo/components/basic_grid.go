@@ -1,6 +1,7 @@
 package components
 
 import (
+	"github.com/gernest/gs"
 	"github.com/gernest/vected/grid"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
@@ -50,5 +51,19 @@ func (BasicGrid) Render() vecty.ComponentOrHTML {
 				}
 			},
 		},
+	)
+}
+
+func styleBasic() gs.CSSRule {
+	return gs.S(".BasicStyle",
+		gs.P("color", "#fff"),
+		gs.P("background", "#00a0e9"),
+		gs.P("text-align", "center"),
+		gs.P("padding", "30px 0"),
+		gs.P("font-size", "18px"),
+		gs.P("border", "none"),
+		gs.P("margin-top", "8px"),
+		gs.P("margin-bottom", "8px"),
+		gs.P("height", "15px"),
 	)
 }

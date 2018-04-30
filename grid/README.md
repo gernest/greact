@@ -8,6 +8,7 @@ title: Grid
 24 Grids System。
 
 ## Design concept
+
 ![](media/grid1.png)
 In most business situations, Ant Design needs to solve a lot of information
 storage problems within the design area, so based on 12 Grids System, we

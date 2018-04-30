@@ -10,21 +10,37 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
+// FlexStyle is flexbox layout justification
 type FlexStyle = grid.FlexStyle
 
 const (
+	// Start sets justify-content:flex-start
 	Start FlexStyle = iota
+
+	// End sets justify-content:flex-end
 	End
+
+	// Center sets justify-content:center
 	Center
+
+	// SpaceAround sets justify-content:space-around
 	SpaceAround
+
+	// SpaceBetween sets justify-content:space-between
 	SpaceBetween
 )
 
+// FlexAlign is flexbox layout  alignment
 type FlexAlign = grid.FlexAlign
 
 const (
+	// Top sets align-items: lex-start
 	Top FlexAlign = iota
+
+	// Middle sets align-items: center
 	Middle
+
+	// Bottom sets align-items: lex-end
 	Bottom
 )
 
@@ -70,6 +86,11 @@ type Row struct {
 	sheet *gs.Sheet
 }
 
+// Render implements vecty.Component interface.
+//
+// If Gutter >0 margins are computed based on the gutter size and styles applied
+// directly on the row's div. In case childerns are of type *Column then the new
+// gutter size is applied before rendering of the children's.
 func (r *Row) Render() vecty.ComponentOrHTML {
 	if r.sheet == nil {
 		r.sheet = ui.NewSheet()
@@ -112,14 +133,16 @@ func format(v int64) string {
 	return strconv.FormatInt(v, 10)
 }
 
-func (c *Row) style() gs.CSSRule {
-	return grid.Row(c.Gutter, c.Flex, c.Justify, c.Align)
+func (r *Row) style() gs.CSSRule {
+	return grid.Row(r.Gutter, r.Flex, r.Justify, r.Align)
 }
 
+// Mount attaches component's stylesheets.
 func (r *Row) Mount() {
 	r.sheet.Attach()
 }
 
+// Unmount detach component's stylesheets
 func (r *Row) Unmount() {
 	r.sheet.Detach()
 }

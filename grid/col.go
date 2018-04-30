@@ -15,31 +15,31 @@ type Number = grid.Number
 // span,offset,pull or push.
 const (
 	// Empty means display: none
-	Empty Number = iota
-	G1
-	G2
-	G3
-	G4
-	G5
-	G6
-	G7
-	G8
-	G9
-	G10
-	G11
-	G12
-	G13
-	G14
-	G15
-	G16
-	G17
-	G18
-	G19
-	G20
-	G21
-	G22
-	G23
-	G24
+	Empty Number = iota //display: none
+	G1                  //span 1
+	G2                  //span 2
+	G3                  //span 3
+	G4                  //span 4
+	G5                  //span 5
+	G6                  //span 6
+	G7                  //span 7
+	G8                  //span 8
+	G9                  //span 9
+	G10                 //span 10
+	G11                 //span 11
+	G12                 //span 12
+	G13                 //span 13
+	G14                 //span 14
+	G15                 //span 15
+	G16                 //span 16
+	G17                 //span 17
+	G18                 //span 18
+	G19                 //span 19
+	G20                 //span 20
+	G21                 //span 21
+	G22                 //span 22
+	G23                 //span 123
+	G24                 //span 124
 )
 
 // ColOptions options for styling a grid Column

@@ -112,8 +112,16 @@ func (c *Column) Render() vecty.ComponentOrHTML {
 			c.sheet.AddRule(c.CSS)
 		}
 	}
+	ch := c.getChildren()
+	style := c.Style
+	if c.Gutter > 0 {
+		style = vecty.Markup(
+			vecty.Style("padding-left", format(c.Gutter/2)+"px"),
+			vecty.Style("padding-right", format(c.Gutter/2)+"px"),
+		)
+	}
 	classes := vecty.ClassMap(c.sheet.CLasses.Classes())
-	return elem.Div(vecty.Markup(classes, c.Style), c.getChildren())
+	return elem.Div(vecty.Markup(classes, style), ch)
 }
 
 func (c *Column) getChildren() vecty.MarkupOrChild {
@@ -172,6 +180,7 @@ func (c *Column) options() *ColOptions {
 		Offset: c.Offset,
 		Push:   c.Push,
 		Pull:   c.Pull,
+		Gutter: c.Gutter,
 	}
 }
 

@@ -6,7 +6,6 @@ import (
 	"github.com/gernest/vected/style/themes"
 
 	"github.com/gernest/gs"
-	"github.com/gernest/vected/style/mixins"
 )
 
 type Number int64
@@ -93,16 +92,7 @@ func (m MediaType) Screen() string {
 
 type ColOptions struct {
 	Span, Order, Offset, Push, Pull Number
-}
-
-func MakeRow(gutter int64) gs.CSSRule {
-	return gs.CSS(
-		gs.P("position", "relative"),
-		gs.P("margin-left", format(gutter/-2)),
-		gs.P("margin-right", format(gutter/-2)),
-		gs.P("height", "auto"),
-		mixins.ClearFix(),
-	)
+	Gutter                          int64
 }
 
 func format(v int64) string {
@@ -112,52 +102,79 @@ func formatFloat(v float64) string {
 	return strconv.FormatFloat(v, 'f', -1, 64)
 }
 
-func Row() gs.CSSRule {
+func Row(gutter int64) gs.CSSRule {
 	return gs.CSS(
 		gs.S(RowClass,
 			gs.P("display", "flex"),
 			gs.P("flex-flow", "row wrap"),
 			gs.S("&:before", gs.P("display", "flex")),
 			gs.S("&:after", gs.P("display", "flex")),
+			gs.S("&:after", gs.P("display", "flex")),
+			gs.P("margin-left", format(gutter/-2)+"px"),
+			gs.P("margin-right", format(gutter/-2)+"px"),
+			gs.P("box-sizing", "border-box"),
+			gs.P("height", "auto"),
 		),
 	)
 }
 
 func MakeColumn(index, gutter, numCols int64) gs.CSSRule {
+	display := gs.P("display", "block")
+	if index == 0 {
+		display = gs.P("display", "none")
+	}
 	return gs.CSS(
 		gs.S(ColClass,
 			gs.P("position", "relative"),
-			gs.P("display", "block"),
+			display,
 			gs.P("min-height", "1px"),
-			gs.P("padding-left", format(gutter/2)),
-			gs.P("padding-right", format(gutter/2)),
+			gs.P("box-sizing", "border-box"),
 			gs.P("float", "left"),
 			gs.P("flex", "0 0 auto"),
-			gs.P("box-sizing", "border-box"),
 			gs.P("width", precent(float64(index)/float64(numCols))),
 		),
 	)
 }
 
 func Push(index int64, numCols int64) gs.CSSRule {
+	if index == 0 {
+		return gs.S(PushClass,
+			gs.P("left", "auto"),
+		)
+	}
 	return gs.S(PushClass,
 		gs.P("left", precent(float64(index)/float64(numCols))),
 	)
 }
 
 func Pull(index int64, numCols int64) gs.CSSRule {
+	if index == 0 {
+		return gs.S(PushClass,
+			gs.P("right", "auto"),
+		)
+	}
 	return gs.S(PullClass,
 		gs.P("right", precent(float64(index)/float64(numCols))),
 	)
 }
 
 func Offset(index int64, numCols int64) gs.CSSRule {
+	if index == 0 {
+		return gs.S(PushClass,
+			gs.P("margin-left", "0"),
+		)
+	}
 	return gs.S(OffsetClass,
 		gs.P("margin-left", precent(float64(index)/float64(numCols))),
 	)
 }
 
 func Order(index int64) gs.CSSRule {
+	if index == 0 {
+		return gs.S(PushClass,
+			gs.P("order", "0"),
+		)
+	}
 	return gs.S(OrderClass,
 		gs.P("order", format(index)),
 	)
@@ -171,8 +188,7 @@ func Column(opts *ColOptions, mediaQuery ...MediaOption) gs.CSSRule {
 	var rules gs.RuleList
 	index := int64(opts.Span)
 	cols := themes.Default.GridColumns
-	rules = append(rules, MakeColumn(index, themes.Default.GridGutterWidth,
-		cols))
+	rules = append(rules, MakeColumn(index, opts.Gutter, cols))
 	if opts.Pull != 0 {
 		rules = append(rules, Pull(int64(opts.Pull), cols))
 	}

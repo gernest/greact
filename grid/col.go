@@ -8,10 +8,10 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
-// Number an alias for int64 used to represent a grid cell.
+// Number an alias for int64 used to represent a grid cell/spans.
 type Number = grid.Number
 
-// helper keys for the 24 grid cells.You can use the keyscof column
+// helper keys for the 24 grid cells.You can use the keys for column
 // span,offset,pull or push.
 const (
 	// Empty means display: none

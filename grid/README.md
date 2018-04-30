@@ -8,70 +8,32 @@ title: Grid
 24 Grids System。
 
 ## Design concept
+![](media/grid1.png)
+In most business situations, Ant Design needs to solve a lot of information
+storage problems within the design area, so based on 12 Grids System, we
+divided the design area into 24 aliquots.
 
-<div class="grid-demo">
-<div class="ant-row demo-row">
-  <div class="ant-col-24 demo-col demo-col-1">
-    100%
-  </div>
-</div>
-<div class="ant-row demo-row">
-  <div class="ant-col-6 demo-col demo-col-2">
-    25%
-  </div>
-  <div class="ant-col-6 demo-col demo-col-3">
-    25%
-  </div>
-  <div class="ant-col-6 demo-col demo-col-2">
-    25%
-  </div>
-  <div class="ant-col-6 demo-col demo-col-3">
-    25%
-  </div>
-</div>
-<div class="ant-row demo-row">
-  <div class="ant-col-8 demo-col demo-col-4">
-    33.33%
-  </div>
-  <div class="ant-col-8 demo-col demo-col-5">
-    33.33%
-  </div>
-  <div class="ant-col-8 demo-col demo-col-4">
-    33.33%
-  </div>
-</div>
-<div class="ant-row demo-row">
-  <div class="ant-col-12 demo-col demo-col-1">
-    50%
-  </div>
-  <div class="ant-col-12 demo-col demo-col-3">
-    50%
-  </div>
-</div>
-<div class="ant-row demo-row">
-  <div class="ant-col-16 demo-col demo-col-4">
-    66.66%
-  </div>
-  <div class="ant-col-8 demo-col demo-col-5">
-    33.33%
-  </div>
-</div>
-</div>
-
-In most business situations, Ant Design needs to solve a lot of information storage problems within the design area, so based on 12 Grids System, we divided the design area into 24 aliquots.
-
-We name the divided area 'box'. We suggest four boxes for horizontal arrangement at most, one at least. Boxes are proportional to the entire screen as shown in the picture above. To ensure a high level of visual comfort, we customize the typography inside of the box based on the box unit.
+We name the divided area 'box'. We suggest four boxes for horizontal
+arrangement at most, one at least. Boxes are proportional to the entire screen
+as shown in the picture above. To ensure a high level of visual comfort, we
+customize the typography inside of the box based on the box unit.
 
 ## Outline
 
 In the grid system, we define the frame outside the information area based on `row` and `column`, to ensure that every area can have stable arrangement.
 
+Rows are defined by the `Row` component and columns are defined by `Column`
+component. These components are standard vecty components which implements
+`vecty.Component` interface.
 Following is a brief look at how it works:
 
-- Establish a set of `column` in the horizontal space defined by `row` (abbreviated col)
-- Your content elements should be placed directly in the `col`, and only `col` should be placed directly in `row`
-- The column grid system is a value of 1-24 to represent its range spans. For example, three columns of equal width can be created by `.col-8` (`span=8`).
-- If the sum of `col` spans in a `row` are more than 24, then the overflowing `col` as a whole will start a new line arrangement.
+- Establish a set of `column` in the horizontal space defined by `row` that is `Column` component instance.
+- Your content elements should be placed directly in the `Column` component's
+ `Children` field. We use `func()vecty.MarkupOrChild` to avoid keeping instances
+ of children's when rendering , and only `Column` components should be placed
+ directly in `Row.Children`. For a list of Columns use `vecty.List`( You will see in the examples below).
+- The column grid system is a value of 1-24 to represent its range spans. For example, three columns of equal width can be created by `Span=8`.
+- If the sum of `Column` spans in a `Row` are more than 24, then the overflowing `Column` as a whole will start a new line arrangement.
 
 ## Flex layout
 
@@ -81,10 +43,6 @@ Flex layout uses a 24 grid layout to define the width of each "box", but does no
 
 ## API
 
-If the Ant Design grid layout component does not meet your needs, you can use the excellent layout components of the community:
-
-- [react-flexbox-grid](http://roylee0704.github.io/react-flexbox-grid/)
-- [react-blocks](https://github.com/whoisandy/react-blocks/)
 
 ### Row
 

@@ -647,31 +647,31 @@ var icons = map[string]string{
 }
 
 type Icon struct {
+	vecty.Core
 	Kind     Kind
 	Spin     bool
+	CSS      gs.CSSRule
 	Style    vecty.Applyer
 	Children vecty.MarkupOrChild
 	sheet    *gs.Sheet
 }
 
-func Init() {
-	ui.Global.AddRule(icon.FontFace())
-}
-
 func (i *Icon) Mount() {
-	ns := ui.Registry.NewSheet()
-	key := string(i.Kind)
-	class := "." + key
-	ns.AddRule(icon.Style(class, icons[key], i.Kind == Spin))
-	ns.Attach()
-	i.sheet = ns
+	i.sheet.Attach()
 }
 
 func (i *Icon) Render() vecty.ComponentOrHTML {
-	c := make(vecty.ClassMap)
-	if i.sheet != nil {
-		c = vecty.ClassMap(i.sheet.CLasses.Classes())
+	if i.sheet == nil {
+		i.sheet = ui.Registry.NewSheet()
+		key := string(i.Kind)
+		class := "." + key
+		println(icons[key])
+		i.sheet.AddRule(icon.Style(class, icons[key], i.Kind == Spin))
+		if i.CSS != nil {
+			i.sheet.AddRule(i.CSS)
+		}
 	}
+	c := vecty.ClassMap(i.sheet.CLasses.Classes())
 	return elem.Italic(
 		vecty.Markup(c, i.Style),
 		i.Children,

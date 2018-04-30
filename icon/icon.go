@@ -646,16 +646,34 @@ var icons = map[string]string{
 	"yuque":                `"\e70c"`,
 }
 
+// Icon is ant design icon component which implements vecty.Component interface.
+// The icons rendered are not styled so it is up to the user to add styles.
+//
+// Remember to add
+//
+// @font-face {
+// 	font-family: 'anticon';
+// 	src: url('https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i.eot');
+// 	/* IE9*/
+// 	src: url('https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i.woff') format('woff'), /* chrome、firefox、opera、Safari, Android, iOS 4.2+*/
+// 	url('https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i.ttf') format('truetype'), /* iOS 4.1- */
+// 	url('https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i.svg#iconfont') format('svg');
+// }
+//
+// On the html page if you want the icons to be visible.
+// TODO: figure out how to add that icon fontface using sheet.AddRules.
 type Icon struct {
 	vecty.Core
+
+	// Kind is a string representing the name of the icon.
 	Kind     Kind
-	Spin     bool
 	CSS      gs.CSSRule
 	Style    vecty.Applyer
-	Children vecty.MarkupOrChild
+	Children func() vecty.MarkupOrChild
 	sheet    *gs.Sheet
 }
 
+// Mount attches component stylest
 func (i *Icon) Mount() {
 	i.sheet.Attach()
 }
@@ -674,10 +692,18 @@ func (i *Icon) Render() vecty.ComponentOrHTML {
 	c := vecty.ClassMap(i.sheet.CLasses.Classes())
 	return elem.Italic(
 		vecty.Markup(c, i.Style),
-		i.Children,
+		i.getChildren(),
 	)
 }
 
+func (i *Icon) getChildren() vecty.MarkupOrChild {
+	if i.Children != nil {
+		return i.Children()
+	}
+	return nil
+}
+
+// Unmount detach component stylest
 func (i *Icon) Unmount() {
 	i.sheet.Detach()
 }

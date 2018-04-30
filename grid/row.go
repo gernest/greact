@@ -19,6 +19,7 @@ type Row struct {
 	CSS      gs.CSSRule
 	Children func() vecty.MarkupOrChild
 	Gutter   int64
+	Flex     bool
 	sheet    *gs.Sheet
 }
 
@@ -69,7 +70,7 @@ func format(v int64) string {
 }
 
 func (c *Row) style() gs.CSSRule {
-	return grid.Row(c.Gutter)
+	return grid.Row(c.Gutter, c.Flex)
 }
 
 func (r *Row) Mount() {

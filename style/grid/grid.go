@@ -78,12 +78,13 @@ var (
 )
 
 const (
-	RowClass    = ".Row"
-	ColClass    = ".Col"
-	PushClass   = ".Push"
-	PullClass   = ".Pull"
-	OffsetClass = ".Offset"
-	OrderClass  = ".Order"
+	RowClass     = ".Row"
+	RowFLexClass = ".RowFlex"
+	ColClass     = ".Col"
+	PushClass    = ".Push"
+	PullClass    = ".Pull"
+	OffsetClass  = ".Offset"
+	OrderClass   = ".Order"
 )
 
 func (m MediaType) Screen() string {
@@ -102,20 +103,58 @@ func formatFloat(v float64) string {
 	return strconv.FormatFloat(v, 'f', -1, 64)
 }
 
-func Row(gutter int64) gs.CSSRule {
+func Row(gutter int64, flex bool) gs.CSSRule {
+	if flex {
+		return gs.CSS(
+			gs.S(RowFLexClass,
+				gs.P("display", "flex"),
+				gs.P("flex-flow", "row wrap"),
+				gs.S("&:before", gs.P("display", "flex")),
+				gs.S("&:after", gs.P("display", "flex")),
+				gs.S("&:after", gs.P("display", "flex")),
+			),
+		)
+	}
 	return gs.CSS(
 		gs.S(RowClass,
-			gs.P("display", "flex"),
-			gs.P("flex-flow", "row wrap"),
-			gs.S("&:before", gs.P("display", "flex")),
-			gs.S("&:after", gs.P("display", "flex")),
-			gs.S("&:after", gs.P("display", "flex")),
 			gs.P("margin-left", format(gutter/-2)+"px"),
 			gs.P("margin-right", format(gutter/-2)+"px"),
 			gs.P("box-sizing", "border-box"),
+			gs.P("display", "block"),
 			gs.P("height", "auto"),
+			gs.P("zoom", "1"),
+			gs.S("&:before",
+				gs.P("content", ""),
+				gs.P("display", "table"),
+			),
+			gs.S("&:after",
+				gs.P("content", ""),
+				gs.P("display", "table"),
+				gs.P("clear", "both"),
+				gs.P("visibility", "hidden"),
+				gs.P("font-size", "0"),
+				gs.P("height", "0"),
+			)),
+	)
+}
+
+func clearFix() gs.CSSRule {
+	return gs.CSS(
+		gs.P("zoom", "1"),
+		gs.S("&:before",
+			gs.P("content", ""),
+			gs.P("display", "table"),
+		),
+		gs.S("&:after",
+			gs.P("content", ""),
+			gs.P("display", "table"),
+			gs.P("clear", "both"),
+			gs.P("visibility", "hidden"),
+			gs.P("font-size", "0"),
+			gs.P("height", "0"),
 		),
 	)
+
 }
 
 func MakeColumn(index, gutter, numCols int64) gs.CSSRule {

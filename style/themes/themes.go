@@ -31,6 +31,11 @@ var Default = &Theme{
 
 	ScreenXXL:    "1600px",
 	ScreenXXLMin: "1600px",
+
+	BorderColorBase:  "hsv(0, 0, 85%)", // base border outline a component
+	BorderColorSplit: "hsv(0, 0, 91%",  // split border inside a component
+	BorderWithBase:   "1px",            // width of the border for a component
+	BorderStyleBase:  "solid",          // style of a components border
 }
 
 type Theme struct {
@@ -55,4 +60,9 @@ type Theme struct {
 	ScreenXLMin     string
 	ScreenXXL       string
 	ScreenXXLMin    string
+
+	BorderColorBase  string
+	BorderColorSplit string
+	BorderWithBase   string
+	BorderStyleBase  string
 }

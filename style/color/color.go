@@ -1,10 +1,11 @@
-package ultimate
+package color
 
 import (
 	"encoding/hex"
-	"errors"
+	"fmt"
 	"math"
 	"strconv"
+	"strings"
 )
 
 var commonColors = map[string]string{
@@ -165,37 +166,23 @@ type Color struct {
 }
 
 func New(rgb interface{}, opts ...interface{}) *Color {
-	c := &Color{Alpha: 1}
 	switch e := rgb.(type) {
 	case []uint8:
+		c := &Color{Alpha: 1}
 		c.RGB = e
+		if len(opts) > 0 {
+			a := opts[0]
+			if al, ok := a.(float64); ok {
+				c.Alpha = al
+			}
+		}
+		return c
 	case string:
-		s := e
-		if s[0] == '#' {
-			s = s[1:]
-		}
-		hx := ""
-		switch len(s) {
-		case 3:
-			x, y, z := string(s[0]), string(s[1]), string(s[2])
-			hx = x + x + y + y + z + z
-		case 6:
-			hx = s
-		default:
-			panic(errors.New(e + " is unknown hex value"))
-		}
-		x, y, z := parseHex(hx)
-		c.RGB[0], c.RGB[1], c.RGB[2] = x, y, z
+		println(e)
+		return matchColor(e).toColor()
 	default:
-		panic(errors.New("unsupported type"))
+		panic(fmt.Errorf("%v unsupported type", e))
 	}
-	if len(opts) > 0 {
-		a := opts[0]
-		if al, ok := a.(float64); ok {
-			c.Alpha = al
-		}
-	}
-	return c
 }
 
 func parseHex(src string) (uint8, uint8, uint8) {
@@ -329,7 +316,7 @@ func RGB(r, g, b uint8) *Color {
 }
 
 func RGBA(r, g, b uint8, a float64) *Color {
-	return New([3]uint8{r, g, b}, a)
+	return New([]uint8{r, g, b}, a)
 }
 
 func HSL(h, s, l float64) *Color {
@@ -579,4 +566,84 @@ func Shade(c *Color, amount float64) *Color {
 	return Mix(
 		RGB(0, 0, 0), c, amount,
 	)
+}
+
+func PrintColor(c *Color, format string) string {
+	switch format {
+	case "hex":
+		return c.Hex()
+	case "rgb":
+		if c.Alpha != 1 {
+			return printRGBA(c.RGB[0], c.RGB[1], c.RGB[2], c.Alpha)
+		}
+		return printRGB(c.RGB[0], c.RGB[1], c.RGB[2])
+	case "hsl":
+		h, s, l, a := c.HSLA()
+		if a != 1 {
+			return printHSLA(h, s, l, a)
+		}
+		return printHSL(h, s, l)
+	case "hsv":
+		h, s, v, a := c.HSVA()
+		if a != 1 {
+			return printHSVA(h, s, v, a)
+		}
+		return printHSV(h, s, v)
+	default:
+		return c.Hex()
+	}
+}
+
+func printRGB(r, g, b uint8) string {
+	return join("rgb", ",",
+		formatUint(r), formatUint(g), formatUint(b),
+	)
+}
+
+func printRGBA(r, g, b uint8, a float64) string {
+	return join("rgba", ",",
+		formatUint(r), formatUint(g), formatUint(b), formatFloat(a),
+	)
+}
+
+func formatUint(v uint8) string {
+	return strconv.FormatInt(int64(v), 10)
+}
+func formatFloat(v float64) string {
+	v = math.Round(v)
+	return strconv.FormatFloat(v, 'f', -1, 64)
+}
+
+func join(prefix, sep string, values ...string) string {
+	prefix += "("
+	prefix += strings.Join(values, sep)
+	prefix += ")"
+	return prefix
+}
+
+func printHSL(h, s, l float64) string {
+	return join("hsl", ",",
+		formatInt(int64(h)), formatFloat(s*100)+"%", formatFloat(l*100)+"%",
+	)
+}
+func printHSLA(h, s, l, a float64) string {
+	return join("hsl", ",",
+		formatInt(int64(h)), formatFloat(s*100)+"%", formatFloat(l*100)+"%",
+		formatFloat(a),
+	)
+}
+func printHSV(h, s, v float64) string {
+	return join("hsl", ",",
+		formatInt(int64(h)), formatFloat(s*100)+"%", formatFloat(v*100)+"%",
+	)
+}
+func printHSVA(h, s, v, a float64) string {
+	return join("hsl", ",",
+		formatInt(int64(h)), formatFloat(s*100)+"%", formatFloat(v*100)+"%",
+		formatFloat(a),
+	)
+}
+
+func formatInt(v int64) string {
+	return strconv.FormatInt(v, 10)
 }

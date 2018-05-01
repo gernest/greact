@@ -420,13 +420,28 @@ func Saturate(c *Color, amount float64, method string) *Color {
 		return nil
 	}
 	h, s, l, a := c.HSLA()
+	s = saturate(s, amount, method)
+	return HSLA(h, s, l, a)
+}
+
+func saturate(s float64, amount float64, method string) float64 {
 	if method == "relative" {
 		s += s * amount / 100
 	} else {
 		s += amount / 100
 	}
 	s = clamp0(s)
-	return HSLA(h, s, l, a)
+	return s
+}
+
+func desaturate(s float64, amount float64, method string) float64 {
+	if method == "relative" {
+		s -= s * amount / 100
+	} else {
+		s -= amount / 100
+	}
+	s = clamp0(s)
+	return s
 }
 
 func Desaturare(c *Color, amount float64, method string) *Color {
@@ -434,34 +449,39 @@ func Desaturare(c *Color, amount float64, method string) *Color {
 		return nil
 	}
 	h, s, l, a := c.HSLA()
-	if method == "relative" {
-		s -= s * amount / 100
-	} else {
-		s -= amount / 100
-	}
-	s = clamp0(s)
+	s = desaturate(s, amount, method)
 	return HSLA(h, s, l, a)
 }
 
 func Lighten(c *Color, amount float64, method string) *Color {
 	h, s, l, a := c.HSLA()
+	l = lighten(l, amount, method)
+	return HSLA(h, s, l, a)
+}
+
+func lighten(l float64, amount float64, method string) float64 {
 	if method == "relative" {
 		l += l * amount / 100
 	} else {
 		l += amount / 100
 	}
 	l = clamp0(l)
-	return HSLA(h, s, l, a)
+	return l
 }
 
-func Darken(c *Color, amount float64, method string) *Color {
-	h, s, l, a := c.HSLA()
+func darken(l float64, amount float64, method string) float64 {
 	if method == "relative" {
 		l -= l * amount / 100
 	} else {
 		l -= amount / 100
 	}
 	l = clamp0(l)
+	return l
+}
+
+func Darken(c *Color, amount float64, method string) *Color {
+	h, s, l, a := c.HSLA()
+	l = darken(l, amount, method)
 	return HSLA(h, s, l, a)
 }
 

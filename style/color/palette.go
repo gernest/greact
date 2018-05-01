@@ -1,5 +1,7 @@
 package color
 
+import "math"
+
 var (
 	blue     = New("#1890ff")
 	purple   = New("#722ed1")
@@ -52,5 +54,76 @@ func NewPaletter() *Palette {
 
 func Generate(base *Color) [10]*Color {
 	var c [10]*Color
+	for i := 0; i < 10; i++ {
+		c[i] = generate(base, i+1)
+	}
 	return c
+}
+
+const (
+	hueStep         = 2
+	saturationStep  = 16
+	saturationStep2 = 5
+	brightnessStep1 = 5
+	brightnessStep2 = 15
+	lightColorCount = 5
+	darkColorCount  = 4
+)
+
+func generate(base *Color, index int) *Color {
+	isLight := index < 6
+	h, s, v, _ := base.HSVA()
+	var i int
+	if isLight {
+		i = lightColorCount + 1 - index
+	} else {
+		i = index - lightColorCount - 1
+	}
+
+	// calculate hue
+	var hue float64
+	if h >= 60 && h <= 248 {
+		if isLight {
+			hue = h - float64(hueStep*i)
+		} else {
+			hue = h + float64(hueStep*i)
+		}
+	}
+	if hue < 0 {
+		hue += 360
+	} else if hue > 360 {
+		hue -= 360
+	}
+	hue = math.Round(hue)
+
+	// calculate saturation
+	var sat float64
+	if isLight {
+		sat = s - float64(saturationStep*i)/100
+	} else if i == darkColorCount {
+		sat = s + float64(saturationStep)/100
+	} else {
+		sat = s + float64(saturationStep*i)/100
+	}
+	if sat > 100 {
+		sat = 10
+	}
+	if isLight && i == lightColorCount && sat > 10 {
+		sat = 10
+	}
+	if sat < 6 {
+		sat = 6
+	}
+	sat = math.Round(sat)
+
+	// calculate value
+	var value float64
+	if isLight {
+		value = v + float64(brightnessStep1*i)/100
+	} else {
+		value = v - float64(brightnessStep1*i)/100
+	}
+	value = math.Round(value)
+
+	return HSV(hue, sat, value)
 }

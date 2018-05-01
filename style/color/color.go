@@ -276,6 +276,10 @@ func (c *Color) HSLA() (h, s, l, a float64) {
 	return
 }
 
+func (c *Color) ToHSV() string {
+	return PrintColor(c, "hsv")
+}
+
 func (c *Color) HSVA() (h, s, v, a float64) {
 	f := c.toFloats()
 	r, g, b := f[0]/255, f[1]/255, f[2]/255

@@ -1,7 +1,6 @@
 package color
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -82,14 +81,19 @@ func generate(base *Color, index int) *Color {
 	} else {
 		i = index - lightColorCount - 1
 	}
-
 	// calculate hue
 	var hue float64
-	if h >= 60 && h <= 248 {
+	if h >= 60 && h <= 240 {
 		if isLight {
-			hue = h - float64(hueStep*i)
+			hue = h - hueStep*float64(i)
 		} else {
-			hue = h + float64(hueStep*i)
+			hue = h + hueStep*float64(i)
+		}
+	} else {
+		if isLight {
+			hue = h + hueStep*float64(i)
+		} else {
+			hue = h - hueStep*float64(i)
 		}
 	}
 	if hue < 0 {
@@ -98,16 +102,14 @@ func generate(base *Color, index int) *Color {
 		hue -= 360
 	}
 	hue = math.Round(hue)
-
-	fmt.Printf("%s: hue %v == %v index %v\n", base.Hex(), h, hue, index)
 	// calculate saturation
 	var sat float64
 	if isLight {
-		sat = s*100 - float64(saturationStep*i)
+		sat = math.Round(s*100) - float64(saturationStep*i)
 	} else if i == darkColorCount {
-		sat = s*100 + float64(saturationStep)
+		sat = math.Round(s*100) + float64(saturationStep)
 	} else {
-		sat = s * +float64(saturationStep*i)
+		sat = math.Round(s*100) + float64(saturationStep*i)
 	}
 	if sat > 100 {
 		sat = 10
@@ -118,17 +120,16 @@ func generate(base *Color, index int) *Color {
 	if sat < 6 {
 		sat = 6
 	}
-	sat = math.Round(sat)
-	fmt.Printf("%s: sat %v == %v index %v\n", base.Hex(), s, sat, index)
 
 	// calculate value
 	var value float64
 	if isLight {
-		value = v + float64(brightnessStep1*i)/100
+		value = math.Round(v*100) + float64(brightnessStep1*i)
 	} else {
-		value = v - float64(brightnessStep1*i)/100
+		value = math.Round(v*100) - float64(brightnessStep2*i)
 	}
-	value = math.Round(value)
-	fmt.Printf("%s: value %v == %v index %v\n", base.Hex(), v, value, index)
-	return HSV(hue, sat/100, value)
+	if value > 100 {
+		value = 100
+	}
+	return HSV(hue, sat/100, value/100)
 }

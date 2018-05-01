@@ -8,7 +8,13 @@ import (
 )
 
 func TestPalette(t *testing.T) {
-	tpl, err := template.ParseFiles("index.html")
+	tpl, err := template.New("t").Funcs(
+		template.FuncMap{
+			"hsv": func(v *Color) template.HTML {
+				return template.HTML(PrintColor(v, "hsv"))
+			},
+		},
+	).ParseFiles("index.html")
 	if err != nil {
 		t.Fatal(err)
 	}

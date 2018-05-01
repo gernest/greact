@@ -683,7 +683,6 @@ func (i *Icon) Render() vecty.ComponentOrHTML {
 		i.sheet = ui.Registry.NewSheet()
 		key := string(i.Kind)
 		class := "." + key
-		println(icons[key])
 		i.sheet.AddRule(icon.Style(class, icons[key], i.Kind == Spin))
 		if i.CSS != nil {
 			i.sheet.AddRule(i.CSS)

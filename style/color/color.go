@@ -2,7 +2,7 @@ package color
 
 import (
 	"encoding/hex"
-	"fmt"
+	"errors"
 	"math"
 	"strconv"
 	"strings"
@@ -178,10 +178,9 @@ func New(rgb interface{}, opts ...interface{}) *Color {
 		}
 		return c
 	case string:
-		println(e)
 		return matchColor(e).toColor()
 	default:
-		panic(fmt.Errorf("%v unsupported type", e))
+		panic(errors.New("unsupported type"))
 	}
 }
 
@@ -324,11 +323,9 @@ func HSL(h, s, l float64) *Color {
 }
 
 func HSLA(h, s, l, a float64) *Color {
-	h = float64((int64(h) % 360) / 360)
 	s = clamp0(s)
 	l = clamp0(l)
 	a = clamp0(a)
-
 	var m2 float64
 	if l <= 0.5 {
 		m2 = l * (s + 1)
@@ -336,9 +333,14 @@ func HSLA(h, s, l, a float64) *Color {
 		m2 = l + s - l*s
 	}
 	m1 := l*2 - m2
-	r := hue(h+1/3, m1, m2) * 255
+	h = math.Mod(h, 360) / 360
+	x := 0.3333333333333333
+	r := hue(h+x, m1, m2) * 255
 	g := hue(h, m1, m2) * 255
-	b := hue(h-1/3, m1, m2) * 255
+	b := hue(h-x, m1, m2) * 255
+	r = math.Round(r)
+	g = math.Round(g)
+	b = math.Round(b)
 	return RGBA(
 		uint8(r), uint8(g), uint8(b), a,
 	)
@@ -357,13 +359,15 @@ func hue(h, m1, m2 float64) float64 {
 		}
 	}
 	if h*6 < 1 {
-		return m2
+		return m1 + (m2-m1)*h*6
 	}
 	if h*2 < 1 {
 		return m2
 	}
 	if h*3 < 2 {
-		return m1 + (m2-m1)*(2/3-h)*6
+		d := 0.6666666666666666
+		vee := m1 + (m2-m1)*(d-h)*6
+		return vee
 	}
 	return m1
 }
@@ -373,9 +377,9 @@ func HSV(h, s, v float64) *Color {
 }
 
 func HSVA(h, s, v, a float64) *Color {
-	h = float64((int64(h) % 360) / 360)
-	i := (int(math.Floor(h)) / 60) % 6
-	f := (h / 60) - float64(i)
+	h = (math.Mod(h, 360) / 360) * 360
+	i := math.Floor(math.Mod(h/60, 6))
+	f := (h / 60) - i
 	vs := []float64{
 		v, v * (1 - s), v * (1 - f*s), v * (1 - (1-f)*s),
 	}
@@ -387,9 +391,13 @@ func HSVA(h, s, v, a float64) *Color {
 		[]int{3, 1, 0},
 		[]int{0, 1, 2},
 	}
-	r := vs[perm[i][0]] * 255
-	g := vs[perm[i][1]] * 255
-	b := vs[perm[i][2]] * 255
+	n := int(i)
+	r := vs[perm[n][0]] * 255
+	r = math.Round(r)
+	g := vs[perm[n][1]] * 255
+	g = math.Round(g)
+	b := vs[perm[n][2]] * 255
+	b = math.Round(b)
 	return RGBA(uint8(r), uint8(g), uint8(b), a)
 }
 
@@ -653,12 +661,12 @@ func printHSLA(h, s, l, a float64) string {
 	)
 }
 func printHSV(h, s, v float64) string {
-	return join("hsl", ",",
+	return join("hsv", ",",
 		formatInt(int64(h)), formatFloat(s*100)+"%", formatFloat(v*100)+"%",
 	)
 }
 func printHSVA(h, s, v, a float64) string {
-	return join("hsl", ",",
+	return join("hsv", ",",
 		formatInt(int64(h)), formatFloat(s*100)+"%", formatFloat(v*100)+"%",
 		formatFloat(a),
 	)

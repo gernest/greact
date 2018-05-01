@@ -1,6 +1,9 @@
 package color
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 var (
 	blue     = New("#1890ff")
@@ -96,14 +99,15 @@ func generate(base *Color, index int) *Color {
 	}
 	hue = math.Round(hue)
 
+	fmt.Printf("%s: hue %v == %v index %v\n", base.Hex(), h, hue, index)
 	// calculate saturation
 	var sat float64
 	if isLight {
-		sat = s - float64(saturationStep*i)/100
+		sat = s*100 - float64(saturationStep*i)
 	} else if i == darkColorCount {
-		sat = s + float64(saturationStep)/100
+		sat = s*100 + float64(saturationStep)
 	} else {
-		sat = s + float64(saturationStep*i)/100
+		sat = s * +float64(saturationStep*i)
 	}
 	if sat > 100 {
 		sat = 10
@@ -115,6 +119,7 @@ func generate(base *Color, index int) *Color {
 		sat = 6
 	}
 	sat = math.Round(sat)
+	fmt.Printf("%s: sat %v == %v index %v\n", base.Hex(), s, sat, index)
 
 	// calculate value
 	var value float64
@@ -124,6 +129,6 @@ func generate(base *Color, index int) *Color {
 		value = v - float64(brightnessStep1*i)/100
 	}
 	value = math.Round(value)
-
-	return HSV(hue, sat, value)
+	fmt.Printf("%s: value %v == %v index %v\n", base.Hex(), v, value, index)
+	return HSV(hue, sat/100, value)
 }

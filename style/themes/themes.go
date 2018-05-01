@@ -1,14 +1,14 @@
 package themes
 
 import (
-	"github.com/gernest/vected/style/tinycolor"
+	"github.com/gernest/vected/style/color"
 )
 
 var Default = &Theme{
 	FontFamily:      `"Monospaced Number", @font-family-no-number`,
 	FontSizeBase:    "14px",
 	LineHeightBase:  "1.5",
-	TextColor:       tinycolor.Fade("#000", 65),
+	TextColor:       color.Fade(color.New("#000"), 65),
 	IconURL:         `"https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i"`,
 	IconFontPrefix:  "anticon",
 	GridColumns:     24,
@@ -42,7 +42,7 @@ type Theme struct {
 	FontFamily     string
 	FontSizeBase   string
 	LineHeightBase string
-	TextColor      *tinycolor.Color
+	TextColor      *color.Color
 
 	IconURL         string
 	IconFontPrefix  string

@@ -53,15 +53,16 @@ type Divider struct {
 	CSS         gs.CSSRule
 	Children    func() vecty.MarkupOrChild
 	sheet       *gs.Sheet
+	classMap    gs.ClassMap
 }
 
 func (d *Divider) Render() vecty.ComponentOrHTML {
 	if d.sheet == nil {
 		d.sheet = ui.NewSheet()
-		d.sheet.AddRule(divider.Style())
+		d.classMap = d.sheet.AddRule(divider.Style())
 	}
 	children := d.getChildren()
-	cn := d.sheet.CLasses[divider.BaseClass]
+	cn := d.classMap[divider.BaseClass]
 	cn = cn[1:]
 	cls := vecty.ClassMap{
 		cn: true,

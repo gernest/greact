@@ -111,7 +111,7 @@ func TestPalette2(t *testing.T) {
 			for _, hx := range v.hues {
 				nc := generate(o, hx.index)
 				if nc.Hex() != hx.hex {
-					t.Errorf("expected %s got %s", hx.hex, nc.Hex())
+					t.Errorf("%v:%v expected %s got %s", hx.index, hx.isLight, hx.hex, nc.Hex())
 				}
 			}
 		})
@@ -120,8 +120,8 @@ func TestPalette2(t *testing.T) {
 
 func TestGenerate(t *testing.T) {
 	base := New("#f5222d")
-	c := generate(base, 2)
-	expect := New("#ffccc7")
+	c := generate(base, 9)
+	expect := New("#820014")
 	if c.Hex() != expect.Hex() {
 		t.Errorf("expected %v got %v", expect.Hex(), c.Hex())
 	}

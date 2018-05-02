@@ -109,10 +109,10 @@ func generate(base *Color, index int) *Color {
 	} else if i == darkColorCount {
 		sat = math.Round(s*100) + float64(saturationStep)
 	} else {
-		sat = math.Round(s*100) + float64(saturationStep*i)
+		sat = math.Round(s*100) + float64(saturationStep2*i)
 	}
 	if sat > 100 {
-		sat = 10
+		sat = 100
 	}
 	if isLight && i == lightColorCount && sat > 10 {
 		sat = 10
@@ -120,7 +120,6 @@ func generate(base *Color, index int) *Color {
 	if sat < 6 {
 		sat = 6
 	}
-
 	// calculate value
 	var value float64
 	if isLight {

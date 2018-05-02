@@ -31,7 +31,7 @@ func TestPalette(t *testing.T) {
 	}
 
 	var o bytes.Buffer
-	err = tpl.ExecuteTemplate(&o, "index.html", NewPaletter())
+	err = tpl.ExecuteTemplate(&o, "index.html", NewPalette())
 	if err != nil {
 		t.Fatal(err)
 	}

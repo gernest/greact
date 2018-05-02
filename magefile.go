@@ -15,3 +15,7 @@ func Grid() error {
 func Icon() error {
 	return sh.RunV("gopherjs", "build", "-o", "icon/demo/main.js", pkg+"/icon/demo/")
 }
+
+func Divider() error {
+	return sh.RunV("gopherjs", "build", "-o", "divider/demo/main.js", pkg+"/divider/demo/")
+}

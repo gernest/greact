@@ -5,19 +5,19 @@ import (
 )
 
 var (
-	blue     = New("#1890ff")
-	purple   = New("#722ed1")
-	cyan     = New("#13c2c2")
-	green    = New("#52c41a")
-	magenta  = New("#eb2f96")
-	pink     = New("#eb2f96")
-	red      = New("#f5222d")
-	orange   = New("#fa8c16")
-	yellow   = New("#fadb14")
-	volcano  = New("#fa541c")
-	geekblue = New("#2f54eb")
-	lime     = New("#a0d911")
-	gold     = New("#faad14")
+	Blue     = New("#1890ff")
+	Purple   = New("#722ed1")
+	Cyan     = New("#13c2c2")
+	Green    = New("#52c41a")
+	Magenta  = New("#eb2f96")
+	Pink     = New("#eb2f96")
+	Red      = New("#f5222d")
+	Orange   = New("#fa8c16")
+	Yellow   = New("#fadb14")
+	Volcano  = New("#fa541c")
+	Geekblue = New("#2f54eb")
+	Lime     = New("#a0d911")
+	Gold     = New("#faad14")
 )
 
 type Palette struct {
@@ -36,21 +36,21 @@ type Palette struct {
 	Gold     [10]*Color
 }
 
-func NewPaletter() *Palette {
+func NewPalette() *Palette {
 	return &Palette{
-		Blue:     Generate(blue),
-		Purple:   Generate(purple),
-		Cyan:     Generate(cyan),
-		Green:    Generate(green),
-		Magenta:  Generate(magenta),
-		Pink:     Generate(pink),
-		Red:      Generate(red),
-		Orange:   Generate(orange),
-		Yellow:   Generate(yellow),
-		Volcano:  Generate(volcano),
-		GeekBlue: Generate(geekblue),
-		Lime:     Generate(lime),
-		Gold:     Generate(gold),
+		Blue:     Generate(Blue),
+		Purple:   Generate(Purple),
+		Cyan:     Generate(Cyan),
+		Green:    Generate(Green),
+		Magenta:  Generate(Magenta),
+		Pink:     Generate(Pink),
+		Red:      Generate(Red),
+		Orange:   Generate(Orange),
+		Yellow:   Generate(Yellow),
+		Volcano:  Generate(Volcano),
+		GeekBlue: Generate(Geekblue),
+		Lime:     Generate(Lime),
+		Gold:     Generate(Gold),
 	}
 }
 

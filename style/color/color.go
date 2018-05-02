@@ -3,6 +3,7 @@ package color
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -217,6 +218,9 @@ func (c *Color) toFloats() []float64 {
 
 func (c *Color) Hex() string {
 	return toHex(c.toFloats()...)
+}
+func (c *Color) String() string {
+	return PrintColor(c, "rgb")
 }
 
 func (c *Color) Luma() float64 {
@@ -522,7 +526,7 @@ func FadeOut(c *Color, amount float64, method string) *Color {
 func Fade(c *Color, amount float64) *Color {
 	h, s, l, a := c.HSLA()
 	a = amount / 100
-	a = clamp0(a)
+	fmt.Println(a, clamp0(a))
 	return HSLA(h, s, l, a)
 }
 
@@ -633,8 +637,9 @@ func printRGB(r, g, b uint8) string {
 }
 
 func printRGBA(r, g, b uint8, a float64) string {
+	fmt.Println("AA", a)
 	return join("rgba", ",",
-		formatUint(r), formatUint(g), formatUint(b), formatFloat(a),
+		formatUint(r), formatUint(g), formatUint(b), strconv.FormatFloat(a, 'f', -1, 64),
 	)
 }
 

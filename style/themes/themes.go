@@ -43,6 +43,47 @@ type Theme struct {
 	BorderRadiusBase string
 	BorderRadiusSM   string
 
+	BackgroundColorLight *color.Color
+	BackgroundColorBase  *color.Color
+
+	DisabledColor     *color.Color
+	DisabledBG        *color.Color
+	DisabledColorDark *color.Color
+
+	BtnFontWeight       string
+	BtnBorderRadiusBase string
+	BtnBorderRadiusSM   string
+
+	BtnPrimaryColor  *color.Color
+	BtnPrimaryBG     *color.Color
+	BtnDefaultColor  *color.Color
+	BtnDefaultBG     *color.Color
+	BtnDefaultBorder *color.Color
+
+	BtnDangerColor  *color.Color
+	BtnDangerBG     *color.Color
+	BtnDangerBorder *color.Color
+
+	BtnDisabledColor  *color.Color
+	BtnDisabledBG     *color.Color
+	BtnDisabledBorder *color.Color
+
+	BtnPaddingBase string
+	BtnFontSizeLG  string
+	BtnFontSizeSM  string
+	BtnPaddingLG   string
+	BtnPaddingSM   string
+
+	BtnHeighBase string
+	BtnHeighLG   string
+	BtnHeighSM   string
+
+	BtnCircleSize   string
+	BtnCircleSizeLG string
+	BtnCircleSizeSM string
+
+	BtnGroupBorder *color.Color
+
 	IconURL         string
 	IconFontPrefix  string
 	GridColumns     int64
@@ -60,7 +101,7 @@ type Theme struct {
 	ScreenXXL       string
 	ScreenXXLMin    string
 
-	BorderColorBase  string
+	BorderColorBase  *color.Color
 	BorderColorSplit string
 	BorderWithBase   string
 	BorderStyleBase  string
@@ -91,12 +132,23 @@ func New() *Theme {
 		TextColorDark:          color.Fade(color.New("#fff"), 85),
 		TextColorSecondaryDark: color.Fade(color.New("#fff"), 65),
 
-		FontSizeBase:     "14px",
-		FontSizeLG:       "16px",
-		FontSizeSM:       "12px",
-		LineHeightBase:   "1.5",
-		BorderRadiusBase: "4px",
-		BorderRadiusSM:   "2px",
+		FontSizeBase:         "14px",
+		FontSizeLG:           "16px",
+		FontSizeSM:           "12px",
+		LineHeightBase:       "1.5",
+		BorderRadiusBase:     "4px",
+		BorderRadiusSM:       "2px",
+		BackgroundColorLight: color.New("#FAFAFA"),
+		BackgroundColorBase:  color.New("#F5F5F5"),
+
+		DisabledColor:       color.Fade(color.New("#000"), 25),
+		DisabledColorDark:   color.Fade(color.New("#fff"), 35),
+		BtnFontWeight:       "400",
+		BtnBorderRadiusBase: "4px",
+		BtnBorderRadiusSM:   "4px",
+
+		BtnPrimaryColor: color.New("#fff"),
+		BtnDefaultBG:    color.New("#fff"),
 
 		IconURL:         `"https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i"`,
 		IconFontPrefix:  "anticon",
@@ -121,12 +173,24 @@ func New() *Theme {
 		ScreenXXL:    "1600px",
 		ScreenXXLMin: "1600px",
 
-		BorderColorBase:  "hsv(0, 0, 85%)", // base border outline a component
-		BorderColorSplit: "#E8E8E8",        // split border inside a component
-		BorderWithBase:   "1px",            // width of the border for a component
-		BorderStyleBase:  "solid",          // style of a components border
+		BorderColorBase:  color.New("#D9D9D9"), // base border outline a component
+		BorderColorSplit: "#E8E8E8",            // split border inside a component
+		BorderWithBase:   "1px",                // width of the border for a component
+		BorderStyleBase:  "solid",              // style of a components border
 	}
+
 	t.Primary = color.Generate(t.PrimaryColor)
 	t.FontFamily = `"Monospaced Number",` + t.FontFamilyNoNumber
+	t.DisabledBG = t.BackgroundColorBase
+	t.BtnPrimaryBG = t.PrimaryColor
+	t.BtnDefaultColor = t.TextColor
+	t.BtnDefaultBorder = t.BorderColorBase
+	t.BtnDangerColor = t.ErrorColor
+	t.BtnDangerBG = t.BackgroundColorBase
+	t.BtnDangerBorder = t.BorderColorBase
+	t.BtnDisabledColor = t.DisabledColor
+	t.BtnDisabledBG = t.DisabledBG
+	t.BtnDisabledBorder = t.BorderColorBase
+
 	return t
 }

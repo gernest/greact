@@ -57,7 +57,7 @@ func NewPaletter() *Palette {
 func Generate(base *Color) [10]*Color {
 	var c [10]*Color
 	for i := 0; i < 10; i++ {
-		c[i] = generate(base, i+1)
+		c[i] = GenerateColor(base, i+1)
 	}
 	return c
 }
@@ -72,7 +72,7 @@ const (
 	darkColorCount  = 4
 )
 
-func generate(base *Color, index int) *Color {
+func GenerateColor(base *Color, index int) *Color {
 	isLight := index < 6
 	h, s, v, _ := base.HSVA()
 	var i int

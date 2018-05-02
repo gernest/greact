@@ -15,8 +15,19 @@ func (ls RuleList) write(f func(string), opts ...Options) {
 	}
 }
 
+// filter out nil values
+func toRuleList(src []CSSRule) RuleList {
+	var ls RuleList
+	for _, v := range src {
+		if v != nil {
+			ls = append(ls, v)
+		}
+	}
+	return ls
+}
+
 func CSS(rules ...CSSRule) CSSRule {
-	return RuleList(rules)
+	return toRuleList(rules)
 }
 
 type SimpleRule struct {
@@ -38,6 +49,13 @@ func (s SimpleRule) write(f func(string), opts ...Options) {
 
 func P(key, value string) CSSRule {
 	return SimpleRule{Key: key, Value: value}
+}
+
+func If(cond bool, c CSSRule) CSSRule {
+	if cond {
+		return c
+	}
+	return nil
 }
 
 type StyleRule struct {
@@ -71,7 +89,7 @@ func (s StyleRule) write(f func(string), opts ...Options) {
 func (StyleRule) isRule() {}
 
 func S(selector string, rules ...CSSRule) CSSRule {
-	return StyleRule{Selector: selector, Rules: RuleList(rules)}
+	return StyleRule{Selector: selector, Rules: toRuleList(rules)}
 }
 
 type Conditional struct {

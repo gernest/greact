@@ -1,7 +1,6 @@
 package prom
 
 import (
-	"errors"
 	"fmt"
 	"runtime"
 )
@@ -59,16 +58,10 @@ type ResultCtx struct {
 	Results  []*ResultInfo
 }
 
-func Exec(ctx ...Test) (*ResultCtx, error) {
+func Exec(ctx ...*T) (*ResultCtx, error) {
 	rs := &ResultCtx{}
 	for _, v := range ctx {
-		s, ok := v.(*suite)
-		if !ok {
-			return nil, errors.New("only test suites are allowed on the top level")
-		}
-		ch := execSuite(s)
-		ch.Parent = rs
-		rs.Children = append(rs.Children, ch)
+		rs.Children = append(rs.Children, v.exec())
 	}
 	return rs, nil
 }
@@ -122,17 +115,39 @@ func execute(e *executioner) *ResultInfo {
 }
 
 type T struct {
-	base List
+	before func()
+	after  func()
+	suit   *suite
+	base   List
+}
+
+func NewTest(name string) *T {
+	return &T{suit: &suite{desc: name}}
 }
 
 func (t *T) Before(fn ...func()) {
-
+	if len(fn) > 0 {
+		t.before = fn[0]
+	}
 }
 
 func (t *T) After(fn ...func()) {
-
+	if len(fn) > 0 {
+		t.after = fn[0]
+	}
 }
 
 func (t *T) Describe(desc string, cases ...Test) {
-	t.base = append(t.base, Describe(desc, cases...))
+	t.suit.cases = append(t.suit.cases, Describe(desc, cases...))
+}
+
+func (t *T) exec() *ResultCtx {
+	if t.before != nil {
+		t.before()
+	}
+	rs := execSuite(t.suit)
+	if t.after != nil {
+		t.after()
+	}
+	return rs
 }

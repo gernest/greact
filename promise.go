@@ -86,9 +86,31 @@ func execSuite(s *Suite) *ResultCtx {
 			rs.Children = append(rs.Children, ch)
 		case *ExecCommand:
 			rs.Results = append(rs.Results, execute(e))
+			rv, ok := wrapPanic(e)
+			rs.Results = append(rs.Results, rv)
+			if ok {
+				// call to Fatal or Fatalf halts the whole suite.
+				return rs
+			}
 		}
 	}
 	return rs
+}
+
+func wrapPanic(e *ExecCommand) (rs *ResultInfo, panicked bool) {
+	defer func() {
+		if err := recover(); err != nil {
+			if nv, ok := err.(*Error); ok {
+				rs.Failed = true
+				rs.FailMessages = append(rs.FailMessages, nv)
+				panicked = true
+			} else {
+				panic(err)
+			}
+		}
+	}()
+	rs = execute(e)
+	return
 }
 
 type baseResult struct {
@@ -110,20 +132,14 @@ func (b *baseResult) FatalF(s string, v ...interface{}) {
 	panic(&Error{Message: fmt.Errorf(s, v...)})
 }
 
+// execute calls the function e.Func and register results.
 func execute(e *ExecCommand) (rs *ResultInfo) {
 	r := &baseResult{}
 	if e.Func != nil {
 		e.Func(r)
 	}
 	rs = &ResultInfo{Case: e.Desc}
-	defer func() {
-		if err := recover(); err != nil {
-			if nv, ok := err.(*Error); ok {
-				rs.Failed = true
-				rs.FailMessages = append(rs.FailMessages, nv)
-			}
-		}
-	}()
+
 	if r.err != nil {
 		rs.Failed = true
 		for _, v := range r.err {

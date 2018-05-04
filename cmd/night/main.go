@@ -70,7 +70,7 @@ func run(ctx *cli.Context) error {
 				return err
 			}
 			files = append(files,
-				tools.ProcessCoverage(set, f),
+				tools.AddCoverage(set, f),
 			)
 		}
 		for _, v := range files {

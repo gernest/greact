@@ -1,6 +1,11 @@
 package helper
 
-import "sync"
+import (
+	"go/token"
+	"sync"
+
+	"github.com/gernest/prom/cover"
+)
 
 var state = &State{
 	files: make(map[string]*CoverStats),
@@ -12,43 +17,47 @@ type State struct {
 }
 
 type CoverStats struct {
-	Filename string
-	Lines    map[int]int
-	mu       sync.RWMutex
+	profile *cover.Profile
+	mu      sync.RWMutex
 }
 
-func (c *CoverStats) Mark(line int) {
+func (c *CoverStats) Mark(p *cover.ProfileBlock) int {
 	c.mu.Lock()
-	c.Lines[line] = 0
+	c.profile.Blocks = append(c.profile.Blocks, p)
+	idx := len(c.profile.Blocks) - 1
+	c.mu.Unlock()
+	return idx
+}
+
+func (c *CoverStats) Hit(idx int, pos *token.Position) {
+	c.mu.Lock()
+	b := c.profile.Blocks[idx]
+	b.EndPosition = pos
 	c.mu.Unlock()
 }
 
-func (c *CoverStats) Hit(line int) {
-	c.mu.Lock()
-	ln := c.Lines[line]
-	ln++
-	c.Lines[line] = ln
-	c.mu.Unlock()
-}
-
-func Mark(name string, line int) {
+func Mark(numStmt int, pos *token.Position) int {
 	state.mu.Lock()
-	f, ok := state.files[name]
+	defer state.mu.Unlock()
+	p := &cover.ProfileBlock{StartPosition: pos, NumStmt: numStmt}
+	fileName := p.StartPosition.Filename
+	f, ok := state.files[fileName]
 	if !ok {
-		f = &CoverStats{
-			Filename: name,
-			Lines:    make(map[int]int)}
-		f.Mark(line)
-		state.files[name] = f
-	} else {
-		f.Mark(line)
+		f = &CoverStats{profile: &cover.Profile{
+			FileName: fileName,
+		}}
+		state.files[fileName] = f
+		return f.Mark(p)
+
 	}
+	return f.Mark(p)
 }
 
-func Hit(name string, line int) {
+func Hit(idx int, pos *token.Position) {
 	state.mu.Lock()
-	if f, ok := state.files[name]; ok {
-		f.Hit(line)
+	defer state.mu.Unlock()
+	if f, ok := state.files[pos.Filename]; ok {
+		f.Hit(idx, pos)
 	}
 }
 

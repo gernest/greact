@@ -12,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kr/pretty"
+	"golang.org/x/tools/go/ast/astutil"
 
 	"github.com/gernest/prom/tools"
 	"github.com/urfave/cli"
@@ -56,7 +56,6 @@ func run(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	println(rootPkg)
 	importMap := make(map[string]string)
 	importMap[rootPkg] = filepath.Join(rootPkg, testsOutDir, pkg.Name)
 	if cover {
@@ -65,7 +64,8 @@ func run(ctx *cli.Context) error {
 		os.MkdirAll(dst, 0755)
 		set := token.NewFileSet()
 		for _, v := range pkg.GoFiles {
-			f, err := parser.ParseFile(set, v, nil, 0)
+			fn := filepath.Join(pkg.Dir, v)
+			f, err := parser.ParseFile(set, fn, nil, 0)
 			if err != nil {
 				return err
 			}
@@ -80,7 +80,34 @@ func run(ctx *cli.Context) error {
 			}
 		}
 	}
-	pretty.Println(importMap)
+	tdir := filepath.Join(pkgPath, testsDir)
+	tsPkg, err := build.ImportDir(tdir, 0)
+	if err != nil {
+		return err
+	}
+	var files []*ast.File
+	dst := out
+	os.MkdirAll(filepath.Join(out, tsPkg.Name), 0755)
+	set := token.NewFileSet()
+	for _, v := range tsPkg.GoFiles {
+		f, err := parser.ParseFile(set, filepath.Join(tsPkg.Dir, v), nil, 0)
+		if err != nil {
+			return err
+		}
+		files = append(files,
+			tools.AddFileNumber(set, f),
+		)
+	}
+	for _, v := range files {
+		for key, value := range importMap {
+			astutil.DeleteImport(set, v, key)
+			astutil.AddImport(set, v, value)
+		}
+		err := writeFile(dst, set, v)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -91,9 +118,14 @@ func writeFile(to string, fset *token.FileSet, f *ast.File) error {
 		return err
 	}
 	fp := fset.File(f.Pos())
+
 	dst := filepath.Join(to, fp.Name())
-	fmt.Println("written to ", dst)
-	return ioutil.WriteFile(dst, buf.Bytes(), 0600)
+	err = ioutil.WriteFile(dst, buf.Bytes(), 0600)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("prom: written %s\n", dst)
+	return nil
 }
 
 func calcPkgPath(base string) (string, error) {

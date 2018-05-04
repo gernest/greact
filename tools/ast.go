@@ -19,11 +19,12 @@ func AddCoverage(set *token.FileSet, file *ast.File) *ast.File {
 	return file
 }
 
-func AddFileNumber(set *token.FileSet, file *ast.File) ast.Node {
-	return astutil.Apply(file,
+func AddFileNumber(set *token.FileSet, file *ast.File) *ast.File {
+	astutil.Apply(file,
 		applyLineNumber(set, true),
 		applyLineNumber(set, false),
 	)
+	return file
 }
 
 func addStrLit(str, lit string) string {

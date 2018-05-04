@@ -7,5 +7,5 @@ import (
 )
 
 func Build() error {
-	return sh.RunV("go", "build", "./cmd/prom/")
+	return sh.RunV("go", "build", "-o", "prom", "./cmd/night/")
 }

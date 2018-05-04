@@ -1,8 +1,8 @@
 package prom
 
 import (
+	"errors"
 	"fmt"
-	"runtime"
 )
 
 type Test interface {
@@ -29,8 +29,10 @@ func It(desc string, fn func(Result)) Test {
 }
 
 type Result interface {
-	Error(err interface{})
+	Error(...interface{})
 	Errorf(string, ...interface{})
+	Fatal(...interface{})
+	FatalF(string, ...interface{})
 }
 
 type ExecCommand struct {
@@ -43,12 +45,18 @@ func (*ExecCommand) run() {}
 type ResultInfo struct {
 	Case         string
 	Failed       bool
-	FailMessages []Error
+	FailMessages []*Error
 }
 
 type Error struct {
-	Message  string
-	Location string
+	Message error
+}
+
+func (e *Error) Error() string {
+	if e.Message != nil {
+		return e.Error()
+	}
+	return ""
 }
 
 type ResultCtx struct {
@@ -81,32 +89,45 @@ func execSuite(s *Suite) *ResultCtx {
 		}
 	}
 	return rs
-
 }
 
 type baseResult struct {
-	err []string
+	err []error
 }
 
-func (b *baseResult) Error(v interface{}) {
-	b.err = append(b.err, fmt.Sprint(v))
-	fmt.Println(runtime.Caller(1))
+func (b *baseResult) Error(v ...interface{}) {
+	b.err = append(b.err, errors.New(fmt.Sprint(v...)))
+}
+func (b *baseResult) Fatal(v ...interface{}) {
+	panic(&Error{Message: errors.New(fmt.Sprint(v...))})
 }
 
 func (b *baseResult) Errorf(s string, v ...interface{}) {
-	b.err = append(b.err, fmt.Sprintf(s, v...))
+	b.err = append(b.err, fmt.Errorf(s, v...))
 }
 
-func execute(e *ExecCommand) *ResultInfo {
+func (b *baseResult) FatalF(s string, v ...interface{}) {
+	panic(&Error{Message: fmt.Errorf(s, v...)})
+}
+
+func execute(e *ExecCommand) (rs *ResultInfo) {
 	r := &baseResult{}
 	if e.Func != nil {
 		e.Func(r)
 	}
-	rs := &ResultInfo{Case: e.Desc}
+	rs = &ResultInfo{Case: e.Desc}
+	defer func() {
+		if err := recover(); err != nil {
+			if nv, ok := err.(*Error); ok {
+				rs.Failed = true
+				rs.FailMessages = append(rs.FailMessages, nv)
+			}
+		}
+	}()
 	if r.err != nil {
 		rs.Failed = true
 		for _, v := range r.err {
-			rs.FailMessages = append(rs.FailMessages, Error{
+			rs.FailMessages = append(rs.FailMessages, &Error{
 				Message: v,
 			})
 		}

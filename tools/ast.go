@@ -35,7 +35,7 @@ func matchTestName(name string, typ *ast.FuncType) bool {
 	ret := typ.Results == nil
 	args := len(typ.Params.List) == 1
 	return ast.IsExported(name) &&
-		name != "Test" && strings.HasSuffix(name, "Test") &&
+		name != "Test" && strings.HasPrefix(name, "Test") &&
 		ret && args && checkSignature(typ.Params.List[0])
 }
 
@@ -204,25 +204,62 @@ func hit(pos token.Position) *ast.ExprStmt {
 func applyLineNumber(set *token.FileSet, pre bool) func(*astutil.Cursor) bool {
 	return func(c *astutil.Cursor) bool {
 		node := c.Node()
-		if pre {
-			if fn, ok := node.(*ast.FuncDecl); ok {
-				name := fn.Name.Name
-				return matchTestName(name, fn.Type)
+		switch e := node.(type) {
+		case *ast.FuncDecl:
+			if pre {
+				return matchTestName(e.Name.Name, e.Type)
 			}
-			return true
-		}
-		if e, ok := node.(*ast.CallExpr); ok {
+		case *ast.CallExpr:
 			if s, ok := e.Fun.(*ast.SelectorExpr); ok {
-				if s.Sel.Name == "Error" {
-					file := set.File(e.Pos())
-					line := file.Line(e.Pos())
-					if a, ok := e.Args[0].(*ast.BasicLit); ok {
-						k := fmt.Sprintf("%s:%v ", file.Name(), line)
-						a.Value = addStrLit(k, a.Value)
-					}
+				file := set.File(e.Pos())
+				line := file.Line(e.Pos())
+				k := fmt.Sprintf("%s:%v ", file.Name(), line)
+				switch s.Sel.Name {
+				case "Error":
+					e.Args = append([]ast.Expr{
+						&ast.BasicLit{
+							Value: fmt.Sprintf(`"%s"`, k),
+						},
+					}, e.Args...)
+					return false
+				case "Errorf":
+					b := e.Args[0].(*ast.BasicLit)
+					b.Value = addStrLit(k, b.Value)
+					return false
+				case "Fatal":
+					e.Args = append([]ast.Expr{
+						&ast.BasicLit{
+							Value: fmt.Sprintf(`"%s"`, k),
+						},
+					}, e.Args...)
+					return false
+				case "Fatalf":
+					b := e.Args[0].(*ast.BasicLit)
+					b.Value = addStrLit(k, b.Value)
+					return false
 				}
+
+				// if s.Sel.Name == "Error" {
+
+				// 	if a, ok := e.Args[0].(*ast.BasicLit); ok {
+				// 		k := fmt.Sprintf("%s:%v ", file.Name(), line)
+				// 		a.Value = addStrLit(k, a.Value)
+				// 	}
+				// }
 			}
 		}
+		// if e, ok := node.(*ast.CallExpr); ok {
+		// 	if s, ok := e.Fun.(*ast.SelectorExpr); ok {
+		// 		if s.Sel.Name == "Error" {
+		// 			file := set.File(e.Pos())
+		// 			line := file.Line(e.Pos())
+		// 			if a, ok := e.Args[0].(*ast.BasicLit); ok {
+		// 				k := fmt.Sprintf("%s:%v ", file.Name(), line)
+		// 				a.Value = addStrLit(k, a.Value)
+		// 			}
+		// 		}
+		// 	}
+		// }
 		return true
 	}
 }

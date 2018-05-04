@@ -2,18 +2,19 @@ package test
 
 import "github.com/gernest/prom"
 
-func DescriptionTest(t *prom.T) {
+func TestT_Before(t *prom.T) {
+	var before bool
 	t.Before(func() {
-		// pre hooks
+		before = true
 	})
-	t.After(func() {
-		// cleanup
-	})
-	t.Describe("Describe",
-		prom.It("Should Pass", func(rs prom.Result) {
-		}),
-		prom.It("Should Fail", func(rs prom.Result) {
-			rs.Error("Fail")
+	t.Describe("T.Before",
+		prom.It("be called before the testcase", func(rs prom.Result) {
+			if !before {
+				rs.Error("expected before to be true")
+			}
 		}),
 	)
+}
+
+func TestDescribe(t *prom.T) {
 }

@@ -10,22 +10,22 @@ type Test interface {
 }
 
 func Describe(desc string, ctx ...Test) Test {
-	return &suite{desc: desc, cases: List(ctx)}
+	return &Suite{Desc: desc, Cases: List(ctx)}
 }
 
 type List []Test
 
 func (ls List) run() {}
 
-type suite struct {
-	desc  string
-	cases List
+type Suite struct {
+	Desc  string
+	Cases List
 }
 
-func (*suite) run() {}
+func (*Suite) run() {}
 
 func It(desc string, fn func(Result)) Test {
-	return &executioner{desc: desc, fn: fn}
+	return &ExecCommand{Desc: desc, Func: fn}
 }
 
 type Result interface {
@@ -33,12 +33,12 @@ type Result interface {
 	Errorf(string, ...interface{})
 }
 
-type executioner struct {
-	desc string
-	fn   func(Result)
+type ExecCommand struct {
+	Desc string
+	Func func(Result)
 }
 
-func (*executioner) run() {}
+func (*ExecCommand) run() {}
 
 type ResultInfo struct {
 	Case         string
@@ -66,17 +66,17 @@ func Exec(ctx ...*T) (*ResultCtx, error) {
 	return rs, nil
 }
 
-func execSuite(s *suite) *ResultCtx {
+func execSuite(s *Suite) *ResultCtx {
 	rs := &ResultCtx{
-		Desc: s.desc,
+		Desc: s.Desc,
 	}
-	for _, v := range s.cases {
+	for _, v := range s.Cases {
 		switch e := v.(type) {
-		case *suite:
+		case *Suite:
 			ch := execSuite(e)
 			ch.Parent = rs
 			rs.Children = append(rs.Children, ch)
-		case *executioner:
+		case *ExecCommand:
 			rs.Results = append(rs.Results, execute(e))
 		}
 	}
@@ -97,12 +97,12 @@ func (b *baseResult) Errorf(s string, v ...interface{}) {
 	b.err = append(b.err, fmt.Sprintf(s, v...))
 }
 
-func execute(e *executioner) *ResultInfo {
+func execute(e *ExecCommand) *ResultInfo {
 	r := &baseResult{}
-	if e.fn != nil {
-		e.fn(r)
+	if e.Func != nil {
+		e.Func(r)
 	}
-	rs := &ResultInfo{Case: e.desc}
+	rs := &ResultInfo{Case: e.Desc}
 	if r.err != nil {
 		rs.Failed = true
 		for _, v := range r.err {
@@ -117,12 +117,12 @@ func execute(e *executioner) *ResultInfo {
 type T struct {
 	before func()
 	after  func()
-	suit   *suite
+	suit   *Suite
 	base   List
 }
 
 func NewTest(name string) *T {
-	return &T{suit: &suite{desc: name}}
+	return &T{suit: &Suite{Desc: name}}
 }
 
 func (t *T) Before(fn ...func()) {
@@ -138,7 +138,7 @@ func (t *T) After(fn ...func()) {
 }
 
 func (t *T) Describe(desc string, cases ...Test) {
-	t.suit.cases = append(t.suit.cases, Describe(desc, cases...))
+	t.suit.Cases = append(t.suit.Cases, Describe(desc, cases...))
 }
 
 func (t *T) exec() *ResultCtx {

@@ -9,11 +9,6 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 )
 
-const (
-	MarkCoverName = "markLineForCOverage"
-	HitCoverName  = "hitLineForCOverage"
-)
-
 func ProcessCoverage(set *token.FileSet, file *ast.File) *ast.File {
 	astutil.AddImport(set, file, "github.com/gernest/prom/helper")
 	astutil.Apply(file,
@@ -118,8 +113,9 @@ func checkSignature(field *ast.Field) bool {
 func mark(file string, n int) *ast.ExprStmt {
 	return &ast.ExprStmt{
 		X: &ast.CallExpr{
-			Fun: &ast.Ident{
-				Name: MarkCoverName,
+			Fun: &ast.SelectorExpr{
+				X:   &ast.Ident{Name: "helper"},
+				Sel: &ast.Ident{Name: "Mark"},
 			},
 			Args: []ast.Expr{
 				&ast.BasicLit{
@@ -138,8 +134,9 @@ func mark(file string, n int) *ast.ExprStmt {
 func hit(file string, n int) *ast.ExprStmt {
 	return &ast.ExprStmt{
 		X: &ast.CallExpr{
-			Fun: &ast.Ident{
-				Name: HitCoverName,
+			Fun: &ast.SelectorExpr{
+				X:   &ast.Ident{Name: "helper"},
+				Sel: &ast.Ident{Name: "Hit"},
 			},
 			Args: []ast.Expr{
 				&ast.BasicLit{

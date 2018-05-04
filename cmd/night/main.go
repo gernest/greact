@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"go/ast"
 	"go/build"
-	"go/format"
 	"go/parser"
 	"go/printer"
 	"go/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/kr/pretty"
 
 	"github.com/gernest/prom/tools"
 	"github.com/urfave/cli"
@@ -56,6 +57,8 @@ func run(ctx *cli.Context) error {
 		return err
 	}
 	println(rootPkg)
+	importMap := make(map[string]string)
+	importMap[rootPkg] = filepath.Join(rootPkg, testsOutDir, pkg.Name)
 	if cover {
 		var files []*ast.File
 		dst := filepath.Join(out, pkg.Name)
@@ -77,56 +80,8 @@ func run(ctx *cli.Context) error {
 			}
 		}
 	}
-
-	// for _, v := range pkg.Imports {
-	// 	fmt.Println(v)
-	// }
-	// cover := ctx.Bool("cover")
-	// out := filepath.Join(pkg, testsOutDir)
-	// base := filepath.Join(pkg, testsDir)
-	// _, err := os.Stat(base)
-	// if os.IsNotExist(err) {
-	// 	return fmt.Errorf("missing %s directory", base)
-	// }
-	// set := token.NewFileSet()
-	// tpkg, err := parser.ParseDir(set, pkg, nil, parser.ParseComments)
-	// if err != nil {
-	// 	return err
-	// }
-	// for name := range tpkg {
-	// 	processTestPackage(set, tpkg[name])
-	// 	// fmt.Println(pkg, name, tpkg[name].Imports)
-	// }
-	// if p, ok := tpkg[testsDir]; ok {
-	// os.MkdirAll(out, 0755)
-	// p.Name = testsOutDir
-	// var imports []*ast.ImportSpec
-	// for name, f := range p.Files {
-	// 	on, err := filepath.Rel(base, name)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	ou := filepath.Join(out, on)
-	// 	tools.AddFileNumber(set, f)
-	// 	var buf bytes.Buffer
-	// 	printer.Fprint(&buf, set, f)
-	// 	err = ioutil.WriteFile(ou, buf.Bytes(), 0600)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	// return writeHelper(out)
-	// }
-	// return errors.New("can't find test package")
+	pretty.Println(importMap)
 	return nil
-}
-
-func processTestPackage(set *token.FileSet, testPkg *ast.Package) {
-	for _, file := range testPkg.Files {
-		for _, i := range file.Imports {
-			println(i.Path.Value)
-		}
-	}
 }
 
 func writeFile(to string, fset *token.FileSet, f *ast.File) error {
@@ -140,28 +95,6 @@ func writeFile(to string, fset *token.FileSet, f *ast.File) error {
 	fmt.Println("written to ", dst)
 	return ioutil.WriteFile(dst, buf.Bytes(), 0600)
 }
-
-func writeHelper(out string) error {
-	h := fmt.Sprintf(helperTpl, tools.MarkCoverName, tools.HitCoverName)
-	m := filepath.Join(out, "prom_test_helper.go")
-	b, err := format.Source([]byte(h))
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(m, b, 0600)
-}
-
-const helperTpl = `package main
-
-import "github.com/gernest/prom/helper"
-
-func %s(file string,n int)  {
-	helper.Mark(file,n)
-}
-func %s(file string,n int)  {
-	helper.Hit(file,n)
-}
-`
 
 func calcPkgPath(base string) (string, error) {
 	if filepath.IsAbs(base) {

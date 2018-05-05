@@ -5,8 +5,11 @@ import (
 )
 
 var palette = color.NewPalette()
+
+// Default is the default Theme.
 var Default = New()
 
+// Theme antd theme object. This defines variables that controls styles.
 type Theme struct {
 	//colors
 	PrimaryColor    *color.Color

@@ -232,6 +232,36 @@ type Theme struct {
 	FormItemTrailingColon    string
 	FormVerticalLabelPadding string
 	FormVerticalLabelMargin  string
+
+	// Input
+	// --
+	InputHeightBase            string
+	InputHeightLG              string
+	InputHeightSM              string
+	InputPaddingHorizontal     string
+	InputPaddingHorizontalBase string
+	InputPaddingHorizontalSM   string
+	InputPaddingHorizontalLG   string
+	InputPaddingVerticalBase   string
+	InputPaddingVerticalSM     string
+	InputPaddingVerticalLG     string
+	InputPlaceholderColor      *color.Color
+	InputColor                 *color.Color
+	InputBorderColor           *color.Color
+	InputBG                    *color.Color
+	InputAddonBG               *color.Color
+	InputHoverBorderColor      *color.Color
+	InputDisabledBG            *color.Color
+
+	// Tooltip
+	// ---
+	//* Tooltip max width
+	TooltipMaxWidth   string
+	TooltipColor      *color.Color
+	TooltipBG         *color.Color
+	TooltipArrowWidth string
+	TooltipDistance   string
+	TooltipArrowColor *color.Color
 }
 
 // New returns a default theme.
@@ -259,96 +289,112 @@ func New() *Theme {
 		TextColorDark:          color.Fade(color.New("#fff"), 85),
 		TextColorSecondaryDark: color.Fade(color.New("#fff"), 65),
 
-		FontSizeBase:             "14px",
-		FontSizeLG:               "16px",
-		FontSizeSM:               "12px",
-		LineHeightBase:           "1.5",
-		BorderRadiusBase:         "4px",
-		BorderRadiusSM:           "2px",
-		PaddingLG:                "24px",
-		PaddingMD:                "16px",
-		PaddingSM:                "12px",
-		PaddingXS:                "8px",
-		BackgroundColorLight:     color.New("#FAFAFA"),
-		BackgroundColorBase:      color.New("#F5F5F5"),
-		DisabledColor:            color.Fade(color.New("#000"), 25),
-		DisabledColorDark:        color.Fade(color.New("#fff"), 35),
-		BtnFontWeight:            "400",
-		BtnBorderRadiusBase:      "4px",
-		BtnBorderRadiusSM:        "4px",
-		BtnPrimaryColor:          color.New("#fff"),
-		BtnDefaultBG:             color.New("#fff"),
-		IconFontPrefix:           "anticon",
-		IconURL:                  `"https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i"`,
-		LinkDecoration:           "none",
-		LinkHoverDecoration:      "none",
-		EaseOut:                  "cubic-bezier(0.215, 0.61, 0.355, 1)",
-		EaseIn:                   "cubic-bezier(0.55, 0.055, 0.675, 0.19)",
-		EaseInOut:                "cubic-bezier(0.645, 0.045, 0.355, 1)",
-		EaseOutBack:              "cubic-bezier(0.12, 0.4, 0.29, 1.46)",
-		EaseInBack:               "cubic-bezier(0.71, -0.46, 0.88, 0.6)",
-		EaseInOutBack:            "cubic-bezier(0.71, -0.46, 0.29, 1.46)",
-		EaseOutCirc:              "cubic-bezier(0.08, 0.82, 0.17, 1)",
-		EaseInCirc:               "cubic-bezier(0.6, 0.04, 0.98, 0.34)",
-		EaseInOutCirc:            "cubic-bezier(0.78, 0.14, 0.15, 0.86)",
-		EaseOutQuint:             "cubic-bezier(0.23, 1, 0.32, 1)",
-		EaseInQuint:              "cubic-bezier(0.755, 0.05, 0.855, 0.06)",
-		EaseInOutQuint:           "cubic-bezier(0.86, 0, 0.07, 1)",
-		OutlineBlurSize:          "0",
-		OutlineWidth:             "2px",
-		ShadowColor:              color.New("#3636BB"),
-		CheckboxSize:             "16px",
-		RadioSize:                "16px",
-		GridColumns:              24,
-		GridGutterWidth:          0,
-		ScreenXS:                 "480px",
-		ScreenXSMin:              "480px",
-		ScreenSM:                 "576px",
-		ScreenSMMin:              "576px",
-		ScreenMD:                 "768px",
-		ScreenMDMin:              "768px",
-		ScreenLG:                 "992px",
-		ScreenLGMin:              "992px",
-		ScreenXL:                 "1200px",
-		ScreenXLMin:              "1200px",
-		ScreenXXL:                "1600px",
-		ScreenXXLMin:             "1600px",
-		ScreenXSMax:              "479px",
-		ScreenSMMax:              "575px",
-		ScreenMDMax:              "767px",
-		ScreenLGMax:              "991px",
-		ScreenXLMax:              "1199px",
-		BorderColorBase:          color.New("#D9D9D9"), // base border outline a component
-		BorderColorSplit:         "#E8E8E8",            // split border inside a component
-		BorderWithBase:           "1px",                // width of the border for a component
-		BorderStyleBase:          "solid",              // style of a components border
-		LayoutBodyBackground:     color.New("#f0f2f5"),
-		LayoutHeaderBackground:   color.New("#001529"),
-		LayoutHeaderHeight:       "64px",
-		LayoutHeaderPadding:      "0 50px",
-		LayoutFooterPadding:      "24px 50px",
-		LayoutTriggerHeight:      "48px",
-		LayoutTriggerBackground:  color.New("#002140"),
-		LayoutTriggerColor:       color.New("#fff"),
-		LayoutZeroTriggerWidth:   "36px",
-		LayoutZeroTriggerHeight:  "42px",
-		ZIndexAffix:              "10",
-		ZIndexBackTop:            "10",
-		ZIndexModalMask:          "1000",
-		ZIndexModal:              "1000",
-		ZIndexNotification:       "1010",
-		ZIndexMessage:            "1010",
-		ZIndexPopover:            "1030",
-		ZIndexPicker:             "1050",
-		ZIndexDropdown:           "1050",
-		ZIndexTooltip:            "1060",
-		AnimationDurationSlow:    ".3s", //Modal
-		AnimationDurationBase:    ".2s",
-		AnimationDurationFast:    ".1s", //Tooltip
-		FormItemMarginBottom:     "24px",
-		FormItemTrailingColon:    "true",
-		FormVerticalLabelPadding: "0 0 8px",
-		FormVerticalLabelMargin:  "0",
+		FontSizeBase:               "14px",
+		FontSizeLG:                 "16px",
+		FontSizeSM:                 "12px",
+		LineHeightBase:             "1.5",
+		BorderRadiusBase:           "4px",
+		BorderRadiusSM:             "2px",
+		PaddingLG:                  "24px",
+		PaddingMD:                  "16px",
+		PaddingSM:                  "12px",
+		PaddingXS:                  "8px",
+		BackgroundColorLight:       color.New("#FAFAFA"),
+		BackgroundColorBase:        color.New("#F5F5F5"),
+		DisabledColor:              color.Fade(color.New("#000"), 25),
+		DisabledColorDark:          color.Fade(color.New("#fff"), 35),
+		BtnFontWeight:              "400",
+		BtnBorderRadiusBase:        "4px",
+		BtnBorderRadiusSM:          "4px",
+		BtnPrimaryColor:            color.New("#fff"),
+		BtnDefaultBG:               color.New("#fff"),
+		IconFontPrefix:             "anticon",
+		IconURL:                    `"https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i"`,
+		LinkDecoration:             "none",
+		LinkHoverDecoration:        "none",
+		EaseOut:                    "cubic-bezier(0.215, 0.61, 0.355, 1)",
+		EaseIn:                     "cubic-bezier(0.55, 0.055, 0.675, 0.19)",
+		EaseInOut:                  "cubic-bezier(0.645, 0.045, 0.355, 1)",
+		EaseOutBack:                "cubic-bezier(0.12, 0.4, 0.29, 1.46)",
+		EaseInBack:                 "cubic-bezier(0.71, -0.46, 0.88, 0.6)",
+		EaseInOutBack:              "cubic-bezier(0.71, -0.46, 0.29, 1.46)",
+		EaseOutCirc:                "cubic-bezier(0.08, 0.82, 0.17, 1)",
+		EaseInCirc:                 "cubic-bezier(0.6, 0.04, 0.98, 0.34)",
+		EaseInOutCirc:              "cubic-bezier(0.78, 0.14, 0.15, 0.86)",
+		EaseOutQuint:               "cubic-bezier(0.23, 1, 0.32, 1)",
+		EaseInQuint:                "cubic-bezier(0.755, 0.05, 0.855, 0.06)",
+		EaseInOutQuint:             "cubic-bezier(0.86, 0, 0.07, 1)",
+		OutlineBlurSize:            "0",
+		OutlineWidth:               "2px",
+		ShadowColor:                color.New("#3636BB"),
+		CheckboxSize:               "16px",
+		RadioSize:                  "16px",
+		GridColumns:                24,
+		GridGutterWidth:            0,
+		ScreenXS:                   "480px",
+		ScreenXSMin:                "480px",
+		ScreenSM:                   "576px",
+		ScreenSMMin:                "576px",
+		ScreenMD:                   "768px",
+		ScreenMDMin:                "768px",
+		ScreenLG:                   "992px",
+		ScreenLGMin:                "992px",
+		ScreenXL:                   "1200px",
+		ScreenXLMin:                "1200px",
+		ScreenXXL:                  "1600px",
+		ScreenXXLMin:               "1600px",
+		ScreenXSMax:                "479px",
+		ScreenSMMax:                "575px",
+		ScreenMDMax:                "767px",
+		ScreenLGMax:                "991px",
+		ScreenXLMax:                "1199px",
+		BorderColorBase:            color.New("#D9D9D9"), // base border outline a component
+		BorderColorSplit:           "#E8E8E8",            // split border inside a component
+		BorderWithBase:             "1px",                // width of the border for a component
+		BorderStyleBase:            "solid",              // style of a components border
+		LayoutBodyBackground:       color.New("#f0f2f5"),
+		LayoutHeaderBackground:     color.New("#001529"),
+		LayoutHeaderHeight:         "64px",
+		LayoutHeaderPadding:        "0 50px",
+		LayoutFooterPadding:        "24px 50px",
+		LayoutTriggerHeight:        "48px",
+		LayoutTriggerBackground:    color.New("#002140"),
+		LayoutTriggerColor:         color.New("#fff"),
+		LayoutZeroTriggerWidth:     "36px",
+		LayoutZeroTriggerHeight:    "42px",
+		ZIndexAffix:                "10",
+		ZIndexBackTop:              "10",
+		ZIndexModalMask:            "1000",
+		ZIndexModal:                "1000",
+		ZIndexNotification:         "1010",
+		ZIndexMessage:              "1010",
+		ZIndexPopover:              "1030",
+		ZIndexPicker:               "1050",
+		ZIndexDropdown:             "1050",
+		ZIndexTooltip:              "1060",
+		AnimationDurationSlow:      ".3s", //Modal
+		AnimationDurationBase:      ".2s",
+		AnimationDurationFast:      ".1s", //Tooltip
+		FormItemMarginBottom:       "24px",
+		FormItemTrailingColon:      "true",
+		FormVerticalLabelPadding:   "0 0 8px",
+		FormVerticalLabelMargin:    "0",
+		InputHeightBase:            "32px",
+		InputHeightLG:              "40px",
+		InputHeightSM:              "24px",
+		InputPaddingHorizontal:     "11px",
+		InputPaddingHorizontalBase: "12px",
+		InputPaddingHorizontalSM:   "7px",
+		InputPaddingHorizontalLG:   "12px",
+		InputPaddingVerticalBase:   "4px",
+		InputPaddingVerticalSM:     "1px",
+		InputPaddingVerticalLG:     "4px",
+		InputPlaceholderColor:      color.New("#BFBFBF"),
+		TooltipMaxWidth:            "250px",
+		TooltipColor:               color.New("#fff"),
+		TooltipBG:                  color.New("#970B97"),
+		TooltipArrowWidth:          "5px",
+		TooltipDistance:            "8px",
 	}
 
 	t.Primary = color.Generate(t.PrimaryColor)
@@ -386,5 +432,13 @@ func New() *Theme {
 	t.LayoutSiderBackground = t.LayoutHeaderBackground
 	t.LabelRequiredColor = t.HighlightColor
 	t.LabelColor = t.HeadingColor
+	t.InputPaddingHorizontal = t.ControlPaddingHorizontal
+	t.InputColor = t.TextColor
+	t.InputBorderColor = t.BorderColorBase
+	t.InputBG = color.New("#fff")
+	t.InputAddonBG = t.BackgroundColorLight
+	t.InputHoverBorderColor = t.PrimaryColor
+	t.InputDisabledBG = t.DisabledBG
+	t.TooltipArrowColor = t.TooltipBG
 	return t
 }

@@ -20,6 +20,8 @@ type Theme struct {
 
 	// Color used by default to control hover and active backgrounds and for
 	// alert info backgrounds.
+	// In antd the color are labelled from 1-10. So actual maping will be form
+	// index 0-9. So @primary-1 becomes Primary[0],@primary-5 becomes Primary[4]
 	Primary [10]*color.Color
 
 	//scaffolding
@@ -83,7 +85,7 @@ type Theme struct {
 
 	// Border color
 	BorderColorBase  *color.Color
-	BorderColorSplit string
+	BorderColorSplit *color.Color
 	BorderWithBase   string
 	BorderStyleBase  string
 
@@ -262,6 +264,188 @@ type Theme struct {
 	TooltipArrowWidth string
 	TooltipDistance   string
 	TooltipArrowColor *color.Color
+
+	// Popover
+	// ---
+	PopoverBG              *color.Color
+	PopoverColor           *color.Color
+	PopoverMinWidth        string
+	PopoverArrowWidth      string
+	PopoverArrowColor      *color.Color
+	PopoverArrowOuterColor *color.Color
+	PopoverDistance        string
+
+	// Modal
+	// --
+	ModalMaskBG *color.Color
+
+	// Progress
+	// --
+	ProgressDefaultColor   *color.Color
+	ProgressRemainingColor *color.Color
+
+	// Menu
+	// ---
+	MenuInlineTopLevelItem  string
+	MenuItemHeight          string
+	MenuCollapsedWidth      string
+	MenuBG                  *color.Color
+	MenuItemColor           *color.Color
+	MenuHighlightColor      *color.Color
+	MenuItemActiveBG        *color.Color
+	MenuItemGroupTitleColor *color.Color
+	MenuDarkColor           *color.Color
+	MenuDarkBG              *color.Color
+	MenuDarkArrowColor      *color.Color
+	MenuDarkSubmenuBG       *color.Color
+	MenuDarkHighlightColor  *color.Color
+	MenuDarkItemActiveBG    *color.Color
+	MenuDarkItemSelectedBG  *color.Color
+
+	// Spin
+	// ---
+	SpinDotSizeSM string
+	SpinDotSize   string
+	SpinDotSizeLG string
+
+	// Table
+	// --
+	TableHeaderBG          *color.Color
+	TableHeaderSortBG      *color.Color
+	TableRowHoverBG        *color.Color
+	TableSelectedRowBG     *color.Color
+	TableExpandedRowBG     *color.Color
+	TablePaddingVertical   string
+	TablePaddingHorizontal string
+
+	// Tag
+	// --
+	TagDefaultBG    *color.Color
+	TagDefaultColor *color.Color
+	TagFontSize     string
+
+	// TimePicker
+	// ---
+	TimePIckerPanelColumnWidth string
+	TimePIckerPanelWidth       string
+	TimePIckerSelectedBG       *color.Color
+
+	// Carousel
+	// ---
+	CarouselDotWidth       string
+	CarouselDotHeight      string
+	CarouselDotActiveWidth string
+
+	// Badge
+	// ---
+	BadgeHeight     string
+	BadgeDotSize    string
+	BadgeFontSize   string
+	BadgeFontWeight string
+	BadgeStatusSize string
+
+	// Rate
+	// ---
+	RateStarColor *color.Color
+	RateStarBG    *color.Color
+
+	// Card
+	// ---
+	CardHeadColor         *color.Color
+	CardHeadBackground    *color.Color
+	CardHeadPadding       string
+	CardInnerHeadPadding  string
+	CardPaddingBase       string
+	CardPaddingWider      string
+	CardActionsBackground *color.Color
+	CardShadow            string
+
+	// Tabs
+	// ---
+	TabsCardHeadBackground *color.Color
+	TabsCardHeight         string
+	TabsCardActiveColor    *color.Color
+	TabsTitleFontSize      string
+	TabsTitleFontSizeLG    string
+	TabsTitleFontSizeSM    string
+	TabsInkBarBGColor      *color.Color
+	TabBarMargin           string
+	TabHorizontalMargin    string
+	TabVerticalMargin      string
+	TabHorizontalPadding   string
+	TabVerticalPadding     string
+	TabScrollingSize       string
+	TabHighlightColor      *color.Color
+	TabHoverColor          *color.Color
+	TabActiveColor         *color.Color
+
+	// BackTop
+	// ---
+	BackTopColor   *color.Color
+	BackTopBG      *color.Color
+	BackTopHoverBG *color.Color
+
+	// Avatar
+	// ---
+	AvatarSizeBase     string
+	AvatarSizeLG       string
+	AvatarSizeSM       string
+	AvatarFontSizeBase string
+	AvatarFontSizeLG   string
+	AvatarFontSizeSM   string
+	AvatarBG           *color.Color
+	AvatarColor        *color.Color
+	AvatarBorderRadius string
+
+	// Switch
+	// ---
+	SwitchHeight              string
+	SwitchSMHeight            string
+	SwitchSMCheckedMarginLeft string
+	SwitchDisabledOpacity     string
+	SwitchColor               *color.Color
+
+	// Pagination
+	// ---
+	PaginationItemSize         string
+	PaginationItemSizeSM       string
+	PaginationFontFamily       string
+	PaginationFontWeightActive string
+
+	// Breadcrumb
+	// ---
+	BreadcrumbBaseColor       *color.Color
+	BreadcrumbLastItemColor   *color.Color
+	BreadcrumbFontSize        string
+	BreadcrumbIconFontSize    string
+	BreadcrumbLinkColor       *color.Color
+	BreadcrumbLinkColorHover  *color.Color
+	BreadcrumbSeparatorColor  *color.Color
+	BreadcrumbSeparatorMargin string
+
+	// Slider
+	// ---
+	SliderMargin                    string
+	SliderRailBackgroundColor       *color.Color
+	SliderRailBackgroundColorHover  *color.Color
+	SliderTrackBackgroundColor      *color.Color
+	SliderTrackBackgroundColorHover *color.Color
+	SliderHandleColor               *color.Color
+	SliderHandleColorHover          *color.Color
+	SliderHandleColorFocus          *color.Color
+	SliderHandleColorFocusShadow    *color.Color
+	SliderHandleColorTooltipOpen    *color.Color
+	SliderDotBorderColor            *color.Color
+	SliderDotBorderColorActive      *color.Color
+	SliderDisabledColor             *color.Color
+	SliderDisabledBackgroundColor   *color.Color
+
+	// Collapse
+	// ---
+	CollapseHeaderPadding  string
+	CollapseHeaderBG       *color.Color
+	CollapseContentPadding string
+	CollapseContentBG      *color.Color
 }
 
 // New returns a default theme.
@@ -289,112 +473,171 @@ func New() *Theme {
 		TextColorDark:          color.Fade(color.New("#fff"), 85),
 		TextColorSecondaryDark: color.Fade(color.New("#fff"), 65),
 
-		FontSizeBase:               "14px",
-		FontSizeLG:                 "16px",
-		FontSizeSM:                 "12px",
-		LineHeightBase:             "1.5",
-		BorderRadiusBase:           "4px",
-		BorderRadiusSM:             "2px",
-		PaddingLG:                  "24px",
-		PaddingMD:                  "16px",
-		PaddingSM:                  "12px",
-		PaddingXS:                  "8px",
-		BackgroundColorLight:       color.New("#FAFAFA"),
-		BackgroundColorBase:        color.New("#F5F5F5"),
-		DisabledColor:              color.Fade(color.New("#000"), 25),
-		DisabledColorDark:          color.Fade(color.New("#fff"), 35),
-		BtnFontWeight:              "400",
-		BtnBorderRadiusBase:        "4px",
-		BtnBorderRadiusSM:          "4px",
-		BtnPrimaryColor:            color.New("#fff"),
-		BtnDefaultBG:               color.New("#fff"),
-		IconFontPrefix:             "anticon",
-		IconURL:                    `"https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i"`,
-		LinkDecoration:             "none",
-		LinkHoverDecoration:        "none",
-		EaseOut:                    "cubic-bezier(0.215, 0.61, 0.355, 1)",
-		EaseIn:                     "cubic-bezier(0.55, 0.055, 0.675, 0.19)",
-		EaseInOut:                  "cubic-bezier(0.645, 0.045, 0.355, 1)",
-		EaseOutBack:                "cubic-bezier(0.12, 0.4, 0.29, 1.46)",
-		EaseInBack:                 "cubic-bezier(0.71, -0.46, 0.88, 0.6)",
-		EaseInOutBack:              "cubic-bezier(0.71, -0.46, 0.29, 1.46)",
-		EaseOutCirc:                "cubic-bezier(0.08, 0.82, 0.17, 1)",
-		EaseInCirc:                 "cubic-bezier(0.6, 0.04, 0.98, 0.34)",
-		EaseInOutCirc:              "cubic-bezier(0.78, 0.14, 0.15, 0.86)",
-		EaseOutQuint:               "cubic-bezier(0.23, 1, 0.32, 1)",
-		EaseInQuint:                "cubic-bezier(0.755, 0.05, 0.855, 0.06)",
-		EaseInOutQuint:             "cubic-bezier(0.86, 0, 0.07, 1)",
-		OutlineBlurSize:            "0",
-		OutlineWidth:               "2px",
-		ShadowColor:                color.New("#3636BB"),
-		CheckboxSize:               "16px",
-		RadioSize:                  "16px",
-		GridColumns:                24,
-		GridGutterWidth:            0,
-		ScreenXS:                   "480px",
-		ScreenXSMin:                "480px",
-		ScreenSM:                   "576px",
-		ScreenSMMin:                "576px",
-		ScreenMD:                   "768px",
-		ScreenMDMin:                "768px",
-		ScreenLG:                   "992px",
-		ScreenLGMin:                "992px",
-		ScreenXL:                   "1200px",
-		ScreenXLMin:                "1200px",
-		ScreenXXL:                  "1600px",
-		ScreenXXLMin:               "1600px",
-		ScreenXSMax:                "479px",
-		ScreenSMMax:                "575px",
-		ScreenMDMax:                "767px",
-		ScreenLGMax:                "991px",
-		ScreenXLMax:                "1199px",
-		BorderColorBase:            color.New("#D9D9D9"), // base border outline a component
-		BorderColorSplit:           "#E8E8E8",            // split border inside a component
-		BorderWithBase:             "1px",                // width of the border for a component
-		BorderStyleBase:            "solid",              // style of a components border
-		LayoutBodyBackground:       color.New("#f0f2f5"),
-		LayoutHeaderBackground:     color.New("#001529"),
-		LayoutHeaderHeight:         "64px",
-		LayoutHeaderPadding:        "0 50px",
-		LayoutFooterPadding:        "24px 50px",
-		LayoutTriggerHeight:        "48px",
-		LayoutTriggerBackground:    color.New("#002140"),
-		LayoutTriggerColor:         color.New("#fff"),
-		LayoutZeroTriggerWidth:     "36px",
-		LayoutZeroTriggerHeight:    "42px",
-		ZIndexAffix:                "10",
-		ZIndexBackTop:              "10",
-		ZIndexModalMask:            "1000",
-		ZIndexModal:                "1000",
-		ZIndexNotification:         "1010",
-		ZIndexMessage:              "1010",
-		ZIndexPopover:              "1030",
-		ZIndexPicker:               "1050",
-		ZIndexDropdown:             "1050",
-		ZIndexTooltip:              "1060",
-		AnimationDurationSlow:      ".3s", //Modal
-		AnimationDurationBase:      ".2s",
-		AnimationDurationFast:      ".1s", //Tooltip
-		FormItemMarginBottom:       "24px",
-		FormItemTrailingColon:      "true",
-		FormVerticalLabelPadding:   "0 0 8px",
-		FormVerticalLabelMargin:    "0",
-		InputHeightBase:            "32px",
-		InputHeightLG:              "40px",
-		InputHeightSM:              "24px",
-		InputPaddingHorizontal:     "11px",
-		InputPaddingHorizontalBase: "12px",
-		InputPaddingHorizontalSM:   "7px",
-		InputPaddingHorizontalLG:   "12px",
-		InputPaddingVerticalBase:   "4px",
-		InputPaddingVerticalSM:     "1px",
-		InputPaddingVerticalLG:     "4px",
-		InputPlaceholderColor:      color.New("#BFBFBF"),
-		TooltipMaxWidth:            "250px",
-		TooltipColor:               color.New("#fff"),
-		TooltipBG:                  color.New("#970B97"),
-		TooltipArrowWidth:          "5px",
-		TooltipDistance:            "8px",
+		FontSizeBase:                   "14px",
+		FontSizeLG:                     "16px",
+		FontSizeSM:                     "12px",
+		LineHeightBase:                 "1.5",
+		BorderRadiusBase:               "4px",
+		BorderRadiusSM:                 "2px",
+		PaddingLG:                      "24px",
+		PaddingMD:                      "16px",
+		PaddingSM:                      "12px",
+		PaddingXS:                      "8px",
+		BackgroundColorLight:           color.New("#FAFAFA"),
+		BackgroundColorBase:            color.New("#F5F5F5"),
+		DisabledColor:                  color.Fade(color.New("#000"), 25),
+		DisabledColorDark:              color.Fade(color.New("#fff"), 35),
+		BtnFontWeight:                  "400",
+		BtnBorderRadiusBase:            "4px",
+		BtnBorderRadiusSM:              "4px",
+		BtnPrimaryColor:                color.New("#fff"),
+		BtnDefaultBG:                   color.New("#fff"),
+		IconFontPrefix:                 "anticon",
+		IconURL:                        `"https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i"`,
+		LinkDecoration:                 "none",
+		LinkHoverDecoration:            "none",
+		EaseOut:                        "cubic-bezier(0.215, 0.61, 0.355, 1)",
+		EaseIn:                         "cubic-bezier(0.55, 0.055, 0.675, 0.19)",
+		EaseInOut:                      "cubic-bezier(0.645, 0.045, 0.355, 1)",
+		EaseOutBack:                    "cubic-bezier(0.12, 0.4, 0.29, 1.46)",
+		EaseInBack:                     "cubic-bezier(0.71, -0.46, 0.88, 0.6)",
+		EaseInOutBack:                  "cubic-bezier(0.71, -0.46, 0.29, 1.46)",
+		EaseOutCirc:                    "cubic-bezier(0.08, 0.82, 0.17, 1)",
+		EaseInCirc:                     "cubic-bezier(0.6, 0.04, 0.98, 0.34)",
+		EaseInOutCirc:                  "cubic-bezier(0.78, 0.14, 0.15, 0.86)",
+		EaseOutQuint:                   "cubic-bezier(0.23, 1, 0.32, 1)",
+		EaseInQuint:                    "cubic-bezier(0.755, 0.05, 0.855, 0.06)",
+		EaseInOutQuint:                 "cubic-bezier(0.86, 0, 0.07, 1)",
+		OutlineBlurSize:                "0",
+		OutlineWidth:                   "2px",
+		ShadowColor:                    color.New("#3636BB"),
+		CheckboxSize:                   "16px",
+		RadioSize:                      "16px",
+		GridColumns:                    24,
+		GridGutterWidth:                0,
+		ScreenXS:                       "480px",
+		ScreenXSMin:                    "480px",
+		ScreenSM:                       "576px",
+		ScreenSMMin:                    "576px",
+		ScreenMD:                       "768px",
+		ScreenMDMin:                    "768px",
+		ScreenLG:                       "992px",
+		ScreenLGMin:                    "992px",
+		ScreenXL:                       "1200px",
+		ScreenXLMin:                    "1200px",
+		ScreenXXL:                      "1600px",
+		ScreenXXLMin:                   "1600px",
+		ScreenXSMax:                    "479px",
+		ScreenSMMax:                    "575px",
+		ScreenMDMax:                    "767px",
+		ScreenLGMax:                    "991px",
+		ScreenXLMax:                    "1199px",
+		BorderColorBase:                color.New("#D9D9D9"), // base border outline a component
+		BorderColorSplit:               color.New("#E8E8E8"), // split border inside a component
+		BorderWithBase:                 "1px",                // width of the border for a component
+		BorderStyleBase:                "solid",              // style of a components border
+		LayoutBodyBackground:           color.New("#f0f2f5"),
+		LayoutHeaderBackground:         color.New("#001529"),
+		LayoutHeaderHeight:             "64px",
+		LayoutHeaderPadding:            "0 50px",
+		LayoutFooterPadding:            "24px 50px",
+		LayoutTriggerHeight:            "48px",
+		LayoutTriggerBackground:        color.New("#002140"),
+		LayoutTriggerColor:             color.New("#fff"),
+		LayoutZeroTriggerWidth:         "36px",
+		LayoutZeroTriggerHeight:        "42px",
+		ZIndexAffix:                    "10",
+		ZIndexBackTop:                  "10",
+		ZIndexModalMask:                "1000",
+		ZIndexModal:                    "1000",
+		ZIndexNotification:             "1010",
+		ZIndexMessage:                  "1010",
+		ZIndexPopover:                  "1030",
+		ZIndexPicker:                   "1050",
+		ZIndexDropdown:                 "1050",
+		ZIndexTooltip:                  "1060",
+		AnimationDurationSlow:          ".3s", //Modal
+		AnimationDurationBase:          ".2s",
+		AnimationDurationFast:          ".1s", //Tooltip
+		FormItemMarginBottom:           "24px",
+		FormItemTrailingColon:          "true",
+		FormVerticalLabelPadding:       "0 0 8px",
+		FormVerticalLabelMargin:        "0",
+		InputHeightBase:                "32px",
+		InputHeightLG:                  "40px",
+		InputHeightSM:                  "24px",
+		InputPaddingHorizontal:         "11px",
+		InputPaddingHorizontalBase:     "12px",
+		InputPaddingHorizontalSM:       "7px",
+		InputPaddingHorizontalLG:       "12px",
+		InputPaddingVerticalBase:       "4px",
+		InputPaddingVerticalSM:         "1px",
+		InputPaddingVerticalLG:         "4px",
+		InputPlaceholderColor:          color.New("#BFBFBF"),
+		TooltipMaxWidth:                "250px",
+		TooltipColor:                   color.New("#fff"),
+		TooltipBG:                      color.New("#970B97"),
+		TooltipArrowWidth:              "5px",
+		TooltipDistance:                "8px",
+		PopoverBG:                      color.New("#fff"),
+		PopoverMinWidth:                "177px",
+		PopoverArrowWidth:              "5px",
+		PopoverDistance:                "9px",
+		ModalMaskBG:                    color.New("#1E2324"),
+		MenuInlineTopLevelItem:         "40px",
+		MenuItemHeight:                 "40px",
+		MenuCollapsedWidth:             "80px",
+		MenuDarkArrowColor:             color.New("#fff"),
+		MenuDarkSubmenuBG:              color.New("#000c17"),
+		MenuDarkHighlightColor:         color.New("#fff"),
+		SpinDotSizeSM:                  "14px",
+		SpinDotSize:                    "20px",
+		SpinDotSizeLG:                  "32px",
+		TableSelectedRowBG:             color.New("#fafafa"),
+		TableExpandedRowBG:             color.New("#fbfbfb"),
+		TablePaddingVertical:           "16px",
+		TablePaddingHorizontal:         "16px",
+		TimePIckerPanelColumnWidth:     "56px",
+		TimePIckerPanelWidth:           "168px",
+		CarouselDotWidth:               "16px",
+		CarouselDotHeight:              "3px",
+		CarouselDotActiveWidth:         "24px",
+		BadgeHeight:                    "20px",
+		BadgeDotSize:                   "6px",
+		BadgeFontWeight:                "normal",
+		BadgeStatusSize:                "6px",
+		CardHeadPadding:                "16px",
+		CardInnerHeadPadding:           "12px",
+		CardPaddingBase:                "24px",
+		CardPaddingWider:               "32px",
+		CardShadow:                     "0 2px 8px rgba(0, 0, 0, .09)",
+		TabsCardHeight:                 "40px",
+		TabBarMargin:                   "0 0 16px 0",
+		TabHorizontalMargin:            "0 32px 0 0",
+		TabVerticalMargin:              "0 0 16px 0",
+		TabHorizontalPadding:           "12px 16px",
+		TabVerticalPadding:             "8px 24px",
+		TabScrollingSize:               "32px",
+		BackTopColor:                   color.New("#fff"),
+		AvatarSizeBase:                 "32px",
+		AvatarSizeLG:                   "40px",
+		AvatarSizeSM:                   "24px",
+		AvatarFontSizeBase:             "18px",
+		AvatarFontSizeLG:               "24px",
+		AvatarFontSizeSM:               "14px",
+		AvatarBG:                       color.New("#ccc"),
+		AvatarColor:                    color.New("#fff"),
+		SwitchHeight:                   "22px",
+		SwitchSMHeight:                 "16px",
+		SwitchSMCheckedMarginLeft:      "-13px",
+		SwitchDisabledOpacity:          " 0.4",
+		PaginationItemSize:             "32px",
+		PaginationItemSizeSM:           "24px",
+		PaginationFontFamily:           "Arial",
+		PaginationFontWeightActive:     "500",
+		SliderMargin:                   "14px 6px 10px",
+		SliderRailBackgroundColorHover: color.New("#e1e1e1"),
+		CollapseHeaderPadding:          "12px 0 12px 40px",
 	}
 
 	t.Primary = color.Generate(t.PrimaryColor)
@@ -440,5 +683,68 @@ func New() *Theme {
 	t.InputHoverBorderColor = t.PrimaryColor
 	t.InputDisabledBG = t.DisabledBG
 	t.TooltipArrowColor = t.TooltipBG
+	t.PopoverColor = t.TextColor
+	t.PopoverArrowColor = t.PopoverBG
+	t.PopoverArrowOuterColor = t.PopoverBG
+	t.ProgressDefaultColor = t.ProcessingColor
+	t.ProgressRemainingColor = t.BackgroundColorBase
+	t.MenuBG = t.ComponentBackground
+	t.MenuItemColor = t.TextColor
+	t.MenuHighlightColor = t.PrimaryColor
+	t.MenuItemActiveBG = t.ActiveItemBG
+	t.MenuItemGroupTitleColor = t.TextColorSecondary
+	t.MenuDarkColor = t.TextColorSecondaryDark
+	t.MenuDarkBG = t.LayoutHeaderBackground
+	t.MenuDarkItemActiveBG = t.PrimaryColor
+	t.MenuDarkItemSelectedBG = t.PrimaryColor
+	t.TableHeaderBG = t.BackgroundColorLight
+	t.TableHeaderSortBG = t.BackgroundColorBase
+	t.TableRowHoverBG = t.Primary[0]
+	t.TagDefaultBG = t.BackgroundColorLight
+	t.TagDefaultColor = t.TextColor
+	t.TagFontSize = t.FontSizeSM
+	t.TimePIckerSelectedBG = t.BackgroundColorBase
+	t.BadgeFontSize = t.FontSizeSM
+	t.RateStarColor = palette.Yellow[5]
+	t.RateStarBG = t.BorderColorSplit
+	t.CardHeadColor = t.HeadingColor
+	t.CardHeadBackground = t.ComponentBackground
+	t.CardActionsBackground = t.BackgroundColorLight
+	t.TabsCardHeadBackground = t.BackgroundColorLight
+	t.TabsCardActiveColor = t.PrimaryColor
+	t.TabsTitleFontSize = t.FontSizeBase
+	t.TabsTitleFontSizeLG = t.FontSizeLG
+	t.TabsTitleFontSizeSM = t.FontSizeBase
+	t.TabsInkBarBGColor = t.PrimaryColor
+	t.TabHighlightColor = t.PrimaryColor
+	t.TabHoverColor = t.Primary[4]
+	t.TabActiveColor = t.Primary[6]
+	t.BackTopBG = t.TextColorSecondary
+	t.BackTopHoverBG = t.TextColor
+	t.AvatarBorderRadius = t.BorderRadiusBase
+	t.SwitchColor = t.PrimaryColor
+	t.BreadcrumbBaseColor = t.TextColorSecondary
+	t.BreadcrumbLastItemColor = t.TextColor
+	t.BreadcrumbFontSize = t.FontSizeBase
+	t.BreadcrumbIconFontSize = t.FontSizeSM
+	t.BreadcrumbLinkColor = t.TextColorSecondary
+	t.BreadcrumbLinkColorHover = t.Primary[4]
+	t.BreadcrumbSeparatorColor = t.TextColorSecondary
+	t.BreadcrumbSeparatorMargin = "0 " + t.PaddingXS
+	t.SliderRailBackgroundColor = t.BackgroundColorBase
+	t.SliderTrackBackgroundColor = t.Primary[2]
+	t.SliderTrackBackgroundColorHover = t.Primary[3]
+	t.SliderHandleColor = t.Primary[2]
+	t.SliderHandleColorHover = t.Primary[3]
+	t.SliderHandleColorFocus = color.Tint(t.PrimaryColor, 20)
+	t.SliderHandleColorFocusShadow = color.Tint(t.PrimaryColor, 50)
+	t.SliderHandleColorTooltipOpen = t.PrimaryColor
+	t.SliderDotBorderColor = t.BorderColorSplit
+	t.SliderDotBorderColorActive = color.Tint(t.PrimaryColor, 50)
+	t.SliderDisabledColor = t.DisabledColor
+	t.SliderDisabledBackgroundColor = t.ComponentBackground
+	t.CollapseHeaderBG = t.BackgroundColorLight
+	t.CollapseContentPadding = t.PaddingMD
+	t.CollapseContentBG = t.ComponentBackground
 	return t
 }

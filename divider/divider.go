@@ -49,20 +49,32 @@ type Divider struct {
 	Type        Kind
 	Orientation Orientation
 	Dashed      bool
-	Style       vecty.Applyer
-	CSS         gs.CSSRule
-	Children    func() vecty.MarkupOrChild
-	sheet       *gs.Sheet
-	classMap    gs.ClassMap
+	// These are additional style rules to apply. If provided the rule will be
+	// compiled and the resulting classes will be applied to the <div></div> html
+	// element rendered.
+	//
+	// Please define only classes/selectors here with gs.S, for trivial css
+	// properties change use the Style field.
+	CSS gs.CSSRule
+
+	// Markup style applied to the divider's root  <div></div> element.
+	Style vecty.Applyer
+
+	Children func() vecty.MarkupOrChild
+	sheet    *gs.Sheet
 }
 
 func (d *Divider) Render() vecty.ComponentOrHTML {
 	if d.sheet == nil {
 		d.sheet = ui.NewSheet()
-		d.classMap = d.sheet.AddRule(divider.Style())
+		d.sheet.AddRule(divider.Style())
+	}
+	var commonClass vecty.ClassMap
+	if d.CSS != nil {
+		commonClass = vecty.ClassMap(d.sheet.AddRule(d.CSS).Classes())
 	}
 	children := d.getChildren()
-	cn := d.classMap[divider.BaseClass]
+	cn := d.sheet.CLasses[divider.BaseClass]
 	cn = cn[1:]
 	cls := vecty.ClassMap{
 		cn: true,
@@ -71,7 +83,7 @@ func (d *Divider) Render() vecty.ComponentOrHTML {
 		join(cn, divider.Dashed):                           !!d.Dashed,
 	}
 	return elem.Div(
-		vecty.Markup(cls),
+		vecty.Markup(cls, commonClass),
 		vecty.If(children != nil,
 			elem.Span(
 				vecty.Markup(

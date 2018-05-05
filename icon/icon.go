@@ -348,8 +348,17 @@ type Icon struct {
 	vecty.Core
 
 	// Kind is a string representing the name of the icon.
-	Kind     Kind
-	CSS      gs.CSSRule
+	Kind Kind
+
+	// These are additional style rules to apply. If provided the rule will be
+	// compiled and the resulting classes will be applied to the <i></i> html
+	// element rendered.
+	//
+	// Please define only classes/selectors here with gs.S, for trivial css
+	// properties change use the Style field.
+	CSS gs.CSSRule
+
+	// Markup style applied to the icon <i></i> element.
 	Style    vecty.Applyer
 	Children func() vecty.MarkupOrChild
 	sheet    *gs.Sheet
@@ -381,6 +390,7 @@ func (i *Icon) Render() vecty.ComponentOrHTML {
 		i.getChildren(),
 	)
 }
+
 func toClass(name string) string {
 	if name == "" {
 		return ""
@@ -390,6 +400,7 @@ func toClass(name string) string {
 	}
 	return name
 }
+
 func join(v ...string) string {
 	o := ""
 	for _, s := range v {

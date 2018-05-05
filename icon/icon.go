@@ -365,6 +365,10 @@ func (i *Icon) Render() vecty.ComponentOrHTML {
 		i.sheet = ui.Registry.NewSheet()
 		i.sheet.AddRule(icon.Style1(string(i.Kind)))
 	}
+	var customStyles vecty.ClassMap
+	if i.CSS != nil {
+		customStyles = vecty.ClassMap(i.sheet.AddRule(i.CSS).Classes())
+	}
 	root := i.sheet.CLasses[icon.Root]
 	k := join(icon.Root, "-", string(i.Kind))
 	k = i.sheet.CLasses[k]
@@ -373,7 +377,7 @@ func (i *Icon) Render() vecty.ComponentOrHTML {
 		toClass(k):    true,
 	}
 	return elem.Italic(
-		vecty.Markup(c, i.Style),
+		vecty.Markup(c, customStyles, i.Style),
 		i.getChildren(),
 	)
 }

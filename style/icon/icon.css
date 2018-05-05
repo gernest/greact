@@ -1,9 +1,4 @@
-instagram:before {
-   display : block;
-   font-family : "anticon" !important;
-   content : "\e70b";
-}
-instagram {
+.AntIcon {
    display : inline-block;
    font-style : normal;
    vertical-align : baseline;
@@ -13,4 +8,11 @@ instagram {
    text-rendering : optimizeLegibility;
    -webkit-font-smoothing : antialiased;
    -moz-osx-font-smoothing : grayscale;
+}
+.AntIcon:before {
+   display : block;
+   font-family : "anticon" !important;
+}
+.AntIcon-instagram:before {
+   content : "\e70b";
 }

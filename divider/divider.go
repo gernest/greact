@@ -29,7 +29,7 @@ func (o Orientation) String() string {
 	case 2:
 		return divider.WithTextRight
 	default:
-		return ""
+		return divider.WithText
 	}
 }
 
@@ -78,9 +78,9 @@ func (d *Divider) Render() vecty.ComponentOrHTML {
 	cn = cn[1:]
 	cls := vecty.ClassMap{
 		cn: true,
-		join(cn, d.Type.String()):                          true,
-		join(cn, divider.WithText, d.Orientation.String()): children != nil,
-		join(cn, divider.Dashed):                           !!d.Dashed,
+		join(cn, d.Type.String()):        true,
+		join(cn, d.Orientation.String()): children != nil,
+		join(cn, divider.Dashed):         !!d.Dashed,
 	}
 	return elem.Div(
 		vecty.Markup(cls, commonClass),

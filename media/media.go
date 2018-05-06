@@ -1,19 +1,19 @@
-package enquire
+package media
 
 import (
 	"github.com/gernest/vected/dom"
 	"github.com/gopherjs/gopherjs/js"
 )
 
-type MediaQuery struct {
+type Query struct {
 	Query           string
 	IsUnconditional bool
 	mql             *dom.MediaQueyList
-	handlers        []*QueryHandler
+	handlers        []*Handler
 }
 
-func NewMediaQuery(query string, isUnconditional bool) *MediaQuery {
-	m := &MediaQuery{
+func NewMediaQuery(query string, isUnconditional bool) *Query {
+	m := &Query{
 		Query:           query,
 		IsUnconditional: isUnconditional,
 	}
@@ -23,7 +23,7 @@ func NewMediaQuery(query string, isUnconditional bool) *MediaQuery {
 	return m
 }
 
-func (m *MediaQuery) clear() {
+func (m *Query) clear() {
 	for _, v := range m.handlers {
 		v.destroy()
 	}
@@ -31,7 +31,7 @@ func (m *MediaQuery) clear() {
 	m.handlers = nil
 }
 
-func (m *MediaQuery) listen(o *js.Object) {
+func (m *Query) listen(o *js.Object) {
 	e := dom.ToMediaQueryListEvent(o)
 	var on bool
 	if e.Matches || m.IsUnconditional {
@@ -46,7 +46,7 @@ func (m *MediaQuery) listen(o *js.Object) {
 	}
 }
 
-func (m *MediaQuery) AddHandler(h *QueryHandler) {
+func (m *Query) AddHandler(h *Handler) {
 	m.handlers = append(m.handlers, h)
 	if m.mql.Matches || m.IsUnconditional {
 		h.on()
@@ -61,27 +61,27 @@ type Options struct {
 	DeferSetup bool
 }
 
-type QueryHandler struct {
+type Handler struct {
 	options     *Options
 	initialized bool
 }
 
-func NewQueryHandler(opts *Options) *QueryHandler {
-	q := &QueryHandler{options: opts}
+func NewQueryHandler(opts *Options) *Handler {
+	q := &Handler{options: opts}
 	if !opts.DeferSetup {
 		q.setup()
 	}
 	return q
 }
 
-func (q *QueryHandler) setup() {
+func (q *Handler) setup() {
 	if q.options.Setup != nil {
 		q.options.Setup()
 	}
 	q.initialized = true
 }
 
-func (q *QueryHandler) on() {
+func (q *Handler) on() {
 	if !q.initialized {
 		q.setup()
 	}
@@ -90,13 +90,13 @@ func (q *QueryHandler) on() {
 	}
 }
 
-func (q *QueryHandler) off() {
+func (q *Handler) off() {
 	if q.options.UnMatch != nil {
 		q.options.UnMatch()
 	}
 }
 
-func (q *QueryHandler) destroy() {
+func (q *Handler) destroy() {
 	if q.options.Destroy != nil {
 		q.options.Destroy()
 	} else {
@@ -116,7 +116,7 @@ var ErrNotSupported = &Error{msg: "matchMedia not present, legacy browsers requi
 
 type Dispatch struct {
 	BrowserIsIncapable bool
-	queries            map[string]*MediaQuery
+	queries            map[string]*Query
 }
 
 func NewDispatch() *Dispatch {

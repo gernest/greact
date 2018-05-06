@@ -7,7 +7,7 @@
    margin : 0;
    padding : 0;
    list-style : none;
-   background : hsv(0, 0, 91%);
+   background : rgb(232,232,232);
 }
 .Divider {
    margin :  0 8px;
@@ -32,7 +32,7 @@
    margin : 24px 0;
    clear : both;
 }
-.DividerWithText {
+.DividerHorizontal.DividerWithText {
    display : table;
    white-space : nowrap;
    text-align : center;
@@ -42,21 +42,23 @@
    font-size : 16px;
    margin : 16px 0;
 }
-.DividerWithText:before {
+.DividerHorizontal.DividerWithText:before {
    content : '';
    display : table-cell;
    position : relative;
    top : 50%;
    width : 50%;
-   border-top : 1px solid hsv(0, 0, 91%);
+   border-top : 1px solid rgb(232,232,232);
+   transform : translateY(50%);
 }
-.DividerWithText:after {
+.DividerHorizontal.DividerWithText:after {
    content : '';
    display : table-cell;
    position : relative;
    top : 50%;
    width : 50%;
-   border-top : 1px solid hsv(0, 0, 91%);
+   border-top : 1px solid rgb(232,232,232);
+   transform : translateY(50%);
 }
 .DividerInnerText {
    display : inline-block;
@@ -77,7 +79,7 @@
    position : relative;
    top : 50%;
    width : 5%;
-   border-top : 1px solid hsv(0, 0, 91%);
+   border-top : 1px solid rgb(232,232,232);
    transform : translateY(50%);
 }
 .DividerHorizontal.DividerWithTextLeft:after {
@@ -86,7 +88,7 @@
    position : relative;
    top : 50%;
    width : 95%;
-   border-top : 1px solid hsv(0, 0, 91%);
+   border-top : 1px solid rgb(232,232,232);
    transform : translateY(50%);
 }
 .DividerHorizontal.DividerWithTextLeftInnerText {
@@ -109,7 +111,7 @@
    position : relative;
    top : 50%;
    width : 95%;
-   border-top : 1px solid hsv(0, 0, 91%);
+   border-top : 1px solid rgb(232,232,232);
    transform : translateY(50%);
 }
 .DividerHorizontal.DividerWithTextRight:after {
@@ -118,7 +120,7 @@
    position : relative;
    top : 50%;
    width : 5%;
-   border-top : 1px solid hsv(0, 0, 91%);
+   border-top : 1px solid rgb(232,232,232);
    transform : translateY(50%);
 }
 .DividerHorizontal.DividerWithTextRightInnerText {
@@ -127,7 +129,7 @@
 }
 .DividerDashed {
    background : none;
-   border-top : 1px dashed hsv(0, 0, 91%);
+   border-top : 1px dashed rgb(232,232,232);
 }
 .DividerHorizontal.DividerWithText.DividerDashed {
    border-top : 0;

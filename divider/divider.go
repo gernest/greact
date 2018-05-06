@@ -8,17 +8,25 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
+// Kind is the type of the divider.
 type Kind int64
 
 const (
+	//Horizontal this draws a horizontal divider.
 	Horizontal Kind = iota
+
+	// Vertical draws vertical divider.
 	Vertical
 )
 
+// Orientation is where the text node within the divider element is placed.
 type Orientation int64
 
 const (
+	// Left the text is placed to the left.
 	Left Orientation = iota + 1
+
+	// Right the text is placed to the right.
 	Right
 )
 
@@ -44,6 +52,7 @@ func (o Kind) String() string {
 	}
 }
 
+// Divider is a component that draws a line to separate different content.
 type Divider struct {
 	vecty.Core
 	Type        Kind
@@ -60,10 +69,13 @@ type Divider struct {
 	// Markup style applied to the divider's root  <div></div> element.
 	Style vecty.Applyer
 
+	// The text node component which is wrapped in a <span> element. You can be
+	// creative and render something else.
 	Children func() vecty.MarkupOrChild
 	sheet    *gs.Sheet
 }
 
+// Render implements vecty.Component interface.
 func (d *Divider) Render() vecty.ComponentOrHTML {
 	if d.sheet == nil {
 		d.sheet = ui.NewSheet()
@@ -110,9 +122,14 @@ func join(v ...string) string {
 	return o
 }
 
+// Mount implements vecty.Mounter interface.This attaches the component's style
+// sheet.
 func (d *Divider) Mount() {
 	d.sheet.Attach()
 }
+
+// Unmount implements vecty.Unmounter interface.This detach the component's style
+// sheet.
 func (d *Divider) Unmount() {
 	d.sheet.Detach()
 }

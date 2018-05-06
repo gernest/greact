@@ -30,6 +30,21 @@ func (demo) Render() vecty.ComponentOrHTML {
 		},
 		loren(),
 		&divider.Divider{},
+		loren(),
+		&divider.Divider{
+			Orientation: divider.Left,
+			Children: func() vecty.MarkupOrChild {
+				return vecty.Text("Left text")
+			},
+		},
+		loren(),
+		&divider.Divider{
+			Orientation: divider.Right,
+			Children: func() vecty.MarkupOrChild {
+				return vecty.Text("Right text")
+			},
+		},
+		loren(),
 	)
 }
 

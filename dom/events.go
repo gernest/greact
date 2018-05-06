@@ -139,3 +139,19 @@ func ToDragEvent(ev *js.Object) *DragEvent {
 	e.DataTransfer = &DataTransfer{Object: dt}
 	return e
 }
+
+type MediaQueryListEvent struct {
+	*js.Object
+	*Event
+	// is true if the document currently matches the media query list, or false if
+	// not.
+	Matches bool `js:"matches"`
+
+	Media string `js:"media"`
+}
+
+func ToMediaQueryListEvent(o *js.Object) *MediaQueryListEvent {
+	m := &MediaQueryListEvent{Object: o}
+	m.Event = &Event{Object: o}
+	return m
+}

@@ -144,3 +144,21 @@ type DataTransferItemList struct {
 	// is the number of drag items in the list.
 	Length uint64 `js:"length"`
 }
+
+type MediaQueyList struct {
+	*js.Object
+
+	// is true if the document currently matches the media query list, or false if
+	// not.
+	Matches bool `js:"matches"`
+
+	Media string `js:"media"`
+}
+
+func (m *MediaQueyList) AddListener(ls func(*js.Object)) {
+	m.Call("addListener", ls)
+}
+
+func (m *MediaQueyList) RemoveListener(ls func(*js.Object)) {
+	m.Call("removeListener", ls)
+}

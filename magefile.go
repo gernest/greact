@@ -19,3 +19,7 @@ func Icon() error {
 func Divider() error {
 	return sh.RunV("gopherjs", "build", "-o", "divider/demo/main.js", pkg+"/divider/demo/")
 }
+
+func Events() error {
+	return sh.RunV("gopherjs", "build", "-o", "event/demo/main.js", pkg+"/event/demo/")
+}

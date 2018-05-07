@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"regexp"
 	"strings"
 
 	"golang.org/x/tools/go/ast/astutil"
@@ -32,28 +33,28 @@ func addStrLit(str, lit string) string {
 }
 
 func matchTestName(name string, typ *ast.FuncType) bool {
-	ret := typ.Results == nil
-	args := len(typ.Params.List) == 1
+	ret := typ.Results != nil && len(typ.Results.List) == 1
+	args := typ.Params.List == nil
 	return ast.IsExported(name) &&
 		name != "Test" && strings.HasPrefix(name, "Test") &&
-		ret && args && checkSignature(typ.Params.List[0])
+		ret && args && checkSignature(typ.Results.List[0])
 }
 
+var testName = regexp.MustCompile(`^Test`)
+
 func checkSignature(field *ast.Field) bool {
-	if a, ok := field.Type.(*ast.StarExpr); ok {
-		if s, ok := a.X.(*ast.SelectorExpr); ok {
-			id, ok := s.X.(*ast.Ident)
-			if !ok {
-				return false
-			}
-			if id.Name != "prom" {
-				return false
-			}
-			if s.Sel.Name != "T" {
-				return false
-			}
-			return true
+	if a, ok := field.Type.(*ast.SelectorExpr); ok {
+		id, ok := a.X.(*ast.Ident)
+		if !ok {
+			return false
 		}
+		if id.Name != "prom" {
+			return false
+		}
+		if a.Sel.Name != "Test" {
+			return false
+		}
+		return true
 	}
 	return false
 }
@@ -207,6 +208,7 @@ func applyLineNumber(set *token.FileSet, pre bool) func(*astutil.Cursor) bool {
 		switch e := node.(type) {
 		case *ast.FuncDecl:
 			if pre {
+				ast.Print(set, e.Type)
 				return matchTestName(e.Name.Name, e.Type)
 			}
 		case *ast.CallExpr:

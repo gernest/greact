@@ -5,6 +5,13 @@ import (
 	"fmt"
 )
 
+var (
+	_ Test = (*T)(nil)
+	_ Test = (*Suite)(nil)
+	_ Test = (*ExecCommand)(nil)
+	_ Test = (List)(nil)
+)
+
 type Test interface {
 	run()
 }
@@ -66,12 +73,12 @@ type ResultCtx struct {
 	Results  []*ResultInfo
 }
 
-func Exec(ctx ...*T) (*ResultCtx, error) {
+func Exec(ctx ...*T) *ResultCtx {
 	rs := &ResultCtx{}
 	for _, v := range ctx {
 		rs.Children = append(rs.Children, v.exec())
 	}
-	return rs, nil
+	return rs
 }
 
 func execSuite(s *Suite) *ResultCtx {
@@ -158,8 +165,15 @@ type T struct {
 	base   List
 }
 
-func NewTest(name string) *T {
-	return &T{suit: &Suite{Desc: name}}
+func NewTest(name string, hooks ...func()) *T {
+	t := &T{suit: &Suite{Desc: name}}
+	switch len(hooks) {
+	case 1:
+		t.before = hooks[0]
+	case 2:
+		t.before, t.after = hooks[0], hooks[1]
+	}
+	return t
 }
 
 func (t *T) Before(fn ...func()) {
@@ -174,6 +188,8 @@ func (t *T) After(fn ...func()) {
 	}
 }
 
+func (t *T) run() {}
+
 func (t *T) Describe(desc string, cases ...Test) {
 	t.suit.Cases = append(t.suit.Cases, Describe(desc, cases...))
 }
@@ -187,4 +203,9 @@ func (t *T) exec() *ResultCtx {
 		t.after()
 	}
 	return rs
+}
+
+func (t *T) Cases(tc ...Test) *T {
+	t.suit.Cases = append(t.suit.Cases)
+	return t
 }

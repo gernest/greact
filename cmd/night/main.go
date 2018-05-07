@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"go/ast"
 	"go/build"
+	"go/format"
 	"go/parser"
 	"go/printer"
 	"go/token"
+	"html/template"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
-
-	"golang.org/x/tools/go/ast/astutil"
 
 	"github.com/gernest/prom/tools"
 	"github.com/urfave/cli"
@@ -33,7 +34,7 @@ func main() {
 			Value: ".",
 		},
 		cli.BoolFlag{
-			Name: "cover",
+			Name: "build",
 		},
 	}
 	a.Action = run
@@ -46,40 +47,13 @@ func main() {
 
 func run(ctx *cli.Context) error {
 	pkgPath := ctx.String("pkg")
-	cover := ctx.Bool("cover")
+	buildPkg := ctx.Bool("build")
 	out := filepath.Join(pkgPath, testsOutDir)
-	pkg, err := build.ImportDir(pkgPath, 0)
-	if err != nil {
-		return err
-	}
 	rootPkg, err := calcPkgPath(pkgPath)
 	if err != nil {
 		return err
 	}
-	importMap := make(map[string]string)
-	importMap[rootPkg] = filepath.Join(rootPkg, testsOutDir, pkg.Name)
-	if cover {
-		var files []*ast.File
-		dst := filepath.Join(out, pkg.Name)
-		os.MkdirAll(dst, 0755)
-		set := token.NewFileSet()
-		for _, v := range pkg.GoFiles {
-			fn := filepath.Join(pkg.Dir, v)
-			f, err := parser.ParseFile(set, fn, nil, 0)
-			if err != nil {
-				return err
-			}
-			files = append(files,
-				tools.AddCoverage(set, f),
-			)
-		}
-		for _, v := range files {
-			err := writeFile(dst, set, v)
-			if err != nil {
-				return err
-			}
-		}
-	}
+
 	tdir := filepath.Join(pkgPath, testsDir)
 	tsPkg, err := build.ImportDir(tdir, 0)
 	if err != nil {
@@ -89,24 +63,37 @@ func run(ctx *cli.Context) error {
 	dst := out
 	os.MkdirAll(filepath.Join(out, tsPkg.Name), 0755)
 	set := token.NewFileSet()
+	var funcs []string
 	for _, v := range tsPkg.GoFiles {
 		f, err := parser.ParseFile(set, filepath.Join(tsPkg.Dir, v), nil, 0)
 		if err != nil {
 			return err
 		}
-		files = append(files,
-			tools.AddFileNumber(set, f),
-		)
+		fn := tools.AddFileNumber(set, f)
+		if fn != nil {
+			funcs = append(funcs, fn...)
+		}
+		files = append(files, f)
 	}
 	for _, v := range files {
-		for key, value := range importMap {
-			astutil.DeleteImport(set, v, key)
-			astutil.AddImport(set, v, value)
-		}
 		err := writeFile(dst, set, v)
 		if err != nil {
 			return err
 		}
+	}
+	data := make(map[string]interface{})
+	data["testPkg"] = filepath.Join(rootPkg, testsOutDir, testsDir)
+	data["funcs"] = funcs
+	if err = writeMain(out, data); err != nil {
+		return err
+	}
+	if err = writeIndex(out); err != nil {
+		return err
+	}
+	o := filepath.Join(rootPkg, testsOutDir)
+	println(o)
+	if buildPkg {
+		return buildPackage(out, o)
 	}
 	return nil
 }
@@ -143,4 +130,77 @@ func calcPkgPath(base string) (string, error) {
 	}
 	p := filepath.Join(wd, base)
 	return calcPkgPath(p)
+}
+
+func writeMain(dst string, ctx interface{}) error {
+	tpl, err := template.New("main").Parse(mainTpl)
+	if err != nil {
+		return err
+	}
+	var buf bytes.Buffer
+	err = tpl.Execute(&buf, ctx)
+	if err != nil {
+		return err
+	}
+	m := filepath.Join(dst, "main.go")
+	b, err := format.Source(buf.Bytes())
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(m, b, 0600)
+}
+
+func writeIndex(dst string) error {
+	m := filepath.Join(dst, "index.html")
+	return ioutil.WriteFile(m, []byte(idxTpl), 0600)
+}
+
+var mainTpl = `package main
+
+import(
+	"{{.testPkg}}"
+	"github.com/gopherjs/gopherjs/js"
+	"github.com/gernest/prom"
+)
+
+func main()  {
+	js.Global.Set("startTest", startTest)
+	js.Global.Set("start", start)
+}
+
+func startTest() *prom.ResultCtx  {
+	return start()
+}
+
+func start()*prom.ResultCtx  {
+	return prom.Exec(
+		{{range .funcs -}}
+		prom.NewTest("{{.}}").Cases(test.{{.}}()),
+		{{end -}}
+	)
+}
+
+`
+
+const idxTpl = `<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>prom test runner</title>
+</head>
+
+<body>
+
+</body>
+<script src="main.js"></script>
+
+</html>`
+
+func buildPackage(dst string, pkg string) error {
+	o := filepath.Join(dst, "main.js")
+	cmd := exec.Command("gopherjs", "build", "-o", o, pkg)
+	return cmd.Run()
 }

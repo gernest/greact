@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/token"
 	"regexp"
+	"sort"
 
 	"golang.org/x/tools/go/ast/astutil"
 )
@@ -19,12 +20,25 @@ func AddCoverage(set *token.FileSet, file *ast.File) *ast.File {
 	return file
 }
 
-func AddFileNumber(set *token.FileSet, file *ast.File) *ast.File {
+func AddFileNumber(set *token.FileSet, file *ast.File) []string {
+	match := make(map[string]int)
 	astutil.Apply(file,
-		applyLineNumber(set, true),
-		applyLineNumber(set, false),
+		applyLineNumber(set, true, match),
+		applyLineNumber(set, false, match),
 	)
-	return file
+	if len(match) == 0 {
+		return nil
+	}
+	var ls []string
+	for k := range match {
+		ls = append(ls, k)
+	}
+	sort.Slice(ls, func(i, j int) bool {
+		a := ls[i]
+		b := ls[j]
+		return match[a] < match[b]
+	})
+	return ls
 }
 
 func addStrLit(str, lit string) string {
@@ -201,14 +215,17 @@ func hit(pos token.Position) *ast.ExprStmt {
 	}
 }
 
-func applyLineNumber(set *token.FileSet, pre bool) func(*astutil.Cursor) bool {
+func applyLineNumber(set *token.FileSet, pre bool, match map[string]int) func(*astutil.Cursor) bool {
+	n := 0
 	return func(c *astutil.Cursor) bool {
 		node := c.Node()
 		switch e := node.(type) {
 		case *ast.FuncDecl:
 			if pre {
-				ast.Print(set, e.Type)
-				return matchTestName(e.Name.Name, e.Type)
+				if matchTestName(e.Name.Name, e.Type) {
+					match[e.Name.Name] = n
+					n++
+				}
 			}
 		case *ast.CallExpr:
 			if s, ok := e.Fun.(*ast.SelectorExpr); ok {

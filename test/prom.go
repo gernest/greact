@@ -15,13 +15,9 @@ func TestT_Before() prom.Test {
 					before += 100
 				}),
 			)
-			_, err := prom.Exec(ts)
-			if err != nil {
-				rs.Errorf("expected no error got %v instead", err)
-			} else {
-				if before != 200 {
-					rs.Errorf("expected %v got %v", 200, before)
-				}
+			prom.Exec(ts)
+			if before != 200 {
+				rs.Errorf("expected %v got %v", 200, before)
 			}
 		}),
 	)
@@ -40,14 +36,19 @@ func TestT_After() prom.Test {
 					after = 0
 				}),
 			)
-			_, err := prom.Exec(ts)
-			if err != nil {
-				rs.Errorf("expected no error got %v instead", err)
-			} else {
-				if after != 200 {
-					rs.Errorf("expected %v got %v", 200, after)
-				}
+			prom.Exec(ts)
+			if after != 200 {
+				rs.Errorf("expected %v got %v", 200, after)
 			}
+		}),
+	)
+}
+
+func TestResult_Error() prom.Test {
+	return prom.Describe("Fails",
+		prom.It("Is failing", func(rs prom.Result) {
+			println("some fish")
+			rs.Error("Some fish")
 		}),
 	)
 }

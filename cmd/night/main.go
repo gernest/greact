@@ -28,40 +28,30 @@ func main() {
 	a := cli.NewApp()
 	a.Name = serviceName
 	a.Usage = desc
-	a.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "pkg",
-			Value: ".",
-		},
-		cli.BoolFlag{
-			Name: "build",
-		},
-	}
-
 	a.Commands = []cli.Command{
 		{
 			Name:   "start",
-			Usage:  "starts the test daemon service",
+			Usage:  "starts the test-runner daemon service",
 			Action: startDaemon,
 		},
 		{
 			Name:   "stop",
-			Usage:  "stops the test daemon service",
+			Usage:  "stops the test-runner daemon service",
 			Action: stopDaemon,
 		},
 		{
 			Name:   "install",
-			Usage:  "installs the test daemon service",
+			Usage:  "installs the test-runner daemon service",
 			Action: installDaemon,
 		},
 		{
 			Name:   "remove",
-			Usage:  "uninstall the test daemon service",
+			Usage:  "uninstall the test-runner daemon service",
 			Action: removeDaemon,
 		},
 		{
 			Name:   "status",
-			Usage:  "shows status of the daemon service",
+			Usage:  "shows status of the test-runner daemon service",
 			Action: removeDaemon,
 		},
 		{

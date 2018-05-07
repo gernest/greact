@@ -47,7 +47,6 @@ func TestT_After() prom.Test {
 func TestResult_Error() prom.Test {
 	return prom.Describe("Fails",
 		prom.It("Is failing", func(rs prom.Result) {
-			println("some fish")
 			rs.Error("Some fish")
 		}),
 	)

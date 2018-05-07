@@ -160,6 +160,7 @@ var mainTpl = `package main
 import(
 	"{{.testPkg}}"
 	"github.com/gopherjs/gopherjs/js"
+	"github.com/gernest/prom/report/text"
 	"github.com/gernest/prom"
 )
 
@@ -168,8 +169,9 @@ func main()  {
 	js.Global.Set("start", start)
 }
 
-func startTest() *prom.ResultCtx  {
-	return start()
+func startTest()   {
+	 v:= start()
+	 text.Report(v)
 }
 
 func start()*prom.ResultCtx  {

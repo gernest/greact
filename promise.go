@@ -52,7 +52,7 @@ func (*ExecCommand) run() {}
 type ResultInfo struct {
 	Case         string
 	Failed       bool
-	FailMessages []*Error
+	FailMessages []string
 }
 
 type Error struct {
@@ -107,13 +107,9 @@ func execSuite(s *Suite) *ResultCtx {
 func wrapPanic(e *ExecCommand) (rs *ResultInfo, panicked bool) {
 	defer func() {
 		if err := recover(); err != nil {
-			if nv, ok := err.(*Error); ok {
-				rs.Failed = true
-				rs.FailMessages = append(rs.FailMessages, nv)
-				panicked = true
-			} else {
-				panic(err)
-			}
+			rs.Failed = true
+			rs.FailMessages = append(rs.FailMessages, fmt.Sprint(err))
+			panicked = true
 		}
 	}()
 	rs = execute(e)
@@ -150,9 +146,7 @@ func execute(e *ExecCommand) (rs *ResultInfo) {
 	if r.err != nil {
 		rs.Failed = true
 		for _, v := range r.err {
-			rs.FailMessages = append(rs.FailMessages, &Error{
-				Message: v,
-			})
+			rs.FailMessages = append(rs.FailMessages, v.Error())
 		}
 	}
 	return rs
@@ -206,6 +200,6 @@ func (t *T) exec() *ResultCtx {
 }
 
 func (t *T) Cases(tc ...Test) *T {
-	t.suit.Cases = append(t.suit.Cases)
+	t.suit.Cases = append(t.suit.Cases, tc...)
 	return t
 }

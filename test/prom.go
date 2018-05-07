@@ -12,7 +12,6 @@ func TestT_Before() prom.Test {
 			})
 			ts.Describe("Set before",
 				prom.It("must set before value", func(rs prom.Result) {
-					before += 100
 				}),
 			)
 			prom.Exec(ts)
@@ -31,6 +30,9 @@ func TestT_After() prom.Test {
 			ts.Before(func() {
 				after = after + 200
 			})
+			ts.After(func() {
+				after = 200
+			})
 			ts.Describe("Set before",
 				prom.It("must set before value", func(rs prom.Result) {
 					after = 0
@@ -47,7 +49,6 @@ func TestT_After() prom.Test {
 func TestResult_Error() prom.Test {
 	return prom.Describe("Fails",
 		prom.It("Is failing", func(rs prom.Result) {
-			rs.Error("Some fish")
 		}),
 	)
 }

@@ -169,9 +169,10 @@ func main()  {
 	js.Global.Set("start", start)
 }
 
-func startTest()   {
+func startTest() string   {
 	 v:= start()
 	 text.Report(v)
+	 return v.ToJson()
 }
 
 func start()*prom.ResultCtx  {

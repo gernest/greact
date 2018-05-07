@@ -1,6 +1,7 @@
 package prom
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -50,9 +51,9 @@ type ExecCommand struct {
 func (*ExecCommand) run() {}
 
 type ResultInfo struct {
-	Case         string
-	Failed       bool
-	FailMessages []string
+	Case         string   `json:"case"`
+	Failed       bool     `json:"failed"`
+	FailMessages []string `json:"fail_messages"`
 }
 
 type Error struct {
@@ -67,10 +68,18 @@ func (e *Error) Error() string {
 }
 
 type ResultCtx struct {
-	Parent   *ResultCtx
-	Desc     string
-	Children []*ResultCtx
-	Results  []*ResultInfo
+	Parent   *ResultCtx    `json:"-"`
+	Desc     string        `json:"description"`
+	Children []*ResultCtx  `json:"children"`
+	Results  []*ResultInfo `json:"results"`
+}
+
+func (r ResultCtx) ToJson() string {
+	v, err := json.MarshalIndent(r, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	return string(v)
 }
 
 func Exec(ctx ...*T) *ResultCtx {

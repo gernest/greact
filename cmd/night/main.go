@@ -26,8 +26,8 @@ const (
 
 func main() {
 	a := cli.NewApp()
-	a.Name = "prom"
-	a.Usage = "Treat your vecty tests like your first date"
+	a.Name = serviceName
+	a.Usage = desc
 	a.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "pkg",
@@ -37,7 +37,49 @@ func main() {
 			Name: "build",
 		},
 	}
-	a.Action = run
+
+	a.Commands = []cli.Command{
+		{
+			Name:   "start",
+			Usage:  "starts the test daemon service",
+			Action: startDaemon,
+		},
+		{
+			Name:   "stop",
+			Usage:  "stops the test daemon service",
+			Action: stopDaemon,
+		},
+		{
+			Name:   "install",
+			Usage:  "installs the test daemon service",
+			Action: installDaemon,
+		},
+		{
+			Name:   "remove",
+			Usage:  "uninstall the test daemon service",
+			Action: removeDaemon,
+		},
+		{
+			Name:   "status",
+			Usage:  "shows status of the daemon service",
+			Action: removeDaemon,
+		},
+		{
+			Name:  "test",
+			Usage: "runs the test suites",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "pkg",
+					Value: ".",
+				},
+				cli.BoolFlag{
+					Name: "build",
+				},
+			},
+			Action: runTestSuites,
+		},
+	}
+	a.Action = daemonService
 	if err := a.Run(os.Args); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -45,15 +87,26 @@ func main() {
 
 }
 
-func run(ctx *cli.Context) error {
-	pkgPath := ctx.String("pkg")
+func runTestSuites(ctx *cli.Context) error {
+	pkgPath := ctx.String("string")
 	buildPkg := ctx.Bool("build")
 	out := filepath.Join(pkgPath, testsOutDir)
 	rootPkg, err := calcPkgPath(pkgPath)
 	if err != nil {
 		return err
 	}
+	if err = generateTestPackage(pkgPath, rootPkg); err != nil {
+		return err
+	}
+	o := filepath.Join(rootPkg, testsOutDir)
+	if buildPkg {
+		return buildPackage(out, o)
+	}
+	return nil
+}
 
+func generateTestPackage(pkgPath, rootPkg string) error {
+	out := filepath.Join(pkgPath, testsOutDir)
 	tdir := filepath.Join(pkgPath, testsDir)
 	tsPkg, err := build.ImportDir(tdir, 0)
 	if err != nil {
@@ -87,15 +140,7 @@ func run(ctx *cli.Context) error {
 	if err = writeMain(out, data); err != nil {
 		return err
 	}
-	if err = writeIndex(out); err != nil {
-		return err
-	}
-	o := filepath.Join(rootPkg, testsOutDir)
-	println(o)
-	if buildPkg {
-		return buildPackage(out, o)
-	}
-	return nil
+	return writeIndex(out)
 }
 
 func writeFile(to string, fset *token.FileSet, f *ast.File) error {

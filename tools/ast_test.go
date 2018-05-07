@@ -8,8 +8,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kr/pretty"
-
 	"golang.org/x/tools/go/ast/astutil"
 )
 
@@ -63,14 +61,10 @@ func TestMatchTestName(t *testing.T) {
 
 func TestExample()prom.Test {}
 func TestF()prom.Test { }
-func TestT()prom.Test {}
 func TestT_M()prom.Test{}
 
 func Testexample()prom.Test {}
-func TestF()prom.Testing { }
-func Test_T()prom.Test {}
-func TestT_M()Test{}
-func TestT_M(){}
+func Test_Test()prom.Test {}
 `
 	m := make(map[string]*ast.FuncDecl)
 	fs := token.NewFileSet()
@@ -82,13 +76,28 @@ func TestT_M(){}
 		node := c.Node()
 		if f, ok := node.(*ast.FuncDecl); ok {
 			m[f.Name.Name] = f
-			return false
 		}
 		return true
 	})
+	s := []struct {
+		name string
+		pass bool
+	}{
+		{"TestExample", true},
+		{"TestF", true},
+		{"TestT_M", true},
+		{"Testexample", false},
+		{"Test_Test", false},
+	}
+	for _, v := range s {
+		fn := m[v.name]
+		println(v.name, fn == nil)
+		g := matchTestName(fn.Name.Name, fn.Type)
+		if g != v.pass {
+			t.Errorf("%s: expected %v got %v", v.name, v.pass, g)
+		}
+	}
 
-	pretty.Println(m)
-	t.Error("")
 }
 
 func TestTestName(t *testing.T) {
@@ -102,5 +111,11 @@ func TestTestName(t *testing.T) {
 		{"TestT_M", true},
 		{"Testexample", false},
 		{"Test_T", false},
+	}
+	for _, v := range s {
+		g := testName.MatchString(v.name)
+		if g != v.pass {
+			t.Errorf("%s: expected %v got %v", v.name, v.pass, g)
+		}
 	}
 }

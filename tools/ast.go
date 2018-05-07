@@ -5,7 +5,6 @@ import (
 	"go/ast"
 	"go/token"
 	"regexp"
-	"strings"
 
 	"golang.org/x/tools/go/ast/astutil"
 )
@@ -36,11 +35,11 @@ func matchTestName(name string, typ *ast.FuncType) bool {
 	ret := typ.Results != nil && len(typ.Results.List) == 1
 	args := typ.Params.List == nil
 	return ast.IsExported(name) &&
-		name != "Test" && strings.HasPrefix(name, "Test") &&
+		testName.MatchString(name) &&
 		ret && args && checkSignature(typ.Results.List[0])
 }
 
-var testName = regexp.MustCompile(`^Test`)
+var testName = regexp.MustCompile(`^Test[[:upper:]].*`)
 
 func checkSignature(field *ast.Field) bool {
 	if a, ok := field.Type.(*ast.SelectorExpr); ok {

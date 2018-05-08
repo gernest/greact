@@ -95,6 +95,11 @@ func runTestSuites(ctx *cli.Context) error {
 	return nil
 }
 
+// generateTestPackage process the test directory and generate processed files
+// in the promtest directory.
+//
+// Position information is injected in all calls to Error,Errorf,Fatal,FatalF.
+// Tis is the simpleset way to provide informative error messages on test failure.
 func generateTestPackage(pkgPath, rootPkg string) error {
 	out := filepath.Join(pkgPath, testsOutDir)
 	tdir := filepath.Join(pkgPath, testsDir)
@@ -133,23 +138,29 @@ func generateTestPackage(pkgPath, rootPkg string) error {
 	return writeIndex(out)
 }
 
+// writeFile prints the ast for f using the printer package. The file name is
+// obtained from the fset.
+//
+// The file is created in the to directory.
 func writeFile(to string, fset *token.FileSet, f *ast.File) error {
 	var buf bytes.Buffer
 	err := printer.Fprint(&buf, fset, f)
 	if err != nil {
 		return err
 	}
-	fp := fset.File(f.Pos())
-
-	dst := filepath.Join(to, fp.Name())
+	file := fset.File(f.Pos())
+	dst := filepath.Join(to, file.Name())
 	err = ioutil.WriteFile(dst, buf.Bytes(), 0600)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("prom: written %s\n", dst)
 	return nil
 }
 
+// calcPkgPath return valid import path for the package defined in base. This
+// assumes GOPATH is set, as the path is relative to the GOPATH/src directory.
+//
+// base can either be relative or absolute.
 func calcPkgPath(base string) (string, error) {
 	if filepath.IsAbs(base) {
 		src := filepath.Join(build.Default.GOPATH, "src")
@@ -167,6 +178,8 @@ func calcPkgPath(base string) (string, error) {
 	return calcPkgPath(p)
 }
 
+// writeMain creates main.go file which wraps the compiled test functions with
+// extra logic for running the tests.
 func writeMain(dst string, ctx interface{}) error {
 	tpl, err := template.New("main").Parse(mainTpl)
 	if err != nil {
@@ -185,6 +198,7 @@ func writeMain(dst string, ctx interface{}) error {
 	return ioutil.WriteFile(m, b, 0600)
 }
 
+//creates index.html file which loads the generated test suite js file.
 func writeIndex(dst string) error {
 	m := filepath.Join(dst, "index.html")
 	return ioutil.WriteFile(m, []byte(idxTpl), 0600)
@@ -237,6 +251,17 @@ const idxTpl = `<!DOCTYPE html>
 
 </html>`
 
+// test package is compiked to javascript using the gopherjs command. This
+// requites gopherjs to be installed and in PATH.
+//
+// source map is important for coverage computation. So nodejs is required and
+// sourcemap module must be installed.
+// Taken from the gopherjs README this command
+// 	npm install --global source-map-support
+// should take care of the sourcemap support.
+//
+// The output is main.js file in the root directory of the generated test
+// package.
 func buildPackage(dst string, pkg string) error {
 	o := filepath.Join(dst, "main.js")
 	cmd := exec.Command("gopherjs", "build", "-o", o, pkg)

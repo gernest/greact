@@ -32,4 +32,12 @@ type TestRequest struct {
 	// When this is empty the path will be calculated relative to GOPATH using the
 	// Package name.
 	Path string `json:"path"`
+
+	// True if the test package has already been compiled. By default the server
+	// will compile the package after receiving the the test request.
+	//
+	// Use this to tell the server to just run the tests and skip the compilation
+	// step. Note that, if the main.js file is not found then the server will try
+	// to compile and completely ignore this field.
+	Compiled bool `json:"compiled"`
 }

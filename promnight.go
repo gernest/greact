@@ -4,13 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/gopherjs/gopherjs/js"
+	"github.com/gopherjs/vecty"
+	"github.com/gopherjs/vecty/elem"
 )
 
 var (
-	_ Test = (*T)(nil)
-	_ Test = (*Suite)(nil)
-	_ Test = (*ExecCommand)(nil)
-	_ Test = (List)(nil)
+	_ Test   = (*T)(nil)
+	_ Test   = (*Suite)(nil)
+	_ Test   = (*ExecCommand)(nil)
+	_ Test   = (List)(nil)
+	_ Result = (*baseResult)(nil)
+	_ Result = (*rsWithNode)(nil)
 )
 
 type Test interface {
@@ -26,8 +32,13 @@ type List []Test
 func (ls List) run() {}
 
 type Suite struct {
-	Desc  string
-	Cases List
+	Desc     string
+	Cases    List
+	ResultFN func() Result
+}
+
+func defaultResultFn() Result {
+	return &baseResult{}
 }
 
 func (*Suite) run() {}
@@ -41,6 +52,7 @@ type Result interface {
 	Errorf(string, ...interface{})
 	Fatal(...interface{})
 	FatalF(string, ...interface{})
+	Errors() []error
 }
 
 type ExecCommand struct {
@@ -101,8 +113,11 @@ func execSuite(s *Suite) *ResultCtx {
 			ch.Parent = rs
 			rs.Children = append(rs.Children, ch)
 		case *ExecCommand:
-			rs.Results = append(rs.Results, execute(e))
-			rv, ok := wrapPanic(e)
+			fn := s.ResultFN
+			if fn == nil {
+				fn = defaultResultFn
+			}
+			rv, ok := wrapPanic(e, fn)
 			rs.Results = append(rs.Results, rv)
 			if ok {
 				// call to Fatal or Fatalf halts the whole suite.
@@ -113,7 +128,7 @@ func execSuite(s *Suite) *ResultCtx {
 	return rs
 }
 
-func wrapPanic(e *ExecCommand) (rs *ResultInfo, panicked bool) {
+func wrapPanic(e *ExecCommand, fn func() Result) (rs *ResultInfo, panicked bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			rs.Failed = true
@@ -121,7 +136,7 @@ func wrapPanic(e *ExecCommand) (rs *ResultInfo, panicked bool) {
 			panicked = true
 		}
 	}()
-	rs = execute(e)
+	rs = execute(e, fn)
 	return
 }
 
@@ -144,17 +159,21 @@ func (b *baseResult) FatalF(s string, v ...interface{}) {
 	panic(&Error{Message: fmt.Errorf(s, v...)})
 }
 
+func (b *baseResult) Errors() []error {
+	return b.err
+}
+
 // execute calls the function e.Func and register results.
-func execute(e *ExecCommand) (rs *ResultInfo) {
-	r := &baseResult{}
+func execute(e *ExecCommand, fn func() Result) (rs *ResultInfo) {
+	r := fn()
 	if e.Func != nil {
 		e.Func(r)
 	}
 	rs = &ResultInfo{Case: e.Desc}
-
-	if r.err != nil {
+	errs := r.Errors()
+	if errs != nil {
 		rs.Failed = true
-		for _, v := range r.err {
+		for _, v := range errs {
 			rs.FailMessages = append(rs.FailMessages, v.Error())
 		}
 	}
@@ -208,4 +227,46 @@ func (t *T) exec() *ResultCtx {
 func (t *T) Cases(tc ...Test) *T {
 	t.suit.Cases = append(t.suit.Cases, tc...)
 	return t
+}
+
+type component struct {
+	id     string
+	cmp    func() vecty.ComponentOrHTML
+	isBody bool
+	cases  List
+	after  func(*ResultCtx)
+}
+
+func (c *component) Mount() {
+	node := js.Global.Get("document").Get("body")
+	if !c.isBody {
+		node = node.Get("firstChild")
+	}
+	s := &Suite{Desc: c.id, Cases: c.cases, ResultFN: func() Result {
+		return &rsWithNode{node: node}
+	}}
+	rs := execSuite(s)
+	if c.after != nil {
+		c.after(rs)
+	}
+}
+
+func (c *component) Render() vecty.ComponentOrHTML {
+	if c.isBody {
+		return c.cmp()
+	}
+	return elem.Body(c.cmp())
+}
+
+type Node interface {
+	Node() *js.Object
+}
+
+type rsWithNode struct {
+	baseResult
+	node *js.Object
+}
+
+func (rs *rsWithNode) Node() *js.Object {
+	return rs.node
 }

@@ -230,6 +230,7 @@ func (t *T) Cases(tc ...Test) *T {
 }
 
 type component struct {
+	vecty.Core
 	id     string
 	cmp    func() vecty.ComponentOrHTML
 	isBody bool
@@ -258,6 +259,13 @@ func (c *component) Render() vecty.ComponentOrHTML {
 	return elem.Body(c.cmp())
 }
 
+func (c *component) runIntegration() {}
+
+type Integration interface {
+	runIntegration()
+}
+
+// Node is an interface for retrieving a rendered component node.
 type Node interface {
 	Node() *js.Object
 }
@@ -269,4 +277,48 @@ type rsWithNode struct {
 
 func (rs *rsWithNode) Node() *js.Object {
 	return rs.node
+}
+
+type ComponentRunner struct {
+	vecty.Core
+
+	next func() *component
+
+	AfterFunc func(*ResultCtx)
+	Done      func()
+}
+
+func (c *ComponentRunner) Render() vecty.ComponentOrHTML {
+	cmp := c.next()
+	if cmp == nil {
+		if c.Done != nil {
+			c.Done()
+		}
+		return nil
+	}
+	cmp.after = c.after
+	return cmp
+
+}
+
+func (c *ComponentRunner) after(rs *ResultCtx) {
+	if c.AfterFunc != nil {
+		c.AfterFunc(rs)
+	}
+	vecty.Rerender(c)
+}
+
+// Render returns an integration test for non body components. Use this to test
+// components that renders spans,div etc.
+func Render(desc string, c func() vecty.ComponentOrHTML, cases ...Test) Integration {
+	return &component{
+		id: desc, cmp: c, cases: cases,
+	}
+}
+
+// RenderBody is like render but the component is expected to be elem.Body
+func RenderBody(desc string, c func() vecty.ComponentOrHTML, cases ...Test) Integration {
+	return &component{
+		id: desc, cmp: c, cases: cases, isBody: true,
+	}
 }

@@ -54,7 +54,7 @@ type TestResponse struct {
 
 // TestStats store statistics about the tests happening in the server.
 type TestStats struct {
-	Completed []*TestSuite `json:"completed"`
-	Running   []*TestSuite `json:"running"`
-	Queued    []*TestSuite `json:"queued"`
+	Completed []*TestSuite `json:"completed,omitempty"`
+	Running   []*TestSuite `json:"running,omitempty"`
+	Queued    []*TestSuite `json:"queued,omitempty"`
 }

@@ -35,9 +35,8 @@ func startDaemon(ctx *cli.Context) error {
 	msg, err := srv.Start()
 	if err != nil {
 		return fmt.Errorf("%s %v", msg, err)
-	} else {
-		fmt.Println(msg)
 	}
+	fmt.Println(msg)
 	return nil
 }
 
@@ -49,9 +48,8 @@ func stopDaemon(ctx *cli.Context) error {
 	msg, err := srv.Stop()
 	if err != nil {
 		return fmt.Errorf("%s %v", msg, err)
-	} else {
-		fmt.Println(msg)
 	}
+	fmt.Println(msg)
 	return nil
 }
 
@@ -63,9 +61,8 @@ func installDaemon(ctx *cli.Context) error {
 	msg, err := srv.Install()
 	if err != nil {
 		return fmt.Errorf("%s %v", msg, err)
-	} else {
-		fmt.Println(msg)
 	}
+	fmt.Println(msg)
 	return nil
 }
 
@@ -77,9 +74,8 @@ func removeDaemon(ctx *cli.Context) error {
 	msg, err := srv.Remove()
 	if err != nil {
 		return fmt.Errorf("%s %v", msg, err)
-	} else {
-		fmt.Println(msg)
 	}
+	fmt.Println(msg)
 	return nil
 }
 
@@ -91,9 +87,8 @@ func statusDaemon(ctx *cli.Context) error {
 	msg, err := srv.Status()
 	if err != nil {
 		return fmt.Errorf("%s %v", msg, err)
-	} else {
-		fmt.Println(msg)
 	}
+	fmt.Println(msg)
 	return nil
 }
 
@@ -127,7 +122,7 @@ func daemonService(ctx *cli.Context) (err error) {
 	return
 }
 
-var upgrader = websocket.Upgrader{}
+var upgrade = websocket.Upgrader{}
 
 func apiServer(ctx context.Context, host string) *alien.Mux {
 	mux := alien.New()
@@ -196,7 +191,7 @@ func apiServer(ctx context.Context, host string) *alien.Mux {
 		ts := tsv.(*api.TestSuite)
 		ts.Status = "running"
 
-		conn, err := upgrader.Upgrade(w, r, nil)
+		conn, err := upgrade.Upgrade(w, r, nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

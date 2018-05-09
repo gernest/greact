@@ -256,13 +256,18 @@ func (rs *RSWithNode) Node() *js.Object {
 
 // Render returns an integration test for non body Components. Use this to test
 // Components that renders spans,div etc.
+//
+// NOTE: func()interface{} was supposed to be func()vecty.ComponentOrHTML this
+// is a workaround, because importing vecty in this package will make it
+// impossible to run the commandline tools since vecty only works with the
+// browser.
 func Render(desc string, c func() interface{}, cases ...Test) Integration {
 	return &Component{
 		ID: desc, Component: c, Cases: cases,
 	}
 }
 
-// RenderBody is like render but the Component is expected to be elem.Body
+// RenderBody is like Render but the Component is expected to be elem.Body
 func RenderBody(desc string, c func() interface{}, cases ...Test) Integration {
 	return &Component{
 		ID: desc, Component: c, Cases: cases, IsBody: true,

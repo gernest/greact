@@ -20,57 +20,94 @@ func AddCoverage(set *token.FileSet, file *ast.File) *ast.File {
 	return file
 }
 
-func AddFileNumber(set *token.FileSet, file *ast.File) []string {
-	match := make(map[string]int)
+type TestNames struct {
+	Integration []string
+	Unit        []string
+}
+
+type testNameMap struct {
+	integration map[string]int
+	unit        map[string]int
+}
+
+func AddFileNumber(set *token.FileSet, file *ast.File) *TestNames {
+	match := &testNameMap{
+		integration: make(map[string]int),
+		unit:        make(map[string]int),
+	}
 	astutil.Apply(file,
 		applyLineNumber(set, true, match),
 		applyLineNumber(set, false, match),
 	)
-	if len(match) == 0 {
-		return nil
+	o := &TestNames{}
+	for k := range match.integration {
+		o.Integration = append(o.Integration, k)
 	}
-	var ls []string
-	for k := range match {
-		ls = append(ls, k)
+	for k := range match.unit {
+		o.Unit = append(o.Unit, k)
 	}
-	sort.Slice(ls, func(i, j int) bool {
-		a := ls[i]
-		b := ls[j]
-		return match[a] < match[b]
-	})
-	return ls
+	if o.Integration != nil {
+		sort.Slice(o.Integration, func(i, j int) bool {
+			a := o.Integration[i]
+			b := o.Integration[j]
+			return match.integration[a] < match.integration[b]
+		})
+	}
+	if o.Unit != nil {
+		sort.Slice(o.Unit, func(i, j int) bool {
+			a := o.Unit[i]
+			b := o.Unit[j]
+			return match.unit[a] < match.unit[b]
+		})
+	}
+	return o
 }
 
 func addStrLit(str, lit string) string {
 	return fmt.Sprintf(`"%s%s`, str, lit[1:])
 }
 
-func matchTestName(name string, typ *ast.FuncType) bool {
-	ret := typ.Results != nil && len(typ.Results.List) == 1
-	args := typ.Params.List == nil
-	return ast.IsExported(name) &&
-		testName.MatchString(name) &&
-		ret && args && checkSignature(typ.Results.List[0])
+func checkName(name string) bool {
+	return ast.IsExported(name) && testName.MatchString(name)
 }
 
 var testName = regexp.MustCompile(`^Test[[:upper:]].*`)
 
-func checkSignature(field *ast.Field) bool {
+func checkSignature(typ *ast.FuncType) (isUnit, ok bool) {
+	ret := typ.Results != nil && len(typ.Results.List) == 1
+	args := typ.Params.List == nil
+	if !(ret && args) {
+		return
+	}
+	field := typ.Results.List[0]
 	if a, ok := field.Type.(*ast.SelectorExpr); ok {
 		id, ok := a.X.(*ast.Ident)
 		if !ok {
-			return false
+			return false, false
 		}
-		if id.Name != "prom" {
-			return false
+		n := a.Sel.Name
+		if id.Name == "prom" && n == "Test" {
+			return true, true
 		}
-		if a.Sel.Name != "Test" {
-			return false
-		}
-		return true
+		return false, id.Name == "prom" && n == "Integration"
 	}
-	return false
+	return
 }
+
+// func checkSignature(field *ast.Field) bool {
+// 	if a, ok := field.Type.(*ast.SelectorExpr); ok {
+// 		id, ok := a.X.(*ast.Ident)
+// 		if !ok {
+// 			return false
+// 		}
+// 		n := a.Sel.Name
+// 		if id.Name == "prom" && (n == "Test" || n == "Integration") {
+// 			return true
+// 		}
+// 		return true
+// 	}
+// 	return false
+// }
 
 func mark(num int, pos token.Position) *ast.AssignStmt {
 	return &ast.AssignStmt{
@@ -215,16 +252,24 @@ func hit(pos token.Position) *ast.ExprStmt {
 	}
 }
 
-func applyLineNumber(set *token.FileSet, pre bool, match map[string]int) func(*astutil.Cursor) bool {
-	n := 0
+func applyLineNumber(set *token.FileSet, pre bool, match *testNameMap) func(*astutil.Cursor) bool {
+	units := 0
+	integrations := 0
 	return func(c *astutil.Cursor) bool {
 		node := c.Node()
 		switch e := node.(type) {
 		case *ast.FuncDecl:
 			if pre {
-				if matchTestName(e.Name.Name, e.Type) {
-					match[e.Name.Name] = n
-					n++
+				if checkName(e.Name.Name) {
+					if u, ok := checkSignature(e.Type); ok {
+						if u {
+							match.unit[e.Name.Name] = units
+							units++
+						} else {
+							match.integration[e.Name.Name] = integrations
+							integrations++
+						}
+					}
 				}
 			}
 		case *ast.CallExpr:
@@ -256,28 +301,8 @@ func applyLineNumber(set *token.FileSet, pre bool, match map[string]int) func(*a
 					b.Value = addStrLit(k, b.Value)
 					return false
 				}
-
-				// if s.Sel.Name == "Error" {
-
-				// 	if a, ok := e.Args[0].(*ast.BasicLit); ok {
-				// 		k := fmt.Sprintf("%s:%v ", file.Name(), line)
-				// 		a.Value = addStrLit(k, a.Value)
-				// 	}
-				// }
 			}
 		}
-		// if e, ok := node.(*ast.CallExpr); ok {
-		// 	if s, ok := e.Fun.(*ast.SelectorExpr); ok {
-		// 		if s.Sel.Name == "Error" {
-		// 			file := set.File(e.Pos())
-		// 			line := file.Line(e.Pos())
-		// 			if a, ok := e.Args[0].(*ast.BasicLit); ok {
-		// 				k := fmt.Sprintf("%s:%v ", file.Name(), line)
-		// 				a.Value = addStrLit(k, a.Value)
-		// 			}
-		// 		}
-		// 	}
-		// }
 		return true
 	}
 }

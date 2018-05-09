@@ -104,7 +104,7 @@ func daemonService(ctx *cli.Context) (err error) {
 	rctx, cancel := context.WithCancel(context.Background())
 	server := &http.Server{
 		Addr:    port,
-		Handler: apiServer(host, rctx),
+		Handler: apiServer(rctx, host),
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -129,7 +129,7 @@ func daemonService(ctx *cli.Context) (err error) {
 
 var upgrader = websocket.Upgrader{}
 
-func apiServer(host string, ctx context.Context) *alien.Mux {
+func apiServer(ctx context.Context, host string) *alien.Mux {
 	mux := alien.New()
 	stats := &api.TestStats{}
 	queue := make(chan *api.TestRequest, 50)

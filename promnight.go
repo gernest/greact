@@ -279,23 +279,33 @@ func (rs *rsWithNode) Node() *js.Object {
 	return rs.node
 }
 
+// ComponentRunner is a vecty component for running integration tests. This
+// doesn't handle collection of results. You need to supply AfterFunc as a
+// callback, which will be called whenever a component test suite is complete.
 type ComponentRunner struct {
 	vecty.Core
 
-	next func() *component
+	Next func() Integration
 
 	AfterFunc func(*ResultCtx)
-	Done      func()
+
+	// This when set will be called when all the components retruned by next have
+	// been successfully mounted and the testcases executed.
+	Done func()
 }
 
+// Render implements vecty.Component interface.
 func (c *ComponentRunner) Render() vecty.ComponentOrHTML {
-	cmp := c.next()
-	if cmp == nil {
+	n := c.Next()
+	if n == nil {
 		if c.Done != nil {
 			c.Done()
 		}
 		return nil
 	}
+
+	// safe to do this. Only the component struct implements Integration interface.
+	cmp := n.(*component)
 	cmp.after = c.after
 	return cmp
 
@@ -305,6 +315,8 @@ func (c *ComponentRunner) after(rs *ResultCtx) {
 	if c.AfterFunc != nil {
 		c.AfterFunc(rs)
 	}
+	// trigger rendering the next component.We are sure now that the test suite for
+	// the previous componet was complete.
 	vecty.Rerender(c)
 }
 

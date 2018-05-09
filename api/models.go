@@ -14,6 +14,11 @@ type TestSuite struct {
 	// The name of the package being tested. This is a valid Go import path.
 	Package string `json:"package"`
 
+	Path string `json:"-"`
+
+	// completed, running,queued
+	Status string `json:"status"`
+
 	// The time it took to complete running the test suite.
 	Duration time.Time `json:"duration"`
 
@@ -40,4 +45,16 @@ type TestRequest struct {
 	// step. Note that, if the main.js file is not found then the server will try
 	// to compile and completely ignore this field.
 	Compiled bool `json:"compiled"`
+}
+
+// TestResponse is the object sent to the client after a successful test request.
+type TestResponse struct {
+	WebsocketURL string `json:"websocket"`
+}
+
+// TestStats store statistics about the tests happening in the server.
+type TestStats struct {
+	Completed []*TestSuite `json:"completed"`
+	Running   []*TestSuite `json:"running"`
+	Queued    []*TestSuite `json:"queued"`
 }

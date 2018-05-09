@@ -52,7 +52,7 @@ func main() {
 		{
 			Name:   "status",
 			Usage:  "shows status of the test-runner daemon service",
-			Action: removeDaemon,
+			Action: statusDaemon,
 		},
 		{
 			Name:  "test",
@@ -67,6 +67,13 @@ func main() {
 				},
 			},
 			Action: runTestSuites,
+		},
+	}
+	a.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "host",
+			Usage: "hostname with port to bind the server",
+			Value: "http://localhost:1955",
 		},
 	}
 	a.Action = daemonService

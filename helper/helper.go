@@ -1,72 +1,104 @@
 package helper
 
 import (
-	"go/token"
-	"sync"
-
-	"github.com/gernest/prom/cover"
+	"github.com/gernest/prom"
+	"github.com/gopherjs/gopherjs/js"
+	"github.com/gopherjs/vecty"
+	"github.com/gopherjs/vecty/elem"
 )
 
-var state = &State{
-	files: make(map[string]*CoverStats),
+// ComponentRunner is a vecty component for running integration tests. This
+// doesn't handle collection of results. You need to supply AfterFunc as a
+// callback, which will be called whenever a component test suite is complete.
+type ComponentRunner struct {
+	vecty.Core
+
+	Next func() vecty.ComponentOrHTML
+
+	AfterFunc func(*prom.ResultCtx)
+
+	// This when set will be called when all the components retruned by next have
+	// been successfully mounted and the testcases executed.
+	Done func()
 }
 
-type State struct {
-	files map[string]*CoverStats
-	mu    sync.RWMutex
-}
-
-type CoverStats struct {
-	profile *cover.Profile
-	mu      sync.RWMutex
-}
-
-func (c *CoverStats) Mark(p *cover.ProfileBlock) int {
-	c.mu.Lock()
-	c.profile.Blocks = append(c.profile.Blocks, p)
-	idx := len(c.profile.Blocks) - 1
-	c.mu.Unlock()
-	return idx
-}
-
-func (c *CoverStats) Hit(idx int, pos *token.Position) {
-	c.mu.Lock()
-	b := c.profile.Blocks[idx]
-	b.EndPosition = pos
-	c.mu.Unlock()
-}
-
-func Mark(numStmt int, pos *token.Position) int {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-	p := &cover.ProfileBlock{StartPosition: pos, NumStmt: numStmt}
-	fileName := p.StartPosition.Filename
-	f, ok := state.files[fileName]
-	if !ok {
-		f = &CoverStats{profile: &cover.Profile{
-			FileName: fileName,
-		}}
-		state.files[fileName] = f
-		return f.Mark(p)
-
+// Render implements vecty.Component interface.
+func (c *ComponentRunner) Render() vecty.ComponentOrHTML {
+	n := c.Next()
+	if n == nil {
+		if c.Done != nil {
+			c.Done()
+		}
+		return nil
 	}
-	return f.Mark(p)
+
+	// safe to do this. Only the component struct implements Integration interface.
+	cmp := n.(*component)
+	cmp.after = c.after
+	return cmp
+
 }
 
-func Hit(idx int, pos *token.Position) {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-	if f, ok := state.files[pos.Filename]; ok {
-		f.Hit(idx, pos)
+func (c *ComponentRunner) after(rs *prom.ResultCtx) {
+	if c.AfterFunc != nil {
+		c.AfterFunc(rs)
+	}
+	// trigger rendering the next component.We are sure now that the test suite for
+	// the previous componet was complete.
+	vecty.Rerender(c)
+}
+
+type component struct {
+	vecty.Core
+	id     string
+	cmp    func() vecty.ComponentOrHTML
+	isBody bool
+	cases  prom.List
+	after  func(*prom.ResultCtx)
+}
+
+func (c *component) Mount() {
+	node := js.Global.Get("document").Get("body")
+	if !c.isBody {
+		node = node.Get("firstChild")
+	}
+
+	s := &prom.Suite{Desc: c.id, Cases: c.cases, ResultFN: func() prom.Result {
+		return &prom.RSWithNode{Object: node}
+	}}
+	rs := prom.ExecSuite(s)
+	if c.after != nil {
+		c.after(rs)
 	}
 }
 
-func Stats() []*CoverStats {
-	state.mu.RLock()
-	var o []*CoverStats
-	for _, v := range state.files {
-		o = append(o, v)
+func (c *component) Render() vecty.ComponentOrHTML {
+	if c.isBody {
+		return c.cmp()
 	}
-	state.mu.RUnlock()
-	return o
+	return elem.Body(c.cmp())
+}
+
+func Wrap(i prom.Integration) *component {
+	v := i.(*prom.Component)
+	return &component{
+		id: v.ID,
+		cmp: func() vecty.ComponentOrHTML {
+			return v.Component().(vecty.ComponentOrHTML)
+		},
+		isBody: v.IsBody,
+		cases:  v.Cases,
+	}
+}
+
+func NextFunc(v ...prom.Integration) func() vecty.ComponentOrHTML {
+	i := 0
+	return func() vecty.ComponentOrHTML {
+		if i < len(v) {
+			c := v[i]
+			i++
+			return Wrap(c)
+		}
+		return nil
+	}
 }

@@ -6,8 +6,6 @@ import (
 	"fmt"
 
 	"github.com/gopherjs/gopherjs/js"
-	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
 )
 
 var (
@@ -16,7 +14,7 @@ var (
 	_ Test   = (*ExecCommand)(nil)
 	_ Test   = (List)(nil)
 	_ Result = (*baseResult)(nil)
-	_ Result = (*rsWithNode)(nil)
+	_ Result = (*RSWithNode)(nil)
 )
 
 type Test interface {
@@ -102,14 +100,14 @@ func Exec(ctx ...*T) *ResultCtx {
 	return rs
 }
 
-func execSuite(s *Suite) *ResultCtx {
+func ExecSuite(s *Suite) *ResultCtx {
 	rs := &ResultCtx{
 		Desc: s.Desc,
 	}
 	for _, v := range s.Cases {
 		switch e := v.(type) {
 		case *Suite:
-			ch := execSuite(e)
+			ch := ExecSuite(e)
 			ch.Parent = rs
 			rs.Children = append(rs.Children, ch)
 		case *ExecCommand:
@@ -217,7 +215,7 @@ func (t *T) exec() *ResultCtx {
 	if t.before != nil {
 		t.before()
 	}
-	rs := execSuite(t.suit)
+	rs := ExecSuite(t.suit)
 	if t.after != nil {
 		t.after(rs)
 	}
@@ -229,108 +227,44 @@ func (t *T) Cases(tc ...Test) *T {
 	return t
 }
 
-type component struct {
-	vecty.Core
-	id     string
-	cmp    func() vecty.ComponentOrHTML
-	isBody bool
-	cases  List
-	after  func(*ResultCtx)
+type Component struct {
+	ID        string
+	Component func() interface{}
+	IsBody    bool
+	Cases     List
 }
 
-func (c *component) Mount() {
-	node := js.Global.Get("document").Get("body")
-	if !c.isBody {
-		node = node.Get("firstChild")
-	}
-	s := &Suite{Desc: c.id, Cases: c.cases, ResultFN: func() Result {
-		return &rsWithNode{node: node}
-	}}
-	rs := execSuite(s)
-	if c.after != nil {
-		c.after(rs)
-	}
-}
-
-func (c *component) Render() vecty.ComponentOrHTML {
-	if c.isBody {
-		return c.cmp()
-	}
-	return elem.Body(c.cmp())
-}
-
-func (c *component) runIntegration() {}
+func (c *Component) runIntegration() {}
 
 type Integration interface {
 	runIntegration()
 }
 
-// Node is an interface for retrieving a rendered component node.
+// Node is an interface for retrieving a rendered Component node.
 type Node interface {
 	Node() *js.Object
 }
 
-type rsWithNode struct {
+type RSWithNode struct {
 	baseResult
-	node *js.Object
+	Object *js.Object
 }
 
-func (rs *rsWithNode) Node() *js.Object {
-	return rs.node
+func (rs *RSWithNode) Node() *js.Object {
+	return rs.Object
 }
 
-// ComponentRunner is a vecty component for running integration tests. This
-// doesn't handle collection of results. You need to supply AfterFunc as a
-// callback, which will be called whenever a component test suite is complete.
-type ComponentRunner struct {
-	vecty.Core
-
-	Next func() Integration
-
-	AfterFunc func(*ResultCtx)
-
-	// This when set will be called when all the components retruned by next have
-	// been successfully mounted and the testcases executed.
-	Done func()
-}
-
-// Render implements vecty.Component interface.
-func (c *ComponentRunner) Render() vecty.ComponentOrHTML {
-	n := c.Next()
-	if n == nil {
-		if c.Done != nil {
-			c.Done()
-		}
-		return nil
-	}
-
-	// safe to do this. Only the component struct implements Integration interface.
-	cmp := n.(*component)
-	cmp.after = c.after
-	return cmp
-
-}
-
-func (c *ComponentRunner) after(rs *ResultCtx) {
-	if c.AfterFunc != nil {
-		c.AfterFunc(rs)
-	}
-	// trigger rendering the next component.We are sure now that the test suite for
-	// the previous componet was complete.
-	vecty.Rerender(c)
-}
-
-// Render returns an integration test for non body components. Use this to test
-// components that renders spans,div etc.
-func Render(desc string, c func() vecty.ComponentOrHTML, cases ...Test) Integration {
-	return &component{
-		id: desc, cmp: c, cases: cases,
+// Render returns an integration test for non body Components. Use this to test
+// Components that renders spans,div etc.
+func Render(desc string, c func() interface{}, cases ...Test) Integration {
+	return &Component{
+		ID: desc, Component: c, Cases: cases,
 	}
 }
 
-// RenderBody is like render but the component is expected to be elem.Body
-func RenderBody(desc string, c func() vecty.ComponentOrHTML, cases ...Test) Integration {
-	return &component{
-		id: desc, cmp: c, cases: cases, isBody: true,
+// RenderBody is like render but the Component is expected to be elem.Body
+func RenderBody(desc string, c func() interface{}, cases ...Test) Integration {
+	return &Component{
+		ID: desc, Component: c, Cases: cases, IsBody: true,
 	}
 }

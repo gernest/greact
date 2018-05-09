@@ -218,12 +218,19 @@ import(
 	"{{.testPkg}}"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gernest/prom/report/text"
+	"github.com/gernest/prom/helper"
 	"github.com/gernest/prom"
+	{{with .funcs.Integration}}
+	"github.com/gopherjs/vecty"
+	{{end}}
 )
 
 func main()  {
 	js.Global.Set("startTest", startTest)
 	js.Global.Set("start", start)
+	{{with .funcs.Integration -}}
+	js.Global.Set("startComponents", startComponents)
+	{{end}}
 }
 
 func startTest() string   {
@@ -240,6 +247,32 @@ func start()*prom.ResultCtx  {
 		{{end -}}
 	)
 }
+{{with .funcs.Integration}}
+func componentsToRender()func()vecty.ComponentOrHTML{
+	return helper.NextFunc(
+		{{range . -}}
+		test.{{.}}(),
+		{{end -}}
+	)
+}
+
+func startComponents()  {
+	c:=&helper.ComponentRunner{
+		Next:componentsToRender(),
+		AfterFunc:afterComponentSuite,
+		Done:doneComponentSuite,
+	}
+	vecty.RenderBody(c)
+}
+
+func afterComponentSuite(rs *prom.ResultCtx)  {
+	println(rs.ToJson())
+}
+
+func doneComponentSuite()  {
+	println("done running components")
+}
+{{end}}
 
 `
 

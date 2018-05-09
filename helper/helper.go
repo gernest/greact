@@ -31,12 +31,11 @@ func (c *ComponentRunner) Render() vecty.ComponentOrHTML {
 		}
 		return nil
 	}
-
 	// safe to do this. Only the component struct implements Integration interface.
 	cmp := n.(*component)
 	cmp.after = c.after
+	println(cmp)
 	return cmp
-
 }
 
 func (c *ComponentRunner) after(rs *prom.ResultCtx) {
@@ -62,7 +61,6 @@ func (c *component) Mount() {
 	if !c.isBody {
 		node = node.Get("firstChild")
 	}
-
 	s := &prom.Suite{Desc: c.id, Cases: c.cases, ResultFN: func() prom.Result {
 		return &prom.RSWithNode{Object: node}
 	}}
@@ -70,13 +68,15 @@ func (c *component) Mount() {
 	if c.after != nil {
 		c.after(rs)
 	}
+	node.Get("parentNode").Call("removeChild", node)
 }
 
 func (c *component) Render() vecty.ComponentOrHTML {
 	if c.isBody {
 		return c.cmp()
 	}
-	return elem.Body(c.cmp())
+	cmp := c.cmp()
+	return elem.Body(cmp)
 }
 
 func Wrap(i prom.Integration) *component {

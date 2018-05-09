@@ -118,7 +118,7 @@ func generateTestPackage(pkgPath, rootPkg string) error {
 	dst := out
 	os.MkdirAll(filepath.Join(out, tsPkg.Name), 0755)
 	set := token.NewFileSet()
-	var funcs []string
+	funcs := &tools.TestNames{}
 	for _, v := range tsPkg.GoFiles {
 		f, err := parser.ParseFile(set, filepath.Join(tsPkg.Dir, v), nil, 0)
 		if err != nil {
@@ -126,7 +126,8 @@ func generateTestPackage(pkgPath, rootPkg string) error {
 		}
 		fn := tools.AddFileNumber(set, f)
 		if fn != nil {
-			funcs = append(funcs, fn...)
+			funcs.Integration = append(funcs.Integration, fn.Integration...)
+			funcs.Unit = append(funcs.Unit, fn.Unit...)
 		}
 		files = append(files, f)
 	}
@@ -233,7 +234,7 @@ func startTest() string   {
 
 func start()*prom.ResultCtx  {
 	return prom.Exec(
-		{{range .funcs -}}
+		{{range .funcs.Unit -}}
 		prom.NewTest("{{.}}",nil,nil).
 		Cases(test.{{.}}()),
 		{{end -}}

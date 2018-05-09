@@ -234,7 +234,8 @@ func startTest() string   {
 func start()*prom.ResultCtx  {
 	return prom.Exec(
 		{{range .funcs -}}
-		prom.NewTest("{{.}}").Cases(test.{{.}}()),
+		prom.NewTest("{{.}}",nil,nil).
+		Cases(test.{{.}}()),
 		{{end -}}
 	)
 }

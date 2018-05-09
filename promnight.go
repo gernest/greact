@@ -163,20 +163,17 @@ func execute(e *ExecCommand) (rs *ResultInfo) {
 
 type T struct {
 	before func()
-	after  func()
+	after  func(*ResultCtx)
 	suit   *Suite
 	base   List
 }
 
-func NewTest(name string, hooks ...func()) *T {
-	t := &T{suit: &Suite{Desc: name}}
-	switch len(hooks) {
-	case 1:
-		t.before = hooks[0]
-	case 2:
-		t.before, t.after = hooks[0], hooks[1]
+func NewTest(name string, before func(), after func(*ResultCtx)) *T {
+	return &T{
+		suit:   &Suite{Desc: name},
+		before: before,
+		after:  after,
 	}
-	return t
 }
 
 func (t *T) Before(fn ...func()) {
@@ -185,7 +182,7 @@ func (t *T) Before(fn ...func()) {
 	}
 }
 
-func (t *T) After(fn ...func()) {
+func (t *T) After(fn ...func(*ResultCtx)) {
 	if len(fn) > 0 {
 		t.after = fn[0]
 	}
@@ -203,7 +200,7 @@ func (t *T) exec() *ResultCtx {
 	}
 	rs := execSuite(t.suit)
 	if t.after != nil {
-		t.after()
+		t.after(rs)
 	}
 	return rs
 }

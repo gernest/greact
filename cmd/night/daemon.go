@@ -124,11 +124,16 @@ func daemonService(ctx *cli.Context) (err error) {
 
 var upgrade = websocket.Upgrader{}
 
+// apiServer returns a *alien.Mux instance with endpoints registered for serving
+// test suites.
 func apiServer(ctx context.Context, host string) *alien.Mux {
 	mux := alien.New()
 	stats := &api.TestStats{}
 	queue := make(chan *api.TestRequest, 50)
 	cache := &sync.Map{}
+
+	// we store channels that tracts results of a a particular test suite run.
+	resultsCache := &sync.Map{}
 	go func() {
 		for {
 			select {
@@ -190,7 +195,13 @@ func apiServer(ctx context.Context, host string) *alien.Mux {
 		}
 		ts := tsv.(*api.TestSuite)
 		ts.Status = "running"
-		rstChan := make(chan *api.TestSuite, 10)
+		var rstChan chan *api.TestSuite
+		if ch, ok := resultsCache.Load(pkg); ok {
+			rstChan = ch.(chan *api.TestSuite)
+		} else {
+			rstChan = make(chan *api.TestSuite, 10)
+			resultsCache.Store(pkg, rstChan)
+		}
 		rstChan <- ts
 		conn, err := upgrade.Upgrade(w, r, nil)
 		if err != nil {

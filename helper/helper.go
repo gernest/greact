@@ -1,10 +1,12 @@
 package helper
 
 import (
+	"net/url"
 	"regexp"
 
 	"github.com/gernest/naaz/prop"
 	"github.com/gernest/prom"
+	"github.com/gernest/xhr"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
@@ -165,4 +167,23 @@ func (a *App) Render() vecty.ComponentOrHTML {
 
 func (a *App) iframeSrc(fn string) string {
 	return ""
+}
+
+func Run() {
+	h := js.Global.Get("location").Get("href").String()
+	println(h)
+	u, err := url.Parse(h)
+	if err != nil {
+		panic(err)
+	}
+	go handle(u)
+}
+
+func handle(u *url.URL) {
+	u.Path = "info"
+	req := xhr.NewRequest("GET", u.String())
+	if err := req.Send(nil); err != nil {
+		panic(err)
+	}
+	println(req.ResponseText)
 }

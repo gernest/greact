@@ -13,6 +13,7 @@ import (
 	"go/token"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -104,36 +105,43 @@ func runTestSuites(ctx *cli.Context) error {
 	}
 	o := filepath.Join(rootPkg, testsOutDir)
 	if buildPkg {
-		return buildPackage(out, o)
+		if err = buildPackage(out, o); err != nil {
+			return err
+		}
 	}
 	req := &api.TestRequest{
 		Package:  rootPkg,
 		Compiled: true,
 	}
-	return callDaemon(req)
+	_, err = sendTestRequest(req)
+	return err
 }
 
-func callDaemon(req *api.TestRequest) error {
+func sendTestRequest(req *api.TestRequest) (*api.TestResponse, error) {
 	h := "http://localhost" + port
 	b, err := json.Marshal(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	res, err := http.Post(h, "application/json", bytes.NewReader(b))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer res.Body.Close()
 	b, err = ioutil.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// println(string(b))
 	r := &api.TestResponse{}
 	err = json.Unmarshal(b, r)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	return r, nil
+}
+
+func callDaemon(r *api.TestResponse) error {
 	return streamResponse(context.Background(), r.WebsocketURL, func(rs *api.TestSuite) {
 		pretty.Println(rs)
 	})
@@ -181,7 +189,7 @@ func generateTestPackage(pkgPath, rootPkg string, buildPkg bool) error {
 	if err = writeIntegrationMain(out, tsUnitPkg, funcs, buildPkg); err != nil {
 		return err
 	}
-	return writeIndex(out)
+	return writeIndex(out, filepath.Join(rootPkg, testsOutDir))
 }
 
 // generates main package for running all unit tests.
@@ -289,9 +297,23 @@ func writeMain(dst string, ctx interface{}) error {
 }
 
 //creates index.html file which loads the generated test suite js file.
-func writeIndex(dst string) error {
+func writeIndex(dst string, pkg string) error {
+	idx, err := template.New("idx").Parse(idxTpl)
+	if err != nil {
+		return err
+	}
+	q := make(url.Values)
+	println(pkg)
+	q.Set("src", pkg+"/main.js")
+	mainFIle := "http://localhost" + port + "/resource?" + q.Encode()
+	println(mainFIle)
+	ctx := map[string]string{
+		"mainFile": mainFIle,
+	}
+	var buf bytes.Buffer
+	err = idx.Execute(&buf, ctx)
 	m := filepath.Join(dst, "index.html")
-	return ioutil.WriteFile(m, []byte(idxTpl), 0600)
+	return ioutil.WriteFile(m, buf.Bytes(), 0600)
 }
 
 var mainUnitTpl = `package main
@@ -300,11 +322,13 @@ import(
 	"{{.testPkg}}"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gernest/prom/report/text"
+	"github.com/gernest/prom/helper"
 	"github.com/gernest/prom"
 )
 
 func main()  {
 	js.Global.Set("startTest", startTest)
+	js.Global.Set("runApp", helper.Run)
 }
 
 func startTest() string   {
@@ -373,7 +397,7 @@ const idxTpl = `<!DOCTYPE html>
 <body>
 
 </body>
-<script src="main.js"></script>
+<script src="{{.mainFile}}"></script>
 
 </html>`
 

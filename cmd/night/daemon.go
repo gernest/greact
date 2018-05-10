@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -233,7 +235,47 @@ func apiServer(ctx context.Context, host string) *alien.Mux {
 			}
 		}
 	})
+	mux.Get("/resource", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		src := q.Get("src")
+		if src == "" {
+			http.Error(w, "file not found", http.StatusNotFound)
+			return
+		}
+		src, err := url.QueryUnescape(src)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// we don't serve files which are outside the package test directory.
+		inScope := false
+		var pkg string
+		cache.Range(func(k, _ interface{}) bool {
+			key := k.(string)
+			println(key)
+			if strings.HasPrefix(src, key) {
+				inScope = true
+				pkg = key
+				return false
+			}
+			return true
+		})
+
+		if !inScope {
+			http.Error(w, "files outside test scope are not allowed",
+				http.StatusForbidden)
+			return
+		}
+		path := filepath.Join(os.ExpandEnv("$GOPATH"), "src", src)
+		fmt.Println(path)
+		http.ServeFile(w, r, path)
+	})
 	return mux
+}
+
+func inPkgScope(a, b string) bool {
+	return strings.HasPrefix(a, b)
 }
 
 func homeResponse(base string, req *api.TestRequest) (*api.TestResponse, error) {

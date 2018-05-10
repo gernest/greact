@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"net/url"
+	"testing"
+)
 
 func TestWebsockerURL(t *testing.T) {
 	base := "http://localhost:8080"
@@ -14,4 +17,21 @@ func TestWebsockerURL(t *testing.T) {
 		t.Errorf("expected %s got %s", expect, u)
 	}
 	// t.Error(u)
+}
+
+func TestInScooe(t *testing.T) {
+	s := "http://localhost:1955/resource?src=github.com/gernest/prom/promtest/main.js"
+	pkg := "github.com/gernest/prom"
+	u, err := url.Parse(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := u.Query().Get("src")
+	src, err = url.QueryUnescape(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !inPkgScope(src, pkg) {
+		t.Errorf("expected %s to be in scope of %s", src, pkg)
+	}
 }

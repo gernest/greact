@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"go/ast"
 	"go/build"
@@ -10,12 +11,14 @@ import (
 	"go/printer"
 	"go/token"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
 
+	"github.com/gernest/prom/api"
 	"github.com/gernest/prom/tools"
 	"github.com/urfave/cli"
 )
@@ -100,6 +103,29 @@ func runTestSuites(ctx *cli.Context) error {
 	if buildPkg {
 		return buildPackage(out, o)
 	}
+	req := &api.TestRequest{
+		Package:  rootPkg,
+		Compiled: true,
+	}
+	return callDaemon(req)
+}
+
+func callDaemon(req *api.TestRequest) error {
+	h := "http://localhost" + port
+	b, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+	res, err := http.Post(h, "application/json", bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	b, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+	println(string(b))
 	return nil
 }
 

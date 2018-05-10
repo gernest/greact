@@ -9,11 +9,12 @@ import (
 	"go/parser"
 	"go/printer"
 	"go/token"
-	"html/template"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+	"text/template"
 
 	"github.com/gernest/prom/tools"
 	"github.com/urfave/cli"
@@ -92,7 +93,7 @@ func runTestSuites(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if err = generateTestPackage(pkgPath, rootPkg); err != nil {
+	if err = generateTestPackage(pkgPath, rootPkg, buildPkg); err != nil {
 		return err
 	}
 	o := filepath.Join(rootPkg, testsOutDir)
@@ -107,7 +108,7 @@ func runTestSuites(ctx *cli.Context) error {
 //
 // Position information is injected in all calls to Error,Errorf,Fatal,FatalF.
 // Tis is the simpleset way to provide informative error messages on test failure.
-func generateTestPackage(pkgPath, rootPkg string) error {
+func generateTestPackage(pkgPath, rootPkg string, buildPkg bool) error {
 	out := filepath.Join(pkgPath, testsOutDir)
 	tdir := filepath.Join(pkgPath, testsDir)
 	tsPkg, err := build.ImportDir(tdir, 0)
@@ -137,13 +138,58 @@ func generateTestPackage(pkgPath, rootPkg string) error {
 			return err
 		}
 	}
-	data := make(map[string]interface{})
-	data["testPkg"] = filepath.Join(rootPkg, testsOutDir, testsDir)
-	data["funcs"] = funcs
-	if err = writeMain(out, data); err != nil {
+	tsUnitPkg := filepath.Join(rootPkg, testsOutDir, testsDir)
+	if err = writeUnitMain(out, tsUnitPkg, funcs); err != nil {
+		return err
+	}
+	if err = writeIntegrationMain(out, tsUnitPkg, funcs, buildPkg); err != nil {
 		return err
 	}
 	return writeIndex(out)
+}
+
+// generates main package for running all unit tests.
+func writeUnitMain(out, pkg string, funcs *tools.TestNames) error {
+	data := make(map[string]interface{})
+	data["testPkg"] = pkg
+	data["funcs"] = funcs
+	return writeMain(out, data)
+}
+
+var itpl = template.Must(template.New("i").Parse(mainIntegrationTpl))
+
+func writeIntegrationMain(out, pkg string, funcs *tools.TestNames, buildPkg bool) error {
+	if len(funcs.Integration) > 0 {
+		data := make(map[string]interface{})
+		data["testPkg"] = pkg
+		var buf bytes.Buffer
+		for _, v := range funcs.Integration {
+			name := strings.ToLower(v)
+			e := filepath.Join(out, name)
+			os.MkdirAll(e, 0755)
+			data["funcName"] = v
+			buf.Reset()
+			err := itpl.Execute(&buf, data)
+			if err != nil {
+				return err
+			}
+			err = ioutil.WriteFile(filepath.Join(e, "main.go"), buf.Bytes(), 0600)
+			if err != nil {
+				return err
+			}
+			if buildPkg {
+				ipkg, err := calcPkgPath(e)
+				if err != nil {
+					return err
+				}
+				if err = buildPackage(e, ipkg); err != nil {
+					return err
+				}
+			}
+
+		}
+	}
+	return nil
 }
 
 // writeFile prints the ast for f using the printer package. The file name is
@@ -189,7 +235,7 @@ func calcPkgPath(base string) (string, error) {
 // writeMain creates main.go file which wraps the compiled test functions with
 // extra logic for running the tests.
 func writeMain(dst string, ctx interface{}) error {
-	tpl, err := template.New("main").Parse(mainTpl)
+	tpl, err := template.New("main").Parse(mainUnitTpl)
 	if err != nil {
 		return err
 	}
@@ -212,25 +258,17 @@ func writeIndex(dst string) error {
 	return ioutil.WriteFile(m, []byte(idxTpl), 0600)
 }
 
-var mainTpl = `package main
+var mainUnitTpl = `package main
 
 import(
 	"{{.testPkg}}"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gernest/prom/report/text"
-	"github.com/gernest/prom/helper"
 	"github.com/gernest/prom"
-	{{with .funcs.Integration}}
-	"github.com/gopherjs/vecty"
-	{{end}}
 )
 
 func main()  {
 	js.Global.Set("startTest", startTest)
-	js.Global.Set("start", start)
-	{{with .funcs.Integration -}}
-	js.Global.Set("startComponents", startComponents)
-	{{end}}
 }
 
 func startTest() string   {
@@ -247,33 +285,43 @@ func start()*prom.ResultCtx  {
 		{{end -}}
 	)
 }
-{{with .funcs.Integration}}
-func componentsToRender()func()vecty.ComponentOrHTML{
-	return helper.NextFunc(
-		{{range . -}}
-		test.{{.}}(),
-		{{end -}}
+
+`
+
+var mainIntegrationTpl = `package main
+
+import(
+	"{{.testPkg}}"
+	"github.com/gopherjs/gopherjs/js"
+	"github.com/gernest/prom/helper"
+	"github.com/gernest/prom"
+	"github.com/gopherjs/vecty"
+)
+
+func main()  {
+	js.Global.Set("startComponents", startComponents)
+}
+
+func componentsToRender()vecty.ComponentOrHTML{
+	return helper.Wrap(
+		test.{{.funcName}}(),
 	)
 }
 
 func startComponents()  {
 	c:=&helper.ComponentRunner{
-		Next:componentsToRender(),
+		Next:componentsToRender,
 		AfterFunc:afterComponentSuite,
-		Done:doneComponentSuite,
 	}
 	vecty.RenderBody(c)
 }
 
 func afterComponentSuite(rs *prom.ResultCtx)  {
-	println(rs.ToJson())
+	parent := js.Global.Get("parent")
+	if parent != nil {
+		parent.Call("postMessage", rs)
+	}
 }
-
-func doneComponentSuite()  {
-	println("done running components")
-}
-{{end}}
-
 `
 
 const idxTpl = `<!DOCTYPE html>
@@ -307,5 +355,7 @@ const idxTpl = `<!DOCTYPE html>
 func buildPackage(dst string, pkg string) error {
 	o := filepath.Join(dst, "main.js")
 	cmd := exec.Command("gopherjs", "build", "-o", o, pkg)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
 	return cmd.Run()
 }

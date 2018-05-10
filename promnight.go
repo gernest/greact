@@ -181,13 +181,13 @@ func execute(e *ExecCommand, fn func() Result) (rs *ResultInfo) {
 type T struct {
 	before func()
 	after  func(*ResultCtx)
-	suit   *Suite
+	Suite  *Suite
 	base   List
 }
 
 func NewTest(name string, before func(), after func(*ResultCtx)) *T {
 	return &T{
-		suit:   &Suite{Desc: name},
+		Suite:  &Suite{Desc: name},
 		before: before,
 		after:  after,
 	}
@@ -208,14 +208,14 @@ func (t *T) After(fn ...func(*ResultCtx)) {
 func (t *T) run() {}
 
 func (t *T) Describe(desc string, cases ...Test) {
-	t.suit.Cases = append(t.suit.Cases, Describe(desc, cases...))
+	t.Suite.Cases = append(t.Suite.Cases, Describe(desc, cases...))
 }
 
 func (t *T) exec() *ResultCtx {
 	if t.before != nil {
 		t.before()
 	}
-	rs := ExecSuite(t.suit)
+	rs := ExecSuite(t.Suite)
 	if t.after != nil {
 		t.after(rs)
 	}
@@ -223,7 +223,7 @@ func (t *T) exec() *ResultCtx {
 }
 
 func (t *T) Cases(tc ...Test) *T {
-	t.suit.Cases = append(t.suit.Cases, tc...)
+	t.Suite.Cases = append(t.Suite.Cases, tc...)
 	return t
 }
 

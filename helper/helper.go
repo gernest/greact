@@ -1,6 +1,9 @@
 package helper
 
 import (
+	"regexp"
+
+	"github.com/gernest/naaz/prop"
 	"github.com/gernest/prom"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/vecty"
@@ -16,25 +19,13 @@ type ComponentRunner struct {
 	Next func() vecty.ComponentOrHTML
 
 	AfterFunc func(*prom.ResultCtx)
-
-	// This when set will be called when all the components retruned by next have
-	// been successfully mounted and the testcases executed.
-	Done func()
 }
 
 // Render implements vecty.Component interface.
 func (c *ComponentRunner) Render() vecty.ComponentOrHTML {
 	n := c.Next()
-	if n == nil {
-		if c.Done != nil {
-			c.Done()
-		}
-		return nil
-	}
-	// safe to do this. Only the component struct implements Integration interface.
 	cmp := n.(*component)
 	cmp.after = c.after
-	println(cmp)
 	return cmp
 }
 
@@ -68,7 +59,6 @@ func (c *component) Mount() {
 	if c.after != nil {
 		c.after(rs)
 	}
-	node.Get("parentNode").Call("removeChild", node)
 }
 
 func (c *component) Render() vecty.ComponentOrHTML {
@@ -101,4 +91,78 @@ func NextFunc(v ...prom.Integration) func() vecty.ComponentOrHTML {
 		}
 		return nil
 	}
+}
+
+type App struct {
+	vecty.Core
+
+	Units []*prom.T
+
+	// A regular expression to specify which unit tests to run.Tests whose top level
+	// description matches will be run.Not macthing tests are simply ignored.
+	UnitMatch string
+
+	// A regular expression to specify which integration tests to run.Tests whose
+	// top level description matches will be run.Not macthing tests are simply
+	// ignored.
+	IntegrationMatch string
+
+	// Integrations names of the functions to run integration tests.
+	Integrations []string
+}
+
+// Mount implements vecty.Mounter. Unit tests are executed here. Integration
+// tests arerun in iframes so the handling is done in the Render method.
+func (a *App) Mount() {
+	x := a.UnitMatch
+	if x == "" {
+		x = ".*"
+	}
+	re := regexp.MustCompile(x)
+	var list []*prom.T
+	for _, v := range a.Units {
+		if re.MatchString(v.Suite.Desc) {
+			list = append(list, v)
+		}
+	}
+	rs := prom.Exec(list...)
+	a.handleUnitsResult(rs)
+}
+
+func (a *App) handleUnitsResult(rs *prom.ResultCtx) {
+}
+
+func (a *App) handleIntegrationResult(rs *js.Object) {
+}
+
+// Render implements vecty.Component interface.
+func (a *App) Render() vecty.ComponentOrHTML {
+	if len(a.Integrations) > 0 {
+		x := a.UnitMatch
+		if x == "" {
+			x = ".*"
+		}
+		re := regexp.MustCompile(x)
+		var list []string
+		for _, v := range a.Integrations {
+			if re.MatchString(v) {
+				list = append(list, v)
+			}
+		}
+		var ls vecty.List
+		for _, v := range list {
+			src := a.iframeSrc(v)
+			ls = append(ls, elem.InlineFrame(
+				vecty.Markup(
+					prop.Src(src),
+				),
+			))
+		}
+		return elem.Body(ls)
+	}
+	return elem.Body()
+}
+
+func (a *App) iframeSrc(fn string) string {
+	return ""
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"go/ast"
@@ -17,6 +18,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/kr/pretty"
 
 	"github.com/gernest/prom/api"
 	"github.com/gernest/prom/tools"
@@ -125,8 +128,15 @@ func callDaemon(req *api.TestRequest) error {
 	if err != nil {
 		return err
 	}
-	println(string(b))
-	return nil
+	// println(string(b))
+	r := &api.TestResponse{}
+	err = json.Unmarshal(b, r)
+	if err != nil {
+		return err
+	}
+	return streamResponse(context.Background(), r.WebsocketURL, func(rs *api.TestSuite) {
+		pretty.Println(rs)
+	})
 }
 
 // generateTestPackage process the test directory and generate processed files

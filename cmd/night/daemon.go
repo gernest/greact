@@ -172,7 +172,7 @@ func apiServer(ctx context.Context, host string) *alien.Mux {
 			return
 		}
 		queue <- req
-		b, _ = json.Marshal(res)
+		b, _ = json.MarshalIndent(res, "", "  ")
 		fmt.Fprint(w, string(b))
 	})
 	mux.Get("/"+testEndpoint, func(w http.ResponseWriter, r *http.Request) {
@@ -190,7 +190,8 @@ func apiServer(ctx context.Context, host string) *alien.Mux {
 		}
 		ts := tsv.(*api.TestSuite)
 		ts.Status = "running"
-
+		rstChan := make(chan *api.TestSuite, 10)
+		rstChan <- ts
 		conn, err := upgrade.Upgrade(w, r, nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -210,11 +211,14 @@ func apiServer(ctx context.Context, host string) *alien.Mux {
 			}
 		}()
 		for {
-			err := conn.WriteJSON(tsv)
-			if err != nil {
-				//log error
-				fmt.Println(err)
-				break
+			select {
+			case v := <-rstChan:
+				err := conn.WriteJSON(v)
+				if err != nil {
+					//log error
+					fmt.Println(err)
+					break
+				}
 			}
 		}
 	})

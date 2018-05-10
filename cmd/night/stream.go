@@ -19,7 +19,7 @@ func streamResponse(ctx context.Context, ws string, handler func(*api.TestSuite)
 	if err != nil {
 		return err
 	}
-	u.Scheme = "tcp"
+	// u.Scheme = "tcp"
 	d, err := net.Dial("tcp", u.Host)
 	if err != nil {
 		return err

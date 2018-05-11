@@ -84,12 +84,12 @@ func (s *Suite) FullName() string {
 		names = append(names, p.Desc)
 		p = p.Parent
 	}
-	var rev []string
-	size := len(names) - 1
-	for i := len(names) - 1; i >= 0; i-- {
-		rev[size-i] = names[i]
+	size := len(names)
+	rvs := make([]string, size)
+	for i := 0; i < size; i++ {
+		rvs[i] = names[size-i-1]
 	}
-	return strings.Join(rev, " ")
+	return strings.Join(rvs, " ")
 }
 
 func (s *Suite) Exec() {
@@ -126,8 +126,10 @@ func (s *Suite) Exec() {
 	}
 }
 
-func Exec(ts ...Test) {
-	List(ts).Exec()
+func Exec(ts ...Test) Test {
+	ls := List(ts)
+	ls.Exec()
+	return ls
 }
 
 // Skip marks test suite as skipped

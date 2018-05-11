@@ -340,17 +340,15 @@ func main()  {
 	js.Global.Set("runApp", helper.Run)
 }
 
-func startTest() string   {
+func startTest(){
 	 v:= start()
 	 text.Report(v)
-	 return v.ToJson()
 }
 
-func start()*prom.ResultCtx  {
+func start()prom.Test  {
 	return prom.Exec(
 		{{range .funcs.Unit -}}
-		prom.NewTest("{{.}}",nil,nil).
-		Cases(test.{{.}}()),
+		test.{{.}}(),
 		{{end -}}
 	)
 }

@@ -2,8 +2,6 @@ package api
 
 import (
 	"time"
-
-	"github.com/gernest/prom"
 )
 
 // TestSuite is an object representing a single test suite. A single test suite
@@ -23,7 +21,7 @@ type TestSuite struct {
 	Duration time.Time `json:"duration"`
 
 	// This is the response from running startTest function on the browser.
-	Result *prom.ResultCtx `json:"results"`
+	// Result *prom.ResultCtx `json:"results"`
 }
 
 // TestRequest is the object sent to the server to initiate the test runner.

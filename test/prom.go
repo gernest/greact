@@ -40,3 +40,7 @@ func TestT_After() prom.Test {
 		}),
 	)
 }
+
+func TestReverse() {
+
+}

@@ -45,10 +45,10 @@ func Describe(desc string, tc ...Test) Test {
 			}
 		case *Suite:
 			e.Parent = t
-			t.Cases = append(t.Cases, e)
+			t.Children = append(t.Children, e)
 		case *Expectation:
 			e.Parent = t
-			t.Cases = append(t.Cases, e)
+			t.Expectations = append(t.Expectations, e)
 		}
 	}
 	return t
@@ -63,18 +63,30 @@ func (ls List) Exec() {
 	}
 }
 
-type Suite struct {
-	Parent      *Suite
-	Desc        string
-	BeforeFuncs *BeforeFuncs
-	AfterFuncs  *AfterFuncs
-	Cases       List
+type SpecResult struct {
+	Desc               string
+	FullName           string
+	FailedExpectations []*ExpectResult
+	PassedExpectations []*ExpectResult
+}
 
-	FailedExpectations []*Expectation
+type ExpectResult struct {
+	Desc     string
+	Messages []string
+}
+
+type Suite struct {
+	Parent             *Suite
+	Desc               string
+	BeforeFuncs        *BeforeFuncs
+	AfterFuncs         *AfterFuncs
 	MarkedSKip         bool
 	MarkedSkipMessage  string
 	Duration           time.Duration
 	Expectations       []*Expectation
+	FailedExpectations []*Expectation
+	PassedExpectations []*Expectation
+	Children           []*Suite
 }
 
 func (s *Suite) FullName() string {
@@ -115,13 +127,19 @@ func (s *Suite) Exec() {
 		}
 
 	}()
-	for i := 0; i < len(s.Cases); i++ {
-		v := s.Cases[i]
-		switch e := v.(type) {
-		case *Suite:
-			e.Exec()
-		case *Expectation:
-			e.Exec()
+	if len(s.Expectations) > 0 {
+		for _, v := range s.Expectations {
+			v.Exec()
+			if !v.Passed {
+				s.FailedExpectations = append(s.FailedExpectations, v)
+			} else {
+				s.PassedExpectations = append(s.PassedExpectations, v)
+			}
+		}
+	}
+	if len(s.Children) > 0 {
+		for _, v := range s.Children {
+			v.Exec()
 		}
 	}
 }
@@ -137,11 +155,21 @@ func Skip(message string) {
 	panic(&Error{Pending: true, Message: errors.New(message)})
 }
 
-func defaultTFn() T {
-	return &baseT{}
-}
-
 func (*Suite) run() {}
+
+func (s *Suite) Result() *SpecResult {
+	r := &SpecResult{
+		Desc:     s.Desc,
+		FullName: s.FullName(),
+	}
+	for _, v := range s.FailedExpectations {
+		r.FailedExpectations = append(r.FailedExpectations, v.Result())
+	}
+	for _, v := range s.PassedExpectations {
+		r.PassedExpectations = append(r.PassedExpectations, v.Result())
+	}
+	return r
+}
 
 func It(desc string, fn func(T)) Test {
 	return &Expectation{Desc: desc, Func: fn}
@@ -164,6 +192,12 @@ type Expectation struct {
 }
 
 func (*Expectation) run() {}
+func (e *Expectation) Result() *ExpectResult {
+	return &ExpectResult{
+		Desc:     e.Desc,
+		Messages: e.FailMessages,
+	}
+}
 
 func (e *Expectation) Exec() {
 	defer func() {

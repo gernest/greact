@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -250,13 +251,13 @@ func apiServer(ctx context.Context, host string) *alien.Mux {
 
 		// we don't serve files which are outside the package test directory.
 		inScope := false
-		var pkg string
-		cache.Range(func(k, _ interface{}) bool {
+		var pkg *api.TestSuite
+		cache.Range(func(k, v interface{}) bool {
 			key := k.(string)
 			println(key)
 			if strings.HasPrefix(src, key) {
 				inScope = true
-				pkg = key
+				pkg = v.(*api.TestSuite)
 				return false
 			}
 			return true
@@ -267,7 +268,12 @@ func apiServer(ctx context.Context, host string) *alien.Mux {
 				http.StatusForbidden)
 			return
 		}
-		path := filepath.Join(os.ExpandEnv("$GOPATH"), "src", src)
+		rel, err := filepath.Rel(pkg.Package, src)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		path := filepath.Join(pkg.Path, rel)
 		fmt.Println(path)
 		http.ServeFile(w, r, path)
 	})
@@ -279,6 +285,12 @@ func inPkgScope(a, b string) bool {
 }
 
 func homeResponse(base string, req *api.TestRequest) (*api.TestResponse, error) {
+	if req.Path == "" {
+		return nil, errors.New("Path can not be empty")
+	}
+	if !filepath.IsAbs(req.Path) {
+		return nil, errors.New("Path must be absolute")
+	}
 	u, err := websocketURL(base, req.Package)
 	if err != nil {
 		return nil, err

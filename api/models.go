@@ -33,9 +33,8 @@ type TestRequest struct {
 	// path.
 	Package string `json:"package"`
 
-	// The absolute path to the the package source files. This field is optional.
-	// When this is empty the path will be calculated relative to GOPATH using the
-	// Package name.
+	// The absolute path to the the package source files. This must be provided,
+	// the daemon has no idea where GOPATH is.
 	Path string `json:"path"`
 
 	// True if the test package has already been compiled. By default the server

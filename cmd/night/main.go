@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/build"
@@ -109,8 +110,13 @@ func runTestSuites(ctx *cli.Context) error {
 			return err
 		}
 	}
+	abs, err := filepath.Abs(pkgPath)
+	if err != nil {
+		return err
+	}
 	req := &api.TestRequest{
 		Package:  rootPkg,
+		Path:     abs,
 		Compiled: true,
 	}
 	_, err = sendTestRequest(req)
@@ -131,6 +137,9 @@ func sendTestRequest(req *api.TestRequest) (*api.TestResponse, error) {
 	b, err = ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
+	}
+	if res.StatusCode != http.StatusOK {
+		return nil, errors.New(string(b))
 	}
 	// println(string(b))
 	r := &api.TestResponse{}

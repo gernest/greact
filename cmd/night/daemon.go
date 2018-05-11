@@ -274,7 +274,6 @@ func apiServer(ctx context.Context, host string) *alien.Mux {
 			return
 		}
 		path := filepath.Join(pkg.Path, rel)
-		fmt.Println(path)
 		http.ServeFile(w, r, path)
 	})
 	return mux

@@ -3,6 +3,7 @@ package prom
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gopherjs/gopherjs/js"
@@ -74,6 +75,21 @@ type Suite struct {
 	MarkedSkipMessage  string
 	Duration           time.Duration
 	Expectations       []*Expectation
+}
+
+func (s *Suite) FullName() string {
+	var names []string
+	p := s
+	for p != nil {
+		names = append(names, p.Desc)
+		p = p.Parent
+	}
+	var rev []string
+	size := len(names) - 1
+	for i := len(names) - 1; i >= 0; i-- {
+		rev[size-i] = names[i]
+	}
+	return strings.Join(rev, " ")
 }
 
 func (s *Suite) Exec() {

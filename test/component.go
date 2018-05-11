@@ -8,7 +8,7 @@ import (
 
 func TestRenderBody() prom.Integration {
 	return prom.RenderBody("Body", helloFunc,
-		prom.It("says hello world", func(rs prom.Result) {
+		prom.It("says hello world", func(rs prom.T) {
 			node := rs.(prom.Node).Node()
 			txt := "hello, world"
 			g := node.Get("textContent").String()
@@ -38,7 +38,7 @@ func (hello) Render() vecty.ComponentOrHTML {
 func TestRender() prom.Integration {
 	txt := "hello, world 2"
 	return prom.Render("HTML node", renderFunc(txt),
-		prom.It("says hello world", func(rs prom.Result) {
+		prom.It("says hello world", func(rs prom.T) {
 			node := rs.(prom.Node).Node()
 			g := node.Get("textContent").String()
 			if g != txt {

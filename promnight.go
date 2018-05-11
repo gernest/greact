@@ -10,13 +10,13 @@ import (
 )
 
 var (
-	_ Test   = (*Suite)(nil)
-	_ Test   = (*Expectation)(nil)
-	_ Test   = (List)(nil)
-	_ Test   = (*BeforeFuncs)(nil)
-	_ Test   = (*AfterFuncs)(nil)
-	_ Result = (*baseResult)(nil)
-	_ Result = (*RSWithNode)(nil)
+	_ Test = (*Suite)(nil)
+	_ Test = (*Expectation)(nil)
+	_ Test = (List)(nil)
+	_ Test = (*BeforeFuncs)(nil)
+	_ Test = (*AfterFuncs)(nil)
+	_ T    = (*baseT)(nil)
+	_ T    = (*RSWithNode)(nil)
 )
 
 type Test interface {
@@ -137,17 +137,17 @@ func Skip(message string) {
 	panic(&Error{Pending: true, Message: errors.New(message)})
 }
 
-func defaultResultFn() Result {
-	return &baseResult{}
+func defaultTFn() T {
+	return &baseT{}
 }
 
 func (*Suite) run() {}
 
-func It(desc string, fn func(Result)) Test {
+func It(desc string, fn func(T)) Test {
 	return &Expectation{Desc: desc, Func: fn}
 }
 
-type Result interface {
+type T interface {
 	Error(...interface{})
 	Errorf(string, ...interface{})
 	Fatal(...interface{})
@@ -158,7 +158,7 @@ type Result interface {
 type Expectation struct {
 	Parent       *Suite
 	Desc         string
-	Func         func(Result)
+	Func         func(T)
 	Passed       bool
 	FailMessages []string
 }
@@ -176,7 +176,7 @@ func (e *Expectation) Exec() {
 			}
 		}
 	}()
-	rs := &baseResult{}
+	rs := &baseT{}
 	if e.Func != nil {
 		e.Func(rs)
 	}
@@ -190,7 +190,7 @@ func (e *Expectation) Exec() {
 	}
 }
 
-type ResultInfo struct {
+type TInfo struct {
 	Case         string   `json:"case"`
 	Failed       bool     `json:"failed"`
 	FailMessages []string `json:"fail_messages"`
@@ -208,26 +208,26 @@ func (e *Error) Error() string {
 	return ""
 }
 
-type baseResult struct {
+type baseT struct {
 	err []error
 }
 
-func (b *baseResult) Error(v ...interface{}) {
+func (b *baseT) Error(v ...interface{}) {
 	b.err = append(b.err, errors.New(fmt.Sprint(v...)))
 }
-func (b *baseResult) Fatal(v ...interface{}) {
+func (b *baseT) Fatal(v ...interface{}) {
 	panic(&Error{Message: errors.New(fmt.Sprint(v...))})
 }
 
-func (b *baseResult) Errorf(s string, v ...interface{}) {
+func (b *baseT) Errorf(s string, v ...interface{}) {
 	b.err = append(b.err, fmt.Errorf(s, v...))
 }
 
-func (b *baseResult) FatalF(s string, v ...interface{}) {
+func (b *baseT) FatalF(s string, v ...interface{}) {
 	panic(&Error{Message: fmt.Errorf(s, v...)})
 }
 
-func (b *baseResult) Errors() []error {
+func (b *baseT) Errors() []error {
 	return b.err
 }
 
@@ -250,7 +250,7 @@ type Node interface {
 }
 
 type RSWithNode struct {
-	baseResult
+	baseT
 	Object *js.Object
 }
 

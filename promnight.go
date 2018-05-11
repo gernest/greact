@@ -1,38 +1,122 @@
 package prom
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/gopherjs/gopherjs/js"
 )
 
 var (
-	_ Test   = (*T)(nil)
 	_ Test   = (*Suite)(nil)
-	_ Test   = (*ExecCommand)(nil)
+	_ Test   = (*Expectation)(nil)
 	_ Test   = (List)(nil)
+	_ Test   = (*BeforeFuncs)(nil)
+	_ Test   = (*AfterFuncs)(nil)
 	_ Result = (*baseResult)(nil)
 	_ Result = (*RSWithNode)(nil)
 )
 
 type Test interface {
+	Exec()
 	run()
 }
 
-func Describe(desc string, ctx ...Test) Test {
-	return &Suite{Desc: desc, Cases: List(ctx)}
+// Describe describe what you want to test.
+func Describe(desc string, tc ...Test) Test {
+	t := &Suite{Desc: desc}
+	for _, v := range tc {
+		switch e := v.(type) {
+		case *BeforeFuncs:
+			if t.BeforeFuncs != nil {
+				t.BeforeFuncs.Funcs =
+					append(t.BeforeFuncs.Funcs, e.Funcs...)
+			} else {
+				t.BeforeFuncs = e
+			}
+		case *AfterFuncs:
+			if t.AfterFuncs != nil {
+				t.AfterFuncs.Funcs =
+					append(t.AfterFuncs.Funcs, e.Funcs...)
+			} else {
+				t.AfterFuncs = e
+			}
+		case *Suite:
+			e.Parent = t
+			t.Cases = append(t.Cases, e)
+		case *Expectation:
+			e.Parent = t
+			t.Cases = append(t.Cases, e)
+		}
+	}
+	return t
 }
 
 type List []Test
 
 func (ls List) run() {}
+func (ls List) Exec() {
+	for _, v := range ls {
+		v.Exec()
+	}
+}
 
 type Suite struct {
-	Desc     string
-	Cases    List
-	ResultFN func() Result
+	Parent      *Suite
+	Desc        string
+	BeforeFuncs *BeforeFuncs
+	AfterFuncs  *AfterFuncs
+	Cases       List
+
+	FailedExpectations []*Expectation
+	MarkedSKip         bool
+	MarkedSkipMessage  string
+	Duration           time.Duration
+	Expectations       []*Expectation
+}
+
+func (s *Suite) Exec() {
+	start := time.Now()
+	if s.BeforeFuncs != nil {
+		s.BeforeFuncs.Exec()
+	}
+	defer func() {
+		s.Duration = time.Now().Sub(start)
+	}()
+	defer func() {
+		if e := recover(); e != nil {
+			if err, ok := e.(*Error); ok {
+				if err.Pending {
+					s.MarkedSKip = true
+					s.MarkedSkipMessage = err.Message.Error()
+				}
+			}
+		} else {
+			if s.AfterFuncs != nil {
+				s.AfterFuncs.Exec()
+			}
+		}
+
+	}()
+	for i := 0; i < len(s.Cases); i++ {
+		v := s.Cases[i]
+		switch e := v.(type) {
+		case *Suite:
+			e.Exec()
+		case *Expectation:
+			e.Exec()
+		}
+	}
+}
+
+func Exec(ts ...Test) {
+	List(ts).Exec()
+}
+
+// Skip marks test suite as skipped
+func Skip(message string) {
+	panic(&Error{Pending: true, Message: errors.New(message)})
 }
 
 func defaultResultFn() Result {
@@ -42,7 +126,7 @@ func defaultResultFn() Result {
 func (*Suite) run() {}
 
 func It(desc string, fn func(Result)) Test {
-	return &ExecCommand{Desc: desc, Func: fn}
+	return &Expectation{Desc: desc, Func: fn}
 }
 
 type Result interface {
@@ -53,12 +137,40 @@ type Result interface {
 	Errors() []error
 }
 
-type ExecCommand struct {
-	Desc string
-	Func func(Result)
+type Expectation struct {
+	Parent       *Suite
+	Desc         string
+	Func         func(Result)
+	Passed       bool
+	FailMessages []string
 }
 
-func (*ExecCommand) run() {}
+func (*Expectation) run() {}
+
+func (e *Expectation) Exec() {
+	defer func() {
+		if ev := recover(); ev != nil {
+			if err, ok := ev.(*Error); ok {
+				if !err.Pending {
+					e.Passed = false
+					e.FailMessages = append(e.FailMessages, err.Message.Error())
+				}
+			}
+		}
+	}()
+	rs := &baseResult{}
+	if e.Func != nil {
+		e.Func(rs)
+	}
+	errs := rs.Errors()
+	if errs != nil {
+		for _, v := range errs {
+			e.FailMessages = append(e.FailMessages, v.Error())
+		}
+	} else {
+		e.Passed = true
+	}
+}
 
 type ResultInfo struct {
 	Case         string   `json:"case"`
@@ -68,6 +180,7 @@ type ResultInfo struct {
 
 type Error struct {
 	Message error
+	Pending bool
 }
 
 func (e *Error) Error() string {
@@ -75,67 +188,6 @@ func (e *Error) Error() string {
 		return e.Error()
 	}
 	return ""
-}
-
-type ResultCtx struct {
-	Parent   *ResultCtx    `json:"-"`
-	Desc     string        `json:"description"`
-	Children []*ResultCtx  `json:"children"`
-	Results  []*ResultInfo `json:"results"`
-}
-
-func (r ResultCtx) ToJson() string {
-	v, err := json.MarshalIndent(r, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	return string(v)
-}
-
-func Exec(ctx ...*T) *ResultCtx {
-	rs := &ResultCtx{}
-	for _, v := range ctx {
-		rs.Children = append(rs.Children, v.exec())
-	}
-	return rs
-}
-
-func ExecSuite(s *Suite) *ResultCtx {
-	rs := &ResultCtx{
-		Desc: s.Desc,
-	}
-	for _, v := range s.Cases {
-		switch e := v.(type) {
-		case *Suite:
-			ch := ExecSuite(e)
-			ch.Parent = rs
-			rs.Children = append(rs.Children, ch)
-		case *ExecCommand:
-			fn := s.ResultFN
-			if fn == nil {
-				fn = defaultResultFn
-			}
-			rv, ok := wrapPanic(e, fn)
-			rs.Results = append(rs.Results, rv)
-			if ok {
-				// call to Fatal or Fatalf halts the whole suite.
-				return rs
-			}
-		}
-	}
-	return rs
-}
-
-func wrapPanic(e *ExecCommand, fn func() Result) (rs *ResultInfo, panicked bool) {
-	defer func() {
-		if err := recover(); err != nil {
-			rs.Failed = true
-			rs.FailMessages = append(rs.FailMessages, fmt.Sprint(err))
-			panicked = true
-		}
-	}()
-	rs = execute(e, fn)
-	return
 }
 
 type baseResult struct {
@@ -159,72 +211,6 @@ func (b *baseResult) FatalF(s string, v ...interface{}) {
 
 func (b *baseResult) Errors() []error {
 	return b.err
-}
-
-// execute calls the function e.Func and register results.
-func execute(e *ExecCommand, fn func() Result) (rs *ResultInfo) {
-	r := fn()
-	if e.Func != nil {
-		e.Func(r)
-	}
-	rs = &ResultInfo{Case: e.Desc}
-	errs := r.Errors()
-	if errs != nil {
-		rs.Failed = true
-		for _, v := range errs {
-			rs.FailMessages = append(rs.FailMessages, v.Error())
-		}
-	}
-	return rs
-}
-
-type T struct {
-	before func()
-	after  func(*ResultCtx)
-	Suite  *Suite
-	base   List
-}
-
-func NewTest(name string, before func(), after func(*ResultCtx)) *T {
-	return &T{
-		Suite:  &Suite{Desc: name},
-		before: before,
-		after:  after,
-	}
-}
-
-func (t *T) Before(fn ...func()) {
-	if len(fn) > 0 {
-		t.before = fn[0]
-	}
-}
-
-func (t *T) After(fn ...func(*ResultCtx)) {
-	if len(fn) > 0 {
-		t.after = fn[0]
-	}
-}
-
-func (t *T) run() {}
-
-func (t *T) Describe(desc string, cases ...Test) {
-	t.Suite.Cases = append(t.Suite.Cases, Describe(desc, cases...))
-}
-
-func (t *T) exec() *ResultCtx {
-	if t.before != nil {
-		t.before()
-	}
-	rs := ExecSuite(t.Suite)
-	if t.after != nil {
-		t.after(rs)
-	}
-	return rs
-}
-
-func (t *T) Cases(tc ...Test) *T {
-	t.Suite.Cases = append(t.Suite.Cases, tc...)
-	return t
 }
 
 type Component struct {
@@ -272,4 +258,39 @@ func RenderBody(desc string, c func() interface{}, cases ...Test) Integration {
 	return &Component{
 		ID: desc, Component: c, Cases: cases, IsBody: true,
 	}
+}
+
+type BeforeFuncs struct {
+	Funcs []func()
+}
+
+func (*BeforeFuncs) run() {}
+func (b *BeforeFuncs) Exec() {
+	for _, v := range b.Funcs {
+		v()
+	}
+}
+
+// Before is a list of functions that will be executed before the actual test
+// suite is run.
+func Before(fn ...func()) Test {
+	return &BeforeFuncs{Funcs: fn}
+}
+
+type AfterFuncs struct {
+	Funcs []func()
+}
+
+func (*AfterFuncs) run() {}
+func (b *AfterFuncs) Exec() {
+	for _, v := range b.Funcs {
+		v()
+	}
+}
+
+// After is a list of functions that will be executed after the actual test
+// suite is run.
+// You can use this to release resources/cleanup after the tests are done.
+func After(fn ...func()) Test {
+	return &AfterFuncs{Funcs: fn}
 }

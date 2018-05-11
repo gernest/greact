@@ -279,10 +279,6 @@ func apiServer(ctx context.Context, host string) *alien.Mux {
 	return mux
 }
 
-func inPkgScope(a, b string) bool {
-	return strings.HasPrefix(a, b)
-}
-
 func homeResponse(base string, req *api.TestRequest) (*api.TestResponse, error) {
 	if req.Path == "" {
 		return nil, errors.New("Path can not be empty")

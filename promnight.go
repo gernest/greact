@@ -64,10 +64,11 @@ func (ls List) Exec() {
 }
 
 type SpecResult struct {
-	Desc               string
-	FullName           string
-	FailedExpectations []*ExpectResult
-	PassedExpectations []*ExpectResult
+	Desc               string          `json:"description"`
+	FullName           string          `json:"fullname"`
+	FailedExpectations []*ExpectResult `json:"failed_expectation"`
+	PassedExpectations []*ExpectResult `json:"passed_expectations"`
+	Children           []*SpecResult   `json:"children"`
 }
 
 type ExpectResult struct {
@@ -157,6 +158,7 @@ func Skip(message string) {
 
 func (*Suite) run() {}
 
+// Result returns results of executing the suite.
 func (s *Suite) Result() *SpecResult {
 	r := &SpecResult{
 		Desc:     s.Desc,
@@ -168,21 +170,29 @@ func (s *Suite) Result() *SpecResult {
 	for _, v := range s.PassedExpectations {
 		r.PassedExpectations = append(r.PassedExpectations, v.Result())
 	}
+	for _, v := range s.Children {
+		r.Children = append(r.Children, v.Result())
+	}
 	return r
 }
 
+// It defines expectations. The test logic happens in the function fn.
 func It(desc string, fn func(T)) Test {
 	return &Expectation{Desc: desc, Func: fn}
 }
 
+// T is an interface for failing expectations.
 type T interface {
 	Error(...interface{})
 	Errorf(string, ...interface{})
 	Fatal(...interface{})
 	FatalF(string, ...interface{})
-	Errors() []error
+	Errors() []string
 }
 
+// Expectation contains the main test function that checks expectations. If the
+// main function after execution happens not to call any method of the passed T
+// object then the test has passed.
 type Expectation struct {
 	Parent       *Suite
 	Desc         string
@@ -217,17 +227,11 @@ func (e *Expectation) Exec() {
 	errs := rs.Errors()
 	if errs != nil {
 		for _, v := range errs {
-			e.FailMessages = append(e.FailMessages, v.Error())
+			e.FailMessages = append(e.FailMessages, v)
 		}
 	} else {
 		e.Passed = true
 	}
-}
-
-type TInfo struct {
-	Case         string   `json:"case"`
-	Failed       bool     `json:"failed"`
-	FailMessages []string `json:"fail_messages"`
 }
 
 type Error struct {
@@ -243,25 +247,25 @@ func (e *Error) Error() string {
 }
 
 type baseT struct {
-	err []error
+	err []string
 }
 
 func (b *baseT) Error(v ...interface{}) {
-	b.err = append(b.err, errors.New(fmt.Sprint(v...)))
+	b.err = append(b.err, fmt.Sprint(v...))
 }
 func (b *baseT) Fatal(v ...interface{}) {
 	panic(&Error{Message: errors.New(fmt.Sprint(v...))})
 }
 
 func (b *baseT) Errorf(s string, v ...interface{}) {
-	b.err = append(b.err, fmt.Errorf(s, v...))
+	b.err = append(b.err, fmt.Sprintf(s, v...))
 }
 
 func (b *baseT) FatalF(s string, v ...interface{}) {
 	panic(&Error{Message: fmt.Errorf(s, v...)})
 }
 
-func (b *baseT) Errors() []error {
+func (b *baseT) Errors() []string {
 	return b.err
 }
 

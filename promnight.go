@@ -16,7 +16,6 @@ var (
 	_ Test = (*BeforeFuncs)(nil)
 	_ Test = (*AfterFuncs)(nil)
 	_ T    = (*baseT)(nil)
-	_ T    = (*RSWithNode)(nil)
 )
 
 type Test interface {
@@ -63,17 +62,20 @@ func (ls List) Exec() {
 	}
 }
 
+// SpecResult contains result information after executing a test suite.
 type SpecResult struct {
 	Desc               string          `json:"description"`
 	FullName           string          `json:"fullname"`
-	FailedExpectations []*ExpectResult `json:"failed_expectation"`
+	FailedExpectations []*ExpectResult `json:"failed_expectations"`
 	PassedExpectations []*ExpectResult `json:"passed_expectations"`
 	Children           []*SpecResult   `json:"children"`
 }
 
+// ExpectResult contains reults of executing expectation.
 type ExpectResult struct {
-	Desc     string
-	Messages []string
+	Desc     string        `json:"description"`
+	Duration time.Duration `json:"duration"`
+	Messages []string      `json:"error_messages"`
 }
 
 type Suite struct {
@@ -199,17 +201,22 @@ type Expectation struct {
 	Func         func(T)
 	Passed       bool
 	FailMessages []string
+	Duration     time.Duration
 }
 
 func (*Expectation) run() {}
+
 func (e *Expectation) Result() *ExpectResult {
 	return &ExpectResult{
 		Desc:     e.Desc,
 		Messages: e.FailMessages,
+		Duration: e.Duration,
 	}
 }
 
+// Exec runs the test function and records the result.
 func (e *Expectation) Exec() {
+	start := time.Now()
 	defer func() {
 		if ev := recover(); ev != nil {
 			if err, ok := ev.(*Error); ok {
@@ -217,8 +224,14 @@ func (e *Expectation) Exec() {
 					e.Passed = false
 					e.FailMessages = append(e.FailMessages, err.Message.Error())
 				}
+			} else {
+				//bubble the error
+				panic(ev)
 			}
 		}
+	}()
+	defer func() {
+		e.Duration = time.Now().Sub(start)
 	}()
 	rs := &baseT{}
 	if e.Func != nil {
@@ -234,6 +247,8 @@ func (e *Expectation) Exec() {
 	}
 }
 
+// Error implements error interface. This is useful for taking care of interupts
+// via panics.
 type Error struct {
 	Message error
 	Pending bool
@@ -241,7 +256,7 @@ type Error struct {
 
 func (e *Error) Error() string {
 	if e.Message != nil {
-		return e.Error()
+		return e.Message.Error()
 	}
 	return ""
 }
@@ -278,6 +293,7 @@ type Component struct {
 
 func (c *Component) runIntegration() {}
 
+// Integration is an interface for integration tests.
 type Integration interface {
 	runIntegration()
 }
@@ -285,15 +301,6 @@ type Integration interface {
 // Node is an interface for retrieving a rendered Component node.
 type Node interface {
 	Node() *js.Object
-}
-
-type RSWithNode struct {
-	baseT
-	Object *js.Object
-}
-
-func (rs *RSWithNode) Node() *js.Object {
-	return rs.Object
 }
 
 // Render returns an integration test for non body Components. Use this to test

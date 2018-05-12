@@ -24,6 +24,7 @@ import (
 	"github.com/kr/pretty"
 
 	"github.com/gernest/prom/api"
+	"github.com/gernest/prom/config"
 	"github.com/gernest/prom/tools"
 	"github.com/urfave/cli"
 )
@@ -64,17 +65,9 @@ func main() {
 			Action: statusDaemon,
 		},
 		{
-			Name:  "test",
-			Usage: "runs the test suites",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "pkg",
-					Value: ".",
-				},
-				cli.BoolFlag{
-					Name: "build",
-				},
-			},
+			Name:   "test",
+			Usage:  "runs the test suites",
+			Flags:  config.FLags(),
 			Action: runTestSuites,
 		},
 	}
@@ -94,29 +87,21 @@ func main() {
 }
 
 func runTestSuites(ctx *cli.Context) error {
-	pkgPath := ctx.String("string")
-	buildPkg := ctx.Bool("build")
-	out := filepath.Join(pkgPath, testsOutDir)
-	rootPkg, err := calcPkgPath(pkgPath)
+	cfg, err := config.Load(ctx)
 	if err != nil {
 		return err
 	}
-	if err = generateTestPackage(pkgPath, rootPkg, buildPkg); err != nil {
+	if err = generateTestPackage(cfg); err != nil {
 		return err
 	}
-	o := filepath.Join(rootPkg, testsOutDir)
-	if buildPkg {
-		if err = buildPackage(out, o); err != nil {
+	if cfg.Build {
+		if err = buildPackage(cfg); err != nil {
 			return err
 		}
 	}
-	abs, err := filepath.Abs(pkgPath)
-	if err != nil {
-		return err
-	}
 	req := &api.TestRequest{
-		Package:  rootPkg,
-		Path:     abs,
+		Package:  cfg.Info.ImportPath,
+		Path:     cfg.Info.Dir,
 		Compiled: true,
 	}
 	_, err = sendTestRequest(req)
@@ -161,16 +146,14 @@ func callDaemon(r *api.TestResponse) error {
 //
 // Position information is injected in all calls to Error,Errorf,Fatal,FatalF.
 // Tis is the simpleset way to provide informative error messages on test failure.
-func generateTestPackage(pkgPath, rootPkg string, buildPkg bool) error {
-	out := filepath.Join(pkgPath, testsOutDir)
-	tdir := filepath.Join(pkgPath, testsDir)
-	tsPkg, err := build.ImportDir(tdir, 0)
+func generateTestPackage(cfg *config.Config) error {
+	tsPkg, err := build.ImportDir(cfg.TestPath, 0)
 	if err != nil {
 		return err
 	}
 	var files []*ast.File
-	dst := out
-	os.MkdirAll(filepath.Join(out, tsPkg.Name), 0755)
+	out := filepath.Join(cfg.OutputPath, tsPkg.Name)
+	os.MkdirAll(out, 0755)
 	set := token.NewFileSet()
 	funcs := &tools.TestNames{}
 	for _, v := range tsPkg.GoFiles {
@@ -186,39 +169,38 @@ func generateTestPackage(pkgPath, rootPkg string, buildPkg bool) error {
 		files = append(files, f)
 	}
 	for _, v := range files {
-		err := writeFile(dst, set, v)
+		err := writeFile(out, set, v)
 		if err != nil {
 			return err
 		}
 	}
-	tsUnitPkg := filepath.Join(rootPkg, testsOutDir, testsDir)
-	if err = writeUnitMain(out, tsUnitPkg, funcs); err != nil {
+	if err = writeUnitMain(cfg, funcs); err != nil {
 		return err
 	}
-	if err = writeIntegrationMain(out, tsUnitPkg, funcs, buildPkg); err != nil {
-		return err
-	}
-	return writeIndex(out, filepath.Join(rootPkg, testsOutDir))
+	// if err = writeIntegrationMain(cfg, funcs); err != nil {
+	// 	return err
+	// }
+	return writeIndex(cfg)
 }
 
 // generates main package for running all unit tests.
-func writeUnitMain(out, pkg string, funcs *tools.TestNames) error {
+func writeUnitMain(cfg *config.Config, funcs *tools.TestNames) error {
 	data := make(map[string]interface{})
-	data["testPkg"] = pkg
+	data["testPkg"] = cfg.TestUnitPkg
 	data["funcs"] = funcs
-	return writeMain(out, data)
+	return writeMain(cfg.OutputPath, data)
 }
 
 var itpl = template.Must(template.New("i").Parse(mainIntegrationTpl))
 
-func writeIntegrationMain(out, pkg string, funcs *tools.TestNames, buildPkg bool) error {
+func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
 	if len(funcs.Integration) > 0 {
 		data := make(map[string]interface{})
-		data["testPkg"] = pkg
+		data["testPkg"] = cfg.TestUnitPkg
 		var buf bytes.Buffer
 		for _, v := range funcs.Integration {
 			name := strings.ToLower(v)
-			e := filepath.Join(out, name)
+			e := filepath.Join(cfg.TestUnitDir, name)
 			os.MkdirAll(e, 0755)
 			data["funcName"] = v
 			buf.Reset()
@@ -230,12 +212,8 @@ func writeIntegrationMain(out, pkg string, funcs *tools.TestNames, buildPkg bool
 			if err != nil {
 				return err
 			}
-			if buildPkg {
-				ipkg, err := calcPkgPath(e)
-				if err != nil {
-					return err
-				}
-				if err = buildPackage(e, ipkg); err != nil {
+			if cfg.Build {
+				if err = buildPackage(cfg); err != nil {
 					return err
 				}
 			}
@@ -256,33 +234,13 @@ func writeFile(to string, fset *token.FileSet, f *ast.File) error {
 		return err
 	}
 	file := fset.File(f.Pos())
-	dst := filepath.Join(to, file.Name())
-	err = ioutil.WriteFile(dst, buf.Bytes(), 0600)
+	o := filepath.Join(to, filepath.Base(file.Name()))
+	// println(o)
+	err = ioutil.WriteFile(o, buf.Bytes(), 0600)
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-// calcPkgPath return valid import path for the package defined in base. This
-// assumes GOPATH is set, as the path is relative to the GOPATH/src directory.
-//
-// base can either be relative or absolute.
-func calcPkgPath(base string) (string, error) {
-	if filepath.IsAbs(base) {
-		src := filepath.Join(build.Default.GOPATH, "src")
-		rel, err := filepath.Rel(src, base)
-		if err != nil {
-			return "", err
-		}
-		return rel, nil
-	}
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	p := filepath.Join(wd, base)
-	return calcPkgPath(p)
 }
 
 // writeMain creates main.go file which wraps the compiled test functions with
@@ -306,13 +264,14 @@ func writeMain(dst string, ctx interface{}) error {
 }
 
 //creates index.html file which loads the generated test suite js file.
-func writeIndex(dst string, pkg string) error {
+func writeIndex(cfg *config.Config) error {
 	idx, err := template.New("idx").Parse(idxTpl)
 	if err != nil {
 		return err
 	}
+	pkg := cfg.OutputMainPkg
 	q := make(url.Values)
-	println(pkg)
+	// println(pkg)
 	q.Set("src", pkg+"/main.js")
 	mainFIle := "http://localhost" + port + "/resource?" + q.Encode()
 	println(mainFIle)
@@ -321,7 +280,7 @@ func writeIndex(dst string, pkg string) error {
 	}
 	var buf bytes.Buffer
 	err = idx.Execute(&buf, ctx)
-	m := filepath.Join(dst, "index.html")
+	m := filepath.Join(cfg.OutputPath, "index.html")
 	return ioutil.WriteFile(m, buf.Bytes(), 0600)
 }
 
@@ -331,18 +290,16 @@ import(
 	"{{.testPkg}}"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gernest/prom/report/text"
-	"github.com/gernest/prom/helper"
 	"github.com/gernest/prom"
 )
 
 func main()  {
 	js.Global.Set("startTest", startTest)
-	js.Global.Set("runApp", helper.Run)
 }
 
 func startTest(){
 	 v:= start()
-	 text.Report(v)
+	 text.JSON(v)
 }
 
 func start()prom.Test  {
@@ -357,38 +314,10 @@ func start()prom.Test  {
 
 var mainIntegrationTpl = `package main
 
-import(
-	"{{.testPkg}}"
-	"github.com/gopherjs/gopherjs/js"
-	"github.com/gernest/prom/helper"
-	"github.com/gernest/prom"
-	"github.com/gopherjs/vecty"
-)
-
 func main()  {
-	js.Global.Set("startComponents", startComponents)
+	// Integration tests are not supported yet
 }
 
-func componentsToRender()vecty.ComponentOrHTML{
-	return helper.Wrap(
-		test.{{.funcName}}(),
-	)
-}
-
-func startComponents()  {
-	c:=&helper.ComponentRunner{
-		Next:componentsToRender,
-		AfterFunc:afterComponentSuite,
-	}
-	vecty.RenderBody(c)
-}
-
-func afterComponentSuite(rs *prom.ResultCtx)  {
-	parent := js.Global.Get("parent")
-	if parent != nil {
-		parent.Call("postMessage", rs)
-	}
-}
 `
 
 const idxTpl = `<!DOCTYPE html>
@@ -419,9 +348,9 @@ const idxTpl = `<!DOCTYPE html>
 //
 // The output is main.js file in the root directory of the generated test
 // package.
-func buildPackage(dst string, pkg string) error {
-	o := filepath.Join(dst, "main.js")
-	cmd := exec.Command("gopherjs", "build", "-o", o, pkg)
+func buildPackage(cfg *config.Config) error {
+	o := filepath.Join(cfg.OutputPath, "main.js")
+	cmd := exec.Command("gopherjs", "build", "-o", o, cfg.OutputMainPkg)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
 	return cmd.Run()

@@ -66,6 +66,7 @@ func (ls List) Exec() {
 type SpecResult struct {
 	Desc               string          `json:"description"`
 	FullName           string          `json:"fullname"`
+	Duration           time.Duration   `json:"duration"`
 	FailedExpectations []*ExpectResult `json:"failed_expectations"`
 	PassedExpectations []*ExpectResult `json:"passed_expectations"`
 	Children           []*SpecResult   `json:"children"`
@@ -165,6 +166,7 @@ func (s *Suite) Result() *SpecResult {
 	r := &SpecResult{
 		Desc:     s.Desc,
 		FullName: s.FullName(),
+		Duration: s.Duration,
 	}
 	for _, v := range s.FailedExpectations {
 		r.FailedExpectations = append(r.FailedExpectations, v.Result())

@@ -2,8 +2,8 @@ package test
 
 import "github.com/gernest/prom"
 
-func TestT_Before() prom.Test {
-	return prom.Describe("T.Before",
+func TestBefore() prom.Test {
+	return prom.Describe("Before",
 		prom.It("be called before the testcase", func(t prom.T) {
 			before := 500
 			ts := prom.Describe("TestT_Before",
@@ -21,11 +21,11 @@ func TestT_Before() prom.Test {
 	)
 }
 
-func TestT_After() prom.Test {
-	return prom.Describe("T.After",
+func TestAfter() prom.Test {
+	return prom.Describe("After",
 		prom.It("should be called after the testcase", func(t prom.T) {
 			after := 500
-			ts := prom.Describe("TestT_After",
+			ts := prom.Describe("TestAfter",
 				prom.After(func() {
 					after = 200
 				}),

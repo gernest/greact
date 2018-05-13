@@ -7,14 +7,6 @@ import (
 )
 
 func Report(rs prom.Test) {
-	switch e := rs.(type) {
-	case *prom.Suite:
-		println(e.FullName())
-	case prom.List:
-		for _, v := range e {
-			Report(v)
-		}
-	}
 }
 
 func JSON(rs prom.Test) {

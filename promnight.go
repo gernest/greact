@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/gopherjs/gopherjs/js"
 )
 
 var (
@@ -18,6 +16,8 @@ var (
 	_ T    = (*baseT)(nil)
 )
 
+// Test is an interface for a testable object. Note that this is supposed to be
+// used internally so user's can't implement this interface.
 type Test interface {
 	Exec()
 	run()
@@ -53,9 +53,12 @@ func Describe(desc string, tc ...Test) Test {
 	return t
 }
 
+// List is a list of tests.
 type List []Test
 
 func (ls List) run() {}
+
+// Exec implements Test interface.
 func (ls List) Exec() {
 	for _, v := range ls {
 		v.Exec()
@@ -93,7 +96,9 @@ type Suite struct {
 	Children           []*Suite
 }
 
-func (s *Suite) FullName() string {
+// Fullname returns a string depicting full tree descriptions from the parent
+// root Suite to the current one.
+func (s *Suite) Fullname() string {
 	var names []string
 	p := s
 	for p != nil {
@@ -108,6 +113,7 @@ func (s *Suite) FullName() string {
 	return strings.Join(rvs, " ")
 }
 
+//Exec implements Test interface.
 func (s *Suite) Exec() {
 	start := time.Now()
 	if s.BeforeFuncs != nil {
@@ -148,6 +154,7 @@ func (s *Suite) Exec() {
 	}
 }
 
+// Exec Executes the tests and returls a List of executed tests.
 func Exec(ts ...Test) Test {
 	ls := List(ts)
 	ls.Exec()
@@ -165,7 +172,7 @@ func (*Suite) run() {}
 func (s *Suite) Result() *SpecResult {
 	r := &SpecResult{
 		Desc:     s.Desc,
-		FullName: s.FullName(),
+		FullName: s.Fullname(),
 		Duration: s.Duration,
 	}
 	for _, v := range s.FailedExpectations {
@@ -208,6 +215,7 @@ type Expectation struct {
 
 func (*Expectation) run() {}
 
+// Result returns *ExpectResult from executing the expectation.
 func (e *Expectation) Result() *ExpectResult {
 	return &ExpectResult{
 		Desc:     e.Desc,
@@ -217,6 +225,8 @@ func (e *Expectation) Result() *ExpectResult {
 }
 
 // Exec runs the test function and records the result.
+//
+// TODO: add timeout.
 func (e *Expectation) Exec() {
 	start := time.Now()
 	defer func() {
@@ -300,11 +310,6 @@ type Integration interface {
 	runIntegration()
 }
 
-// Node is an interface for retrieving a rendered Component node.
-type Node interface {
-	Node() *js.Object
-}
-
 // Render returns an integration test for non body Components. Use this to test
 // Components that renders spans,div etc.
 //
@@ -325,11 +330,20 @@ func RenderBody(desc string, c func() interface{}, cases ...Test) Integration {
 	}
 }
 
+// BeforeFuncs contains functions that are supposed to be executed before a
+// test.
 type BeforeFuncs struct {
 	Funcs []func()
 }
 
 func (*BeforeFuncs) run() {}
+
+// Exec implements Test interface. When called this will iterate and call every
+// function that is stored in the Funcs field. Iteration is done by the order in
+// which the functions are added.
+//
+// TODO: Have timeout to allow handling of long running functions. One option is
+// to pass context.Context as the first argument of the functions.
 func (b *BeforeFuncs) Exec() {
 	for _, v := range b.Funcs {
 		v()
@@ -342,11 +356,14 @@ func Before(fn ...func()) Test {
 	return &BeforeFuncs{Funcs: fn}
 }
 
+// AfterFuncs is like BeforeFuncs but executed after the test has run.
 type AfterFuncs struct {
 	Funcs []func()
 }
 
 func (*AfterFuncs) run() {}
+
+// Exec like BeforeFuncs.Exec but executed after the test run.
 func (b *AfterFuncs) Exec() {
 	for _, v := range b.Funcs {
 		v()

@@ -15,6 +15,8 @@ import (
 	"golang.org/x/tools/cover"
 )
 
+// funcOutput calculates total coverage precent of functions in the cover
+// profiles.
 func funcOutput(profiles []*cover.Profile) (float64, error) {
 	var total, covered int64
 	for _, profile := range profiles {

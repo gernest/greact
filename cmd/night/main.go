@@ -91,6 +91,8 @@ func runTestSuites(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	os.RemoveAll(cfg.OutputPath)
+	os.MkdirAll(cfg.OutputPath, 0755)
 	if err = generateTestPackage(cfg); err != nil {
 		return err
 	}

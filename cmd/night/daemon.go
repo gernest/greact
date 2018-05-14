@@ -18,8 +18,8 @@ import (
 	"github.com/gernest/alien"
 	"github.com/gernest/prom/api"
 	"github.com/gorilla/websocket"
-
 	"github.com/takama/daemon"
+
 	"github.com/urfave/cli"
 )
 
@@ -28,6 +28,7 @@ const (
 	desc         = "Treat your vecty tests like your first date"
 	port         = ":1955"
 	testEndpoint = "test"
+	home         = "promnight"
 )
 
 func startDaemon(ctx *cli.Context) error {
@@ -96,6 +97,9 @@ func statusDaemon(ctx *cli.Context) error {
 }
 
 func daemonService(ctx *cli.Context) (err error) {
+	if err := prepareHomeDir(); err != nil {
+		return err
+	}
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, os.Kill, syscall.SIGTERM)
 	rctx, cancel := context.WithCancel(context.Background())
@@ -304,4 +308,22 @@ func websocketURL(base string, pkg string) (string, error) {
 	u.Scheme = "ws"
 	u.RawQuery = query.Encode()
 	return u.String(), nil
+}
+
+// Create the directory where the daemon will use to store data. In darwin this
+// is in /usr/local/var/promnight.
+func prepareHomeDir() error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	h := filepath.Join(wd, home, "data")
+	_, err = os.Stat(h)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(h, 0755)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

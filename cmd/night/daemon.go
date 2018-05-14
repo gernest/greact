@@ -96,13 +96,12 @@ func statusDaemon(ctx *cli.Context) error {
 }
 
 func daemonService(ctx *cli.Context) (err error) {
-	host := ctx.String("host")
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, os.Kill, syscall.SIGTERM)
 	rctx, cancel := context.WithCancel(context.Background())
 	server := &http.Server{
 		Addr:    port,
-		Handler: apiServer(rctx, host),
+		Handler: apiServer(rctx, port),
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -116,6 +115,7 @@ func daemonService(ctx *cli.Context) (err error) {
 			select {
 			case <-rctx.Done():
 				err = server.Shutdown(rctx)
+				return
 			case <-interrupt:
 				cancel()
 			}

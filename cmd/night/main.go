@@ -22,6 +22,7 @@ import (
 	"text/template"
 
 	"github.com/kr/pretty"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/gernest/prom/api"
 	"github.com/gernest/prom/config"
@@ -71,13 +72,6 @@ func main() {
 			Action: runTestSuites,
 		},
 	}
-	a.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "host",
-			Usage: "hostname with port to bind the server",
-			Value: "http://localhost:1955",
-		},
-	}
 	a.Action = daemonService
 	if err := a.Run(os.Args); err != nil {
 		fmt.Println(err)
@@ -97,26 +91,26 @@ func runTestSuites(ctx *cli.Context) error {
 		return err
 	}
 	if cfg.Build {
-		if err = buildPackage(cfg); err != nil {
+		if err = buildGeneratedTestPackage(cfg); err != nil {
 			return err
 		}
 	}
 	req := &api.TestRequest{
+		ID:       uuid.NewV4().String(),
 		Package:  cfg.Info.ImportPath,
 		Path:     cfg.Info.Dir,
 		Compiled: true,
 	}
-	_, err = sendTestRequest(req)
+	_, err = sendTestRequest(cfg, req)
 	return err
 }
 
-func sendTestRequest(req *api.TestRequest) (*api.TestResponse, error) {
-	h := "http://localhost" + port
+func sendTestRequest(cfg *config.Config, req *api.TestRequest) (*api.TestResponse, error) {
 	b, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	res, err := http.Post(h, "application/json", bytes.NewReader(b))
+	res, err := http.Post(cfg.ServerURL, "application/json", bytes.NewReader(b))
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +209,7 @@ func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
 				return err
 			}
 			if cfg.Build {
-				if err = buildPackage(cfg); err != nil {
+				if err = buildGeneratedTestPackage(cfg); err != nil {
 					return err
 				}
 			}
@@ -350,7 +344,7 @@ const idxTpl = `<!DOCTYPE html>
 //
 // The output is main.js file in the root directory of the generated test
 // package.
-func buildPackage(cfg *config.Config) error {
+func buildGeneratedTestPackage(cfg *config.Config) error {
 	o := filepath.Join(cfg.OutputPath, "main.js")
 	cmd := exec.Command("gopherjs", "build", "-o", o, cfg.OutputMainPkg)
 	cmd.Stdout = os.Stdout

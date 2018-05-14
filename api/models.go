@@ -26,7 +26,8 @@ type TestSuite struct {
 
 // TestRequest is the object sent to the server to initiate the test runner.
 type TestRequest struct {
-
+	// Unique string to identify the package request. It is best to use uuid.
+	ID string `json:"id"`
 	// The name of the package to be tested. This must be a valid package import
 	// path.
 	Package string `json:"package"`

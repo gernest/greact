@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -23,10 +24,11 @@ func openDatabase() (*badger.DB, error) {
 		return nil, err
 	}
 	dir := filepath.Join(h, "data")
-	return badger.Open(badger.Options{
-		Dir:      dir,
-		ValueDir: dir,
-	})
+	opts := badger.DefaultOptions
+	opts.Dir = dir
+	opts.ValueDir = dir
+	fmt.Println(dir)
+	return badger.Open(opts)
 }
 
 func savePendingTest(db *badger.DB, ts *api.TestRequest) error {

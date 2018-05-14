@@ -110,7 +110,7 @@ func daemonService(ctx *cli.Context) (err error) {
 	rctx, cancel := context.WithCancel(context.Background())
 	server := &http.Server{
 		Addr:    port,
-		Handler: apiServer(rctx, db, port),
+		Handler: apiServer(rctx, db, serverURL),
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -246,7 +246,7 @@ func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 			}
 		}
 	})
-	mux.Get("/resource", func(w http.ResponseWriter, r *http.Request) {
+	mux.Get(resourcePath, func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		src := q.Get("src")
 		if src == "" {
@@ -300,7 +300,8 @@ func homeResponse(base string, req *api.TestRequest) (*api.TestResponse, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &api.TestResponse{WebsocketURL: u}, nil
+	idx := indexHome(base, req.Package)
+	return &api.TestResponse{WebsocketURL: u, IndexURL: idx}, nil
 }
 
 func websocketURL(base string, pkg string) (string, error) {
@@ -314,6 +315,12 @@ func websocketURL(base string, pkg string) (string, error) {
 	u.Scheme = "ws"
 	u.RawQuery = query.Encode()
 	return u.String(), nil
+}
+
+func indexHome(host string, pkg string) string {
+	query := make(url.Values)
+	query.Set("src", filepath.Join(pkg, testsOutDir, "index.html"))
+	return fmt.Sprintf("%s%s?%s", host, resourcePath, query.Encode())
 }
 
 // Create the directory where the daemon will use to store data. In darwin this

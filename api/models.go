@@ -48,6 +48,7 @@ type TestRequest struct {
 // TestResponse is the object sent to the client after a successful test request.
 type TestResponse struct {
 	WebsocketURL string `json:"websocket"`
+	IndexURL     string `json:"index"`
 }
 
 // TestStats store statistics about the tests happening in the server.

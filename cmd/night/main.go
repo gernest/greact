@@ -31,8 +31,10 @@ import (
 )
 
 const (
-	testsDir    = "test"
-	testsOutDir = "promtest"
+	testsDir     = "test"
+	testsOutDir  = "promtest"
+	serverURL    = "http://localhost:1955"
+	resourcePath = "/resource"
 )
 
 func main() {
@@ -101,8 +103,12 @@ func runTestSuites(ctx *cli.Context) error {
 		Path:     cfg.Info.Dir,
 		Compiled: true,
 	}
-	_, err = sendTestRequest(cfg, req)
-	return err
+	res, err := sendTestRequest(cfg, req)
+	if err != nil {
+		return err
+	}
+	fmt.Println(res.IndexURL)
+	return nil
 }
 
 func sendTestRequest(cfg *config.Config, req *api.TestRequest) (*api.TestResponse, error) {
@@ -122,7 +128,6 @@ func sendTestRequest(cfg *config.Config, req *api.TestRequest) (*api.TestRespons
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New(string(b))
 	}
-	// println(string(b))
 	r := &api.TestResponse{}
 	err = json.Unmarshal(b, r)
 	if err != nil {
@@ -286,11 +291,13 @@ import(
 	"{{.testPkg}}"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gernest/prom/report/text"
+	"github.com/gernest/prom/ws"
 	"github.com/gernest/prom"
 )
 
 func main()  {
 	js.Global.Set("startTest", startTest)
+	ws.New()
 }
 
 func startTest(){

@@ -15,6 +15,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/dgraph-io/badger"
 	"github.com/gernest/alien"
 	"github.com/gernest/prom/api"
 	"github.com/gorilla/websocket"
@@ -100,12 +101,16 @@ func daemonService(ctx *cli.Context) (err error) {
 	if err := prepareHomeDir(); err != nil {
 		return err
 	}
+	db, err := openDatabase()
+	if err != nil {
+		return err
+	}
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, os.Kill, syscall.SIGTERM)
 	rctx, cancel := context.WithCancel(context.Background())
 	server := &http.Server{
 		Addr:    port,
-		Handler: apiServer(rctx, port),
+		Handler: apiServer(rctx, db, port),
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -133,10 +138,11 @@ var upgrade = websocket.Upgrader{}
 
 // apiServer returns a *alien.Mux instance with endpoints registered for serving
 // test suites.
-func apiServer(ctx context.Context, host string) *alien.Mux {
+func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 	mux := alien.New()
 	stats := &api.TestStats{}
 	queue := make(chan *api.TestRequest, 50)
+
 	cache := &sync.Map{}
 
 	// we store channels that tracts results of a a particular test suite run.
@@ -313,11 +319,13 @@ func websocketURL(base string, pkg string) (string, error) {
 // Create the directory where the daemon will use to store data. In darwin this
 // is in /usr/local/var/promnight.
 func prepareHomeDir() error {
-	wd, err := os.Getwd()
+	p, err := homePath()
 	if err != nil {
 		return err
 	}
-	h := filepath.Join(wd, home, "data")
+	// this is the directory where we store data using the badger package. Fo clean
+	// setup we can't just use the root homepath.
+	h := filepath.Join(p, "data")
 	_, err = os.Stat(h)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(h, 0755)
@@ -326,4 +334,13 @@ func prepareHomeDir() error {
 		}
 	}
 	return nil
+}
+
+func homePath() (string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	h := filepath.Join(wd, home)
+	return h, nil
 }

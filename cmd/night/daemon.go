@@ -234,8 +234,6 @@ func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 						return
 					}
 					fmt.Println(string(msg))
-
-					// }
 				}
 			}
 		}()

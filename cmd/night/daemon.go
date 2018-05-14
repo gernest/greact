@@ -227,10 +227,15 @@ func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 				case <-ctx.Done():
 					break
 				default:
-					if _, _, err := conn.NextReader(); err != nil {
+					_, msg, err := conn.ReadMessage()
+					if err != nil {
 						conn.Close()
-						break
+						fmt.Printf(" reading response %s\n", err)
+						return
 					}
+					fmt.Println(string(msg))
+
+					// }
 				}
 			}
 		}()
@@ -240,7 +245,7 @@ func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 				err := conn.WriteJSON(v)
 				if err != nil {
 					//log error
-					fmt.Println(err)
+					fmt.Printf(" writing response %s\n", err)
 					break
 				}
 			}

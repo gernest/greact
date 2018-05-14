@@ -290,7 +290,6 @@ var mainUnitTpl = `package main
 import(
 	"{{.testPkg}}"
 	"github.com/gopherjs/gopherjs/js"
-	"github.com/gernest/prom/report/text"
 	"github.com/gernest/prom/ws"
 	"github.com/gernest/prom"
 )
@@ -301,8 +300,18 @@ func main()  {
 }
 
 func startTest(){
-	 v:= start()
-	 text.JSON(v)
+	go func ()  {
+	v:= start()
+	 w,err:=ws.New()
+	 if err!=nil{
+		 panic(err)
+	 }
+	 err=w.Report(v)
+	 if err!=nil{
+		 println(err)
+	 }
+	}()
+
 }
 
 func start()prom.Test  {

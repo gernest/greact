@@ -1,34 +1,41 @@
 # Unit testing
 
-Promnight borrows from go's standard `testing` package and some ideas from behavior driven development(BDD).
+Promnight borrows from go's standard library's`testing` package and some ideas
+from many javascript test packages/runners such as jasmine,jest, karma-runner
+etc..
 
 Tests are defined as any function with the signature 
 
 ```go
-func TestXxx() prom.Test
+func TestXxx() prom.T
 ```
 
-So, tests are just functions which can be composed in very interesting ways.
+You can the use `Describe` and `It` functions to compose your test suite.
 
 ## Describe
+
+This is a container, meant to group/structure your tests.
+
 Describing a test case is done with the `prom.Describe` function, this takes
-the description as first argument and arbitrary number of test cases as the
-second argument.
+the description string as first argument and arbitrary number of test cases as the
+second argument. The description string is a human readable string stating whatis being tested.
 
 Use this to describe what you are testing
 
-For example , given we have a function callled `Rainfall` which makes it rain
+For example , given we have a function called `Rainfall` which makes it rain
 and we want to test it.
 
 We can start describing our unit test like this
 
 ```go
-func TestRainfall() prom.Test {
+func TestRainfall() prom.T {
 	return prom.Describe("Raining")
 }
 ```
 
-At the moment out test doesn't do anything. We are just describing a Rainy day.
+Here we are stating that we are testing Raining feature.
+
+At the moment our test doesn't do anything. We are just describing a Rainy day.
 
 Let's define our function
 
@@ -54,37 +61,60 @@ func Rainfall() *RainContext {
 
 
 ## Expectation
+
+This is where we verify the behavior of our functions. We use `It` for stating
+our expectations.
+
+It has the following signature
+```go
+func It(desc string, fn func(T)) Test {
+``
+What the user of the library does is supply the `fn` parameter. First parameter
+tells what expectation we are trying to achieve.
+
+Inside the passed fn you can call `T.Error`, `T.Errorf` to signal failure. You
+can call them as many times as you want inside your functions and they will be
+included in the failed test report. If you want to halt the function execution
+then you can use `T.Fatal` or `T.Falatf` as you can see the concept were
+borrowed from the `testing` package.
+
+
 We have seen how to describe what we are testing. Now we will see how to assert
 expectation from our functions/piece of code.
 
 We use `prom.It` to state our expectation. It is up for the one writing tests
-to determine if the code meets expectation or now, I will explain this with
+to determine if the code meets expectation or not, I will explain this with
 code in a moment.
 
- Let's say, it is only raining when there are clouds. We can now update our
+ Let us say, it is only raining whenever there are clouds. We can now update our
  Rainfall test case to look like this.
 
  ```go
  func TestRainfall() prom.Test {
 	return prom.Describe("Raining",
-		prom.It("must be cloudy", func(rs prom.Result) {
+		prom.It("must be cloudy", func(t prom.T) {
 			ctx := Rainfall()
 			if !ctx.Cloudy {
-				rs.Error("expected to be cloudy")
+				t.Error("expected to be cloudy")
 			}
 		}),
 	)
 }
 ```
 
-`ctx := Rainfall()`  here we run the code that we want to unit test and here
+```go
+ctx := Rainfall()  #here we execute the function that we want to unit test 
+```
 
 ```go
 			if !ctx.Cloudy {
-				rs.Error("expected to be cloudy")
+				t.Error("expected to be cloudy")
             }
 ```
-We are comparing the current behavior/output with our expectation. This test will pass because `Rainfall` function sets `Cloudy` to be true, hence it will meet expectations.
+
+We are comparing the current behavior/output with our expectation. This test
+will pass because `Rainfall` function sets `Cloudy` to be true, hence it will
+meet expectations.
 
 Promnight favors composition, so build your test suite to suit your needs from
 smaller modular functional components.

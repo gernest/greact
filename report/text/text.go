@@ -3,10 +3,10 @@ package text
 import (
 	"encoding/json"
 
-	"github.com/gernest/prom"
+	"github.com/gernest/mad"
 )
 
-func JSON(rs prom.Test, pkg, id string) {
+func JSON(rs mad.Test, pkg, id string) {
 	v, err := json.MarshalIndent(reportJSON(rs, pkg, id), "", "  ")
 	if err != nil {
 		panic(err)
@@ -14,14 +14,14 @@ func JSON(rs prom.Test, pkg, id string) {
 	println(string(v))
 }
 
-func reportJSON(rs prom.Test, pkg, id string) []*prom.SpecResult {
-	var results []*prom.SpecResult
+func reportJSON(rs mad.Test, pkg, id string) []*mad.SpecResult {
+	var results []*mad.SpecResult
 	switch e := rs.(type) {
-	case *prom.Suite:
+	case *mad.Suite:
 		e.ID = id
 		e.Package = pkg
 		results = append(results, e.Result())
-	case prom.List:
+	case mad.List:
 		for _, v := range e {
 			results = append(results, reportJSON(v, pkg, id)...)
 		}

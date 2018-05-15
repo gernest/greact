@@ -7,7 +7,7 @@ import (
 
 func TestWebsockerURL(t *testing.T) {
 	base := "http://localhost:8080"
-	pkg := "github.com/gernest/prom"
+	pkg := "github.com/gernest/mad"
 	u, err := websocketURL(base, pkg)
 	if err != nil {
 		t.Fatal(err)
@@ -20,8 +20,8 @@ func TestWebsockerURL(t *testing.T) {
 }
 
 func TestInScooe(t *testing.T) {
-	s := "http://localhost:1955/resource?src=github.com/gernest/prom/promtest/main.js"
-	pkg := "github.com/gernest/prom"
+	s := "http://localhost:1955/resource?src=github.com/gernest/mad/promtest/main.js"
+	pkg := "github.com/gernest/mad"
 	u, err := url.Parse(s)
 	if err != nil {
 		t.Fatal(err)

@@ -23,15 +23,15 @@ import (
 
 	"github.com/kr/pretty"
 
-	"github.com/gernest/prom/api"
-	"github.com/gernest/prom/config"
-	"github.com/gernest/prom/tools"
+	"github.com/gernest/mad/api"
+	"github.com/gernest/mad/config"
+	"github.com/gernest/mad/tools"
 	"github.com/urfave/cli"
 )
 
 const (
-	testsDir     = "test"
-	testsOutDir  = "promtest"
+	testsDir     = "tests"
+	testsOutDir  = "madness"
 	serverURL    = "http://localhost:1955"
 	resourcePath = "/resource"
 )
@@ -291,8 +291,8 @@ var mainUnitTpl = `package main
 import(
 	"{{.config.TestUnitPkg}}"
 	"github.com/gopherjs/gopherjs/js"
-	"github.com/gernest/prom/ws"
-	"github.com/gernest/prom"
+	"github.com/gernest/mad/ws"
+	"github.com/gernest/mad"
 )
 
 func main()  {
@@ -316,10 +316,11 @@ func startTest(){
 	 }
 	}()
 }
-func start()prom.Test  {
-	return prom.Exec(
+{{$n:=.config.TestDirName}}
+func start()mad.Test  {
+	return mad.Exec(
 		{{range .funcs.Unit -}}
-		test.{{.}}(),
+		{{$n}}.{{.}}(),
 		{{end -}}
 	)
 }
@@ -340,7 +341,7 @@ const idxTpl = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>prom test runner</title>
+    <title>mad test runner</title>
 </head>
 
 <body>

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger"
-	"github.com/gernest/prom"
-	"github.com/gernest/prom/api"
+	"github.com/gernest/mad"
+	"github.com/gernest/mad/api"
 )
 
 const (
@@ -50,7 +50,7 @@ func savePendingTest(db *badger.DB, ts *api.TestRequest) error {
 	})
 }
 
-func saveCompletedTest(db *badger.DB, id string, rs *prom.SpecResult) error {
+func saveCompletedTest(db *badger.DB, id string, rs *mad.SpecResult) error {
 	data, err := json.Marshal(rs)
 	if err != nil {
 		return err

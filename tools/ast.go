@@ -10,16 +10,6 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 )
 
-func AddCoverage(set *token.FileSet, file *ast.File) *ast.File {
-	astutil.AddImport(set, file, "github.com/gernest/prom/helper")
-	astutil.AddImport(set, file, "go/token")
-	astutil.Apply(file,
-		applyCoverage(set, true),
-		applyCoverage(set, false),
-	)
-	return file
-}
-
 type TestNames struct {
 	Integration []string
 	Unit        []string
@@ -86,10 +76,10 @@ func checkSignature(typ *ast.FuncType) (isUnit, ok bool) {
 			return false, false
 		}
 		n := a.Sel.Name
-		if id.Name == "prom" && n == "Test" {
+		if id.Name == "mad" && n == "Test" {
 			return true, true
 		}
-		return false, id.Name == "prom" && n == "Integration"
+		return false, id.Name == "mad" && n == "Integration"
 	}
 	return
 }
@@ -108,149 +98,6 @@ func checkSignature(typ *ast.FuncType) (isUnit, ok bool) {
 // 	}
 // 	return false
 // }
-
-func mark(num int, pos token.Position) *ast.AssignStmt {
-	return &ast.AssignStmt{
-		Lhs: []ast.Expr{
-			&ast.Ident{
-				Name: "idx",
-			},
-		},
-		Tok: token.DEFINE,
-		Rhs: []ast.Expr{
-			&ast.CallExpr{
-				Fun: &ast.SelectorExpr{
-					X:   &ast.Ident{Name: "helper"},
-					Sel: &ast.Ident{Name: "Mark"},
-				},
-				Args: []ast.Expr{
-					&ast.BasicLit{
-						Kind:  token.INT,
-						Value: fmt.Sprint(num),
-					},
-					&ast.UnaryExpr{
-						Op: token.AND,
-						X: &ast.CompositeLit{
-							Type: &ast.SelectorExpr{
-								X: &ast.Ident{
-									Name: "token",
-								},
-								Sel: &ast.Ident{
-									Name: "Position",
-								},
-							},
-							Elts: []ast.Expr{
-								&ast.KeyValueExpr{
-									Key: &ast.Ident{
-										Name: "Filename",
-									},
-									Value: &ast.BasicLit{
-										Kind:  token.STRING,
-										Value: fmt.Sprintf(`"%s"`, pos.Filename),
-									},
-								},
-								&ast.KeyValueExpr{
-									Key: &ast.Ident{
-										Name: "Offset",
-									},
-									Value: &ast.BasicLit{
-										Kind:  token.INT,
-										Value: fmt.Sprint(pos.Offset),
-									},
-								},
-								&ast.KeyValueExpr{
-									Key: &ast.Ident{
-										Name: "Column",
-									},
-									Value: &ast.BasicLit{
-										Kind:  token.INT,
-										Value: fmt.Sprint(pos.Line),
-									},
-								},
-								&ast.KeyValueExpr{
-									Key: &ast.Ident{
-										Name: "Line",
-									},
-									Value: &ast.BasicLit{
-										Kind:  token.INT,
-										Value: fmt.Sprint(pos.Line),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func hit(pos token.Position) *ast.ExprStmt {
-	return &ast.ExprStmt{
-		X: &ast.CallExpr{
-			Fun: &ast.SelectorExpr{
-				X:   &ast.Ident{Name: "helper"},
-				Sel: &ast.Ident{Name: "Hit"},
-			},
-			Args: []ast.Expr{
-				&ast.Ident{
-					Name: "idx",
-				},
-				&ast.UnaryExpr{
-					Op: token.AND,
-					X: &ast.CompositeLit{
-						Type: &ast.SelectorExpr{
-							X: &ast.Ident{
-								Name: "token",
-							},
-							Sel: &ast.Ident{
-								Name: "Position",
-							},
-						},
-						Elts: []ast.Expr{
-							&ast.KeyValueExpr{
-								Key: &ast.Ident{
-									Name: "Filename",
-								},
-								Value: &ast.BasicLit{
-									Kind:  token.STRING,
-									Value: fmt.Sprintf(`"%s"`, pos.Filename),
-								},
-							},
-							&ast.KeyValueExpr{
-								Key: &ast.Ident{
-									Name: "Offset",
-								},
-								Value: &ast.BasicLit{
-									Kind:  token.INT,
-									Value: fmt.Sprint(pos.Offset),
-								},
-							},
-							&ast.KeyValueExpr{
-								Key: &ast.Ident{
-									Name: "Column",
-								},
-								Value: &ast.BasicLit{
-									Kind:  token.INT,
-									Value: fmt.Sprint(pos.Line),
-								},
-							},
-							&ast.KeyValueExpr{
-								Key: &ast.Ident{
-									Name: "Line",
-								},
-								Value: &ast.BasicLit{
-									Kind:  token.INT,
-									Value: fmt.Sprint(pos.Line),
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
 
 func applyLineNumber(set *token.FileSet, pre bool, match *testNameMap) func(*astutil.Cursor) bool {
 	units := 0
@@ -301,26 +148,6 @@ func applyLineNumber(set *token.FileSet, pre bool, match *testNameMap) func(*ast
 					b.Value = addStrLit(k, b.Value)
 					return false
 				}
-			}
-		}
-		return true
-	}
-}
-
-func applyCoverage(set *token.FileSet, pre bool) func(*astutil.Cursor) bool {
-	return func(c *astutil.Cursor) bool {
-		node := c.Node()
-		if pre {
-			return true
-		}
-		if e, ok := node.(*ast.IfStmt); ok {
-			if len(e.Body.List) > 0 {
-				size := len(e.Body.List)
-				start := set.Position(e.Body.Lbrace)
-				end := set.Position(e.Body.Rbrace)
-				list := append([]ast.Stmt{mark(size, start)}, e.Body.List...)
-				list = append(list, hit(end))
-				e.Body.List = list
 			}
 		}
 		return true

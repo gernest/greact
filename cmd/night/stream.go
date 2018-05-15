@@ -6,7 +6,7 @@ import (
 	"net"
 	"net/url"
 
-	"github.com/gernest/prom/api"
+	"github.com/gernest/mad/api"
 	"github.com/gorilla/websocket"
 )
 

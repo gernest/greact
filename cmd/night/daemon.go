@@ -17,8 +17,8 @@ import (
 
 	"github.com/dgraph-io/badger"
 	"github.com/gernest/alien"
-	"github.com/gernest/prom"
-	"github.com/gernest/prom/api"
+	"github.com/gernest/mad"
+	"github.com/gernest/mad/api"
 	"github.com/gorilla/websocket"
 	"github.com/takama/daemon"
 
@@ -26,12 +26,12 @@ import (
 )
 
 const (
-	serviceName        = "promnight"
+	serviceName        = "madtitan"
 	desc               = "Treat your vecty tests like your first date"
 	port               = ":1955"
 	testEndpoint       = "test"
 	testResultEndpoint = "/results"
-	home               = "promnight"
+	home               = "madtitan"
 )
 
 func startDaemon(ctx *cli.Context) error {
@@ -144,7 +144,7 @@ func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 	mux := alien.New()
 	stats := &api.TestStats{}
 	queue := make(chan *api.TestRequest, 50)
-	results := make(chan *prom.SpecResult, 50)
+	results := make(chan *mad.SpecResult, 50)
 	listeners := &sync.Map{}
 	cache := &sync.Map{}
 	go func() {
@@ -158,7 +158,7 @@ func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 
 				}
 				listeners.Range(func(_, v interface{}) bool {
-					if fn, ok := v.(func(*prom.SpecResult)); ok {
+					if fn, ok := v.(func(*mad.SpecResult)); ok {
 						fn(rst)
 					}
 					return true
@@ -207,7 +207,7 @@ func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 		}
 		ts := tsv.(*api.TestRequest)
 		rsChan := make(chan string, 5)
-		listeners.Store(ts.ID, func(rs *prom.SpecResult) {
+		listeners.Store(ts.ID, func(rs *mad.SpecResult) {
 			b, _ := json.Marshal(rs)
 			rsChan <- string(b)
 		})
@@ -263,7 +263,7 @@ func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 			case <-ctx.Done():
 				return
 			default:
-				rs := &prom.SpecResult{}
+				rs := &mad.SpecResult{}
 				if err := conn.ReadJSON(rs); err != nil {
 					fmt.Printf(" reading response %s\n", err)
 					return
@@ -343,7 +343,7 @@ func indexHome(host string, req *api.TestRequest) string {
 }
 
 // Create the directory where the daemon will use to store data. In darwin this
-// is in /usr/local/var/promnight.
+// is in /usr/local/var/madnight.
 func prepareHomeDir() error {
 	p, err := homePath()
 	if err != nil {

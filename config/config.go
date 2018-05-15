@@ -52,12 +52,12 @@ func FLags() []cli.Flag {
 		cli.StringFlag{
 			Name:  "test_dir",
 			Usage: "relative path to the tests directory",
-			Value: "test",
+			Value: "tests",
 		},
 		cli.StringFlag{
 			Name:  "output_dir",
 			Usage: "relative path to the generated tests directory",
-			Value: "promtest",
+			Value: "madness",
 		},
 		cli.BoolFlag{
 			Name: "build",

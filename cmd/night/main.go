@@ -22,7 +22,6 @@ import (
 	"text/template"
 
 	"github.com/kr/pretty"
-	uuid "github.com/satori/go.uuid"
 
 	"github.com/gernest/prom/api"
 	"github.com/gernest/prom/config"
@@ -98,7 +97,7 @@ func runTestSuites(ctx *cli.Context) error {
 		}
 	}
 	req := &api.TestRequest{
-		ID:       uuid.NewV4().String(),
+		ID:       cfg.UUID,
 		Package:  cfg.Info.ImportPath,
 		Path:     cfg.Info.Dir,
 		Compiled: true,

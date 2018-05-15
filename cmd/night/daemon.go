@@ -107,6 +107,7 @@ func daemonService(ctx *cli.Context) (err error) {
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, os.Kill, syscall.SIGTERM)
 	rctx, cancel := context.WithCancel(context.Background())

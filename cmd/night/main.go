@@ -186,10 +186,10 @@ func generateTestPackage(cfg *config.Config) error {
 
 // generates main package for running all unit tests.
 func writeUnitMain(cfg *config.Config, funcs *tools.TestNames) error {
-	data := make(map[string]interface{})
-	data["testPkg"] = cfg.TestUnitPkg
-	data["funcs"] = funcs
-	return writeMain(cfg.OutputPath, data)
+	return writeMain(cfg.OutputPath, map[string]interface{}{
+		"config": cfg,
+		"funcs":  funcs,
+	})
 }
 
 var itpl = template.Must(template.New("i").Parse(mainIntegrationTpl))
@@ -276,8 +276,9 @@ func writeIndex(cfg *config.Config) error {
 	q.Set("src", pkg+"/main.js")
 	mainFIle := "http://localhost" + port + "/resource?" + q.Encode()
 	println(mainFIle)
-	ctx := map[string]string{
+	ctx := map[string]interface{}{
 		"mainFile": mainFIle,
+		"config":   cfg,
 	}
 	var buf bytes.Buffer
 	err = idx.Execute(&buf, ctx)
@@ -288,7 +289,7 @@ func writeIndex(cfg *config.Config) error {
 var mainUnitTpl = `package main
 
 import(
-	"{{.testPkg}}"
+	"{{.config.TestUnitPkg}}"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gernest/prom/ws"
 	"github.com/gernest/prom"
@@ -299,6 +300,9 @@ func main()  {
 	ws.New()
 }
 
+const testID ="{{.config.UUID}}"
+const testPkg ="{{.config.Info.ImportPath}}"
+
 func startTest(){
 	go func ()  {
 	v:= start()
@@ -306,14 +310,12 @@ func startTest(){
 	 if err!=nil{
 		 panic(err)
 	 }
-	 err=w.Report(v)
+	 err=w.Report(v,testPkg,testID)
 	 if err!=nil{
 		 println(err)
 	 }
 	}()
-
 }
-
 func start()prom.Test  {
 	return prom.Exec(
 		{{range .funcs.Unit -}}
@@ -321,7 +323,6 @@ func start()prom.Test  {
 		{{end -}}
 	)
 }
-
 `
 
 var mainIntegrationTpl = `package main

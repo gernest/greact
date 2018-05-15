@@ -36,6 +36,7 @@ func New() (*WS, error) {
 	}
 	w := &WS{Conn: conn}
 	w.enc = json.NewEncoder(w)
+	w.enc.SetIndent("", "  ")
 	return w, nil
 }
 
@@ -44,8 +45,8 @@ type WS struct {
 	enc *json.Encoder
 }
 
-func (w *WS) Report(ts prom.Test) error {
-	rs := toResult(ts)
+func (w *WS) Report(ts prom.Test, pkg, id string) error {
+	rs := toResult(ts, pkg, id)
 	for _, v := range rs {
 		if err := w.WriteResponse(v); err != nil {
 			return err
@@ -58,14 +59,16 @@ func (w *WS) WriteResponse(rs *prom.SpecResult) error {
 	return w.enc.Encode(rs)
 }
 
-func toResult(rs prom.Test) []*prom.SpecResult {
+func toResult(rs prom.Test, pkg, id string) []*prom.SpecResult {
 	var results []*prom.SpecResult
 	switch e := rs.(type) {
 	case *prom.Suite:
+		e.ID = id
+		e.Package = pkg
 		results = append(results, e.Result())
 	case prom.List:
 		for _, v := range e {
-			results = append(results, toResult(v)...)
+			results = append(results, toResult(v, pkg, id)...)
 		}
 	}
 	return results

@@ -67,6 +67,8 @@ func (ls List) Exec() {
 
 // SpecResult contains result information after executing a test suite.
 type SpecResult struct {
+	ID                 string          `json:"id"`
+	Package            string          `json:"package"`
 	Desc               string          `json:"description"`
 	FullName           string          `json:"fullname"`
 	Duration           time.Duration   `json:"duration"`
@@ -84,6 +86,8 @@ type ExpectResult struct {
 
 type Suite struct {
 	Parent             *Suite
+	Package            string
+	ID                 string
 	Desc               string
 	BeforeFuncs        *BeforeFuncs
 	AfterFuncs         *AfterFuncs
@@ -171,6 +175,8 @@ func (*Suite) run() {}
 // Result returns results of executing the suite.
 func (s *Suite) Result() *SpecResult {
 	r := &SpecResult{
+		ID:       s.ID,
+		Package:  s.Package,
 		Desc:     s.Desc,
 		FullName: s.Fullname(),
 		Duration: s.Duration,

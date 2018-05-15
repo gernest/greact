@@ -4,6 +4,7 @@ import (
 	"go/build"
 	"path/filepath"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/urfave/cli"
 )
 
@@ -32,6 +33,8 @@ type Config struct {
 	OutputMainPkg string
 
 	Build bool
+
+	UUID string
 }
 
 // FLags returns configuration flags.
@@ -88,6 +91,7 @@ func Load(ctx *cli.Context) (*Config, error) {
 	c.TestUnitDir = filepath.Join(c.OutputPath, c.TestDirName)
 	c.TestUnitPkg = filepath.Join(c.Info.ImportPath, c.OutputDirName, c.TestDirName)
 	c.OutputMainPkg = filepath.Join(c.Info.ImportPath, c.OutputDirName)
+	c.UUID = uuid.NewV4().String()
 	return c, nil
 }
 

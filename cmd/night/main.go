@@ -107,7 +107,7 @@ func runTestSuites(ctx *cli.Context) error {
 		return err
 	}
 	fmt.Println(res.IndexURL)
-	return nil
+	return streamResponse(context.Background(), res.WebsocketURL, nil)
 }
 
 func sendTestRequest(cfg *config.Config, req *api.TestRequest) (*api.TestResponse, error) {
@@ -273,6 +273,7 @@ func writeIndex(cfg *config.Config) error {
 	q := make(url.Values)
 	// println(pkg)
 	q.Set("src", pkg+"/main.js")
+	q.Set("id", cfg.UUID)
 	mainFIle := "http://localhost" + port + "/resource?" + q.Encode()
 	println(mainFIle)
 	ctx := map[string]interface{}{

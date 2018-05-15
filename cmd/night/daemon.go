@@ -17,6 +17,7 @@ import (
 
 	"github.com/dgraph-io/badger"
 	"github.com/gernest/alien"
+	"github.com/gernest/prom"
 	"github.com/gernest/prom/api"
 	"github.com/gorilla/websocket"
 	"github.com/takama/daemon"
@@ -25,11 +26,12 @@ import (
 )
 
 const (
-	serviceName  = "promnight"
-	desc         = "Treat your vecty tests like your first date"
-	port         = ":1955"
-	testEndpoint = "test"
-	home         = "promnight"
+	serviceName        = "promnight"
+	desc               = "Treat your vecty tests like your first date"
+	port               = ":1955"
+	testEndpoint       = "test"
+	testResultEndpoint = "/results"
+	home               = "promnight"
 )
 
 func startDaemon(ctx *cli.Context) error {
@@ -142,27 +144,29 @@ func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 	mux := alien.New()
 	stats := &api.TestStats{}
 	queue := make(chan *api.TestRequest, 50)
-
+	results := make(chan *prom.SpecResult, 50)
+	listeners := &sync.Map{}
 	cache := &sync.Map{}
-
-	// we store channels that tracts results of a a particular test suite run.
-	resultsCache := &sync.Map{}
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case req := <-queue:
-				ts := &api.TestSuite{
-					Package: req.Package,
-					Path:    req.Path,
+			case rst := <-results:
+				err := saveCompletedTest(db, rst.ID, rst)
+				if err != nil {
+
 				}
-				ts.Status = "queued"
-				cache.Store(ts.Package, ts)
-				stats.Queued = append(stats.Queued, ts)
+				listeners.Range(func(_, v interface{}) bool {
+					if fn, ok := v.(func(*prom.SpecResult)); ok {
+						fn(rst)
+					}
+					return true
+				})
+			case req := <-queue:
+				cache.Store(req.ID, req)
 			}
 		}
-
 	}()
 	// we only display the server's test stats on GET /
 	mux.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -195,57 +199,76 @@ func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 	})
 	mux.Get("/"+testEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
-		pkg := query.Get("pkg")
-		pkg, err := url.QueryUnescape(pkg)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		tsv, ok := cache.Load(pkg)
+		id := query.Get("id")
+		tsv, ok := cache.Load(id)
 		if !ok {
 			http.Error(w, "package not found", http.StatusNotFound)
 			return
 		}
-		ts := tsv.(*api.TestSuite)
-		ts.Status = "running"
-		var rstChan chan *api.TestSuite
-		if ch, ok := resultsCache.Load(pkg); ok {
-			rstChan = ch.(chan *api.TestSuite)
-		} else {
-			rstChan = make(chan *api.TestSuite, 10)
-			resultsCache.Store(pkg, rstChan)
-		}
-		rstChan <- ts
+		ts := tsv.(*api.TestRequest)
+		rsChan := make(chan string, 5)
+		listeners.Store(ts.ID, func(rs *prom.SpecResult) {
+			b, _ := json.Marshal(rs)
+			rsChan <- string(b)
+		})
 		conn, err := upgrade.Upgrade(w, r, nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		defer conn.Close()
 		go func() {
 			for {
 				select {
 				case <-ctx.Done():
 					break
 				default:
-					_, msg, err := conn.ReadMessage()
+					_, _, err := conn.ReadMessage()
 					if err != nil {
 						conn.Close()
 						fmt.Printf(" reading response %s\n", err)
 						return
 					}
-					fmt.Println(string(msg))
 				}
 			}
 		}()
 		for {
 			select {
-			case v := <-rstChan:
-				err := conn.WriteJSON(v)
+			case v := <-rsChan:
+				err := conn.WriteMessage(websocket.TextMessage, []byte(v))
 				if err != nil {
 					//log error
 					fmt.Printf(" writing response %s\n", err)
 					break
 				}
+			}
+		}
+	})
+	mux.Get(testResultEndpoint, func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+		id := query.Get("id")
+		_, ok := cache.Load(id)
+		if !ok {
+			http.Error(w, "package not found", http.StatusNotFound)
+			return
+		}
+		conn, err := upgrade.Upgrade(w, r, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer conn.Close()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				rs := &prom.SpecResult{}
+				if err := conn.ReadJSON(rs); err != nil {
+					fmt.Printf(" reading response %s\n", err)
+					return
+				}
+				results <- rs
 			}
 		}
 	})
@@ -261,32 +284,24 @@ func apiServer(ctx context.Context, db *badger.DB, host string) *alien.Mux {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		// we don't serve files which are outside the package test directory.
-		inScope := false
-		var pkg *api.TestSuite
-		cache.Range(func(k, v interface{}) bool {
-			key := k.(string)
-			println(key)
-			if strings.HasPrefix(src, key) {
-				inScope = true
-				pkg = v.(*api.TestSuite)
-				return false
-			}
-			return true
-		})
-
-		if !inScope {
+		id := q.Get("id")
+		tv, ok := cache.Load(id)
+		if !ok {
+			http.Error(w, "file not found", http.StatusNotFound)
+			return
+		}
+		ts := tv.(*api.TestRequest)
+		if !strings.HasPrefix(src, ts.Package) {
 			http.Error(w, "files outside test scope are not allowed",
 				http.StatusForbidden)
 			return
 		}
-		rel, err := filepath.Rel(pkg.Package, src)
+		rel, err := filepath.Rel(ts.Package, src)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		path := filepath.Join(pkg.Path, rel)
+		path := filepath.Join(ts.Path, rel)
 		http.ServeFile(w, r, path)
 	})
 	return mux
@@ -299,30 +314,31 @@ func homeResponse(base string, req *api.TestRequest) (*api.TestResponse, error) 
 	if !filepath.IsAbs(req.Path) {
 		return nil, errors.New("Path must be absolute")
 	}
-	u, err := websocketURL(base, req.Package)
+	u, err := websocketURL(base, req.ID)
 	if err != nil {
 		return nil, err
 	}
-	idx := indexHome(base, req.Package)
+	idx := indexHome(base, req)
 	return &api.TestResponse{WebsocketURL: u, IndexURL: idx}, nil
 }
 
-func websocketURL(base string, pkg string) (string, error) {
+func websocketURL(base string, id string) (string, error) {
 	u, err := url.Parse(base)
 	if err != nil {
 		return "", err
 	}
 	query := make(url.Values)
-	query.Set("pkg", pkg)
+	query.Set("id", id)
 	u.Path = testEndpoint
 	u.Scheme = "ws"
 	u.RawQuery = query.Encode()
 	return u.String(), nil
 }
 
-func indexHome(host string, pkg string) string {
+func indexHome(host string, req *api.TestRequest) string {
 	query := make(url.Values)
-	query.Set("src", filepath.Join(pkg, testsOutDir, "index.html"))
+	query.Set("src", filepath.Join(req.Package, testsOutDir, "index.html"))
+	query.Set("id", req.ID)
 	return fmt.Sprintf("%s%s?%s", host, resourcePath, query.Encode())
 }
 

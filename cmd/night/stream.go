@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/url"
 
@@ -24,6 +25,7 @@ func streamResponse(ctx context.Context, ws string, handler func(*api.TestSuite)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("socket %s\n", ws)
 	conn, _, err := websocket.NewClient(d, u, nil, 1024, 1024)
 	if err != nil {
 		return err
@@ -33,14 +35,19 @@ func streamResponse(ctx context.Context, ws string, handler func(*api.TestSuite)
 		case <-ctx.Done():
 			return conn.Close()
 		default:
-			ts := &api.TestSuite{}
-			err := conn.ReadJSON(ts)
+			// ts := &api.TestSuite{}
+			// err := conn.ReadJSON(ts)
+			// if err != nil {
+			// 	return err
+			// }
+			// if handler != nil {
+			// 	handler(ts)
+			// }
+			_, msg, err := conn.ReadMessage()
 			if err != nil {
 				return err
 			}
-			if handler != nil {
-				handler(ts)
-			}
+			fmt.Println(string(msg))
 		}
 	}
 }

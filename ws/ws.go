@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net"
 	"net/url"
-	"path/filepath"
 
 	"github.com/gernest/prom"
 	"github.com/gopherjs/gopherjs/js"
@@ -17,17 +16,10 @@ func New() (*WS, error) {
 	if err != nil {
 		return nil, err
 	}
-	u.Path = "/test"
+	u.Path = "/results"
 	u.Scheme = "ws"
 	q := u.Query()
-	src, err := url.QueryUnescape(q.Get("src"))
-	if err != nil {
-		return nil, err
-	}
-	src = filepath.Dir(src)
-	src = filepath.Dir(src)
 	q.Del("src")
-	q.Set("pkg", src)
 	u.RawQuery = q.Encode()
 	println(u.String())
 	conn, err := websocket.Dial(u.String())

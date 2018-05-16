@@ -27,7 +27,6 @@ import (
 
 const (
 	serviceName        = "madtitan"
-	desc               = "Treat your vecty tests like your first date"
 	port               = ":1955"
 	testEndpoint       = "test"
 	testResultEndpoint = "/results"
@@ -99,7 +98,7 @@ func statusDaemon(ctx *cli.Context) error {
 	return nil
 }
 
-func daemonService(ctx *cli.Context) (err error) {
+func deployDaemonService(ctx *cli.Context) (err error) {
 	if err := prepareHomeDir(); err != nil {
 		return err
 	}

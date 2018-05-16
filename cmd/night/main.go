@@ -34,6 +34,7 @@ const (
 	testsOutDir  = "madness"
 	serverURL    = "http://localhost:1955"
 	resourcePath = "/resource"
+	desc         = "Treat your vecty tests like your first date"
 )
 
 func main() {
@@ -73,7 +74,7 @@ func main() {
 			Action: runTestSuites,
 		},
 	}
-	a.Action = daemonService
+	a.Action = deployDaemonService
 	if err := a.Run(os.Args); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -274,7 +275,7 @@ func writeIndex(cfg *config.Config) error {
 	// println(pkg)
 	q.Set("src", pkg+"/main.js")
 	q.Set("id", cfg.UUID)
-	mainFIle := "http://localhost" + port + "/resource?" + q.Encode()
+	mainFIle := cfg.ServerURL + resourcePath + q.Encode()
 	println(mainFIle)
 	ctx := map[string]interface{}{
 		"mainFile": mainFIle,
@@ -286,6 +287,11 @@ func writeIndex(cfg *config.Config) error {
 	return ioutil.WriteFile(m, buf.Bytes(), 0600)
 }
 
+// This is the template for the main entrypoint of the generated unit test
+// package.
+//
+// This goes to the madness/main.go what will eventual be compiled by gopherjs.
+// And loaded for execution in the browser.
 var mainUnitTpl = `package main
 
 import(

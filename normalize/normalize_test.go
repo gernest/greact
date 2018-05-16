@@ -9,11 +9,12 @@ import (
 
 func TestNew(t *testing.T) {
 	c := New()
-	s := gs.ToString(c)
+	s := gs.Process(c)
+	v := s.String()
 	b, _ := ioutil.ReadFile("normalize.css")
 	e := string(b)
-	if s != e {
-		t.Errorf("expected %s got %s", e, s)
+	if v != e {
+		t.Errorf("expected %s got %s", e, v)
 	}
-	// ioutil.WriteFile("normalize.css", []byte(s), 0600)
+	// ioutil.WriteFile("normalize.css", []byte(s.String()), 0600)
 }

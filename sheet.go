@@ -10,19 +10,32 @@ type Sheet struct {
 	registry Registry
 }
 
-func (s *Sheet) AddRule(rules CSSRule) {
-	v := process(rules, classNamer(
-		namerFunc(s.CLasses, s.idGen),
+// AddRule processes the rules are returns mapping of original classnames to the
+// generated classnames.
+//
+// The resulting class map is merged with the existing classmap, so added
+// classes can always be acced by s.Classes[className] field. The processed
+// rules are stored in the stylesheet, note that this doesn't attach the sheet
+// to the dom. You need to explicitly call Attach method to attach the styles to
+// the dom.
+func (s *Sheet) AddRule(rules CSSRule) ClassMap {
+	m := make(ClassMap)
+	v := Process(rules, classNamer(
+		namerFunc(m, s.idGen),
 	))
 	if ls, ok := v.(RuleList); ok {
 		s.rules = append(s.rules, ls...)
 	} else {
 		s.rules = append(s.rules, v)
 	}
+	for k, v := range m {
+		s.CLasses[k] = v
+	}
+	return m
 }
 
 func (s *Sheet) Text() string {
-	return toString(s.rules)
+	return s.rules.String()
 }
 
 func NewSheet(idGen func() string) *Sheet {
@@ -102,7 +115,7 @@ func (s *Sheet) ListRules() []string {
 		return s.list
 	}
 	for _, v := range s.rules {
-		s.list = append(s.list, toString(v, Options{NoPretty: true}))
+		s.list = append(s.list, v.String())
 	}
 	return s.list
 }

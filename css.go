@@ -5,14 +5,31 @@ import (
 	"strings"
 )
 
+type stringer interface {
+	String() string
+}
+
+// RuleList is a list of css style rules.
 type RuleList []CSSRule
 
 func (RuleList) isRule() {}
 
-func (ls RuleList) write(f func(string), opts ...Options) {
-	for _, v := range ls {
-		v.write(f, opts...)
+func (r RuleList) String() string {
+	var buf bytes.Buffer
+	for k, v := range r {
+		if s, ok := v.(stringer); ok {
+			sc := s.String()
+			if sc == "" {
+				continue
+			}
+			if k != 0 {
+				buf.WriteByte('\n')
+				buf.WriteByte('\n')
+			}
+			buf.WriteString(sc)
+		}
 	}
+	return buf.String()
 }
 
 // filter out nil values
@@ -26,6 +43,7 @@ func toRuleList(src []CSSRule) RuleList {
 	return ls
 }
 
+// CSS defines a list of style rules. Nil values will be removed.
 func CSS(rules ...CSSRule) CSSRule {
 	return toRuleList(rules)
 }
@@ -36,15 +54,9 @@ type SimpleRule struct {
 }
 
 func (SimpleRule) isRule() {}
-func (s SimpleRule) write(f func(string), opts ...Options) {
-	if len(opts) > 0 {
-		o := opts[0]
-		if o.NoPretty {
-			f(s.Key + ":" + s.Value + ";")
-			return
-		}
-	}
-	f(s.Key + " : " + s.Value + ";")
+
+func (s SimpleRule) String() string {
+	return s.Key + ":" + s.Value + ";"
 }
 
 func P(key, value string) CSSRule {
@@ -63,27 +75,17 @@ type StyleRule struct {
 	Rules    RuleList
 }
 
-func (s StyleRule) write(f func(string), opts ...Options) {
-	if s.Rules == nil {
-		return
+func (s StyleRule) String() string {
+	if len(s.Rules) == 0 {
+		return ""
 	}
-	f(s.Selector)
-	if len(opts) > 0 {
-		o := opts[0]
-		if o.NoPretty {
-			f("{")
-			s.Rules.write(func(v string) {
-				f(v)
-			}, opts...)
-			f("}")
-			return
-		}
+	var buf bytes.Buffer
+	buf.WriteString(s.Selector + " {\n")
+	for _, v := range s.Rules {
+		buf.WriteString(indent(v.String(), 2))
 	}
-	f(" {")
-	s.Rules.write(func(v string) {
-		f("\n   " + v)
-	}, opts...)
-	f("\n}\n")
+	buf.WriteString("}")
+	return buf.String()
 }
 
 func (StyleRule) isRule() {}
@@ -97,26 +99,21 @@ type Conditional struct {
 	Rules RuleList
 }
 
-func (Conditional) isRule() {}
-func (c Conditional) write(f func(string), opts ...Options) {
-	f(c.Key)
+func (c Conditional) String() string {
 	var buf bytes.Buffer
-	c.Rules.write(func(v string) {
-		buf.WriteString(v)
-	}, opts...)
-	if len(opts) > 0 {
-		o := opts[0]
-		if o.NoPretty {
-			f("{")
-			f(buf.String())
-			f("}")
-			return
+	buf.WriteString(c.Key + " {\n")
+	for k, v := range c.Rules {
+		if s, ok := v.(stringer); ok {
+			if k != 0 {
+				buf.WriteByte('\n')
+			}
+			buf.WriteString(indent(s.String(), 2))
 		}
 	}
-	f(" {\n")
-	f(indent(buf.String(), 2))
-	f("\n}")
+	return buf.String()
 }
+
+func (Conditional) isRule() {}
 
 func indent(s string, by int) string {
 	p := strings.Split(s, "\n")
@@ -132,6 +129,7 @@ func indent(s string, by int) string {
 	}
 	return o.String()
 }
+
 func FontFace(rules ...CSSRule) CSSRule {
 	return S("@font-face", rules...)
 }
@@ -142,8 +140,7 @@ func Cond(cond string, rules ...CSSRule) CSSRule {
 
 type CSSRule interface {
 	//we don't want users to implement this.
-
-	write(func(string), ...Options)
+	stringer
 	isRule()
 }
 
@@ -200,7 +197,7 @@ func flatternStyle(s StyleRule) RuleList {
 			baseStyle.Rules = append(baseStyle.Rules, e)
 		}
 	}
-	o = append(o, baseStyle)
+	o = append(RuleList{baseStyle}, o...)
 	return o
 }
 
@@ -212,23 +209,17 @@ func replaceParent(parent, selector string) string {
 }
 
 func ToString(rule CSSRule, ts ...Transformer) string {
-	rule = process(rule, ts...)
-	return toString(rule)
+	rule = Process(rule, ts...)
+	return rule.String()
 }
 
 type Options struct {
 	NoPretty bool
 }
 
-func toString(rule CSSRule, opts ...Options) string {
-	var buf bytes.Buffer
-	rule.write(func(v string) {
-		buf.WriteString(v)
-	}, opts...)
-	return buf.String()
-}
-
-func process(rule CSSRule, ts ...Transformer) CSSRule {
+// Process this applies any transformation to the rule. It automatically
+// flatterns the rule tree.
+func Process(rule CSSRule, ts ...Transformer) CSSRule {
 	ts = append(ts, fLattern)
 	for _, v := range ts {
 		rule = v(rule)

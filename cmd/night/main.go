@@ -311,14 +311,16 @@ const testPkg ="{{.config.Info.ImportPath}}"
 
 func startTest(){
 	go func ()  {
-	v:= start()
 	 w,err:=ws.New()
 	 if err!=nil{
 		 panic(err)
 	 }
-	 err=w.Report(v,testPkg,testID)
-	 if err!=nil{
-		 println(err)
+	 for _,ts:=range allTests(){
+		 v:=mad.Exec(ts)
+		 err=w.Report(v,testPkg,testID)
+		 if err!=nil{
+			 println(err)
+		 }
 	 }
 	}()
 }
@@ -329,6 +331,13 @@ func start()mad.Test  {
 		{{$n}}.{{.}}(),
 		{{end -}}
 	)
+}
+func allTests()[]mad.Test  {
+	return []mad.Test{
+		{{range .funcs.Unit -}}
+		mad.Describe("{{.}}",{{$n}}.{{.}}()),
+		{{end -}}
+	}
 }
 `
 

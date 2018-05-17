@@ -21,7 +21,6 @@ func New() (*WS, error) {
 	q := u.Query()
 	q.Del("src")
 	u.RawQuery = q.Encode()
-	println(u.String())
 	conn, err := websocket.Dial(u.String())
 	if err != nil {
 		return nil, err

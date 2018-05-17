@@ -275,7 +275,7 @@ func writeIndex(cfg *config.Config) error {
 	// println(pkg)
 	q.Set("src", pkg+"/main.js")
 	q.Set("id", cfg.UUID)
-	mainFIle := cfg.ServerURL + resourcePath + q.Encode()
+	mainFIle := cfg.ServerURL + resourcePath + "?" + q.Encode()
 	println(mainFIle)
 	ctx := map[string]interface{}{
 		"mainFile": mainFIle,

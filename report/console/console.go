@@ -33,3 +33,31 @@ func ident(level int) string {
 	}
 	return s
 }
+
+// calcStats calculates total failed and passed tests. This is recursive.
+func calcStats(ts *mad.SpecResult) (int, int) {
+	pass := len(ts.PassedExpectations)
+	fail := len(ts.FailedExpectations)
+	for _, v := range ts.Children {
+		p, f := calcStats(v)
+		pass += p
+		fail += f
+	}
+	return pass, fail
+}
+
+type ResponseHandler struct {
+	passed int
+	failed int
+}
+
+func (r *ResponseHandler) Handle(ts *mad.SpecResult) {
+	pass, fail := calcStats(ts)
+	r.passed += pass
+	r.failed += fail
+	Report(ts)
+}
+
+func (r *ResponseHandler) Done() {
+	fmt.Printf(" Passed :%d Failed:%d\n", r.passed, r.failed)
+}

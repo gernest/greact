@@ -110,7 +110,12 @@ func runTestSuites(ctx *cli.Context) error {
 	}
 	fmt.Println(res.IndexURL)
 	return streamResponse(context.Background(),
-		cfg, res.WebsocketURL, handleResponse)
+		cfg, res.WebsocketURL, &console.ResponseHandler{})
+}
+
+type respHandler interface {
+	Handle(*mad.SpecResult)
+	Done()
 }
 
 func handleResponse(ts *mad.SpecResult) {

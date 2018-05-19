@@ -17,7 +17,7 @@ import (
 //
 // If handler is not nil, for every successful read the handler will be invoked
 // passing the decoded *api.TestSuite as argument.
-func streamResponse(ctx context.Context, cfg *config.Config, ws string, handler func(*mad.SpecResult)) error {
+func streamResponse(ctx context.Context, cfg *config.Config, ws string, h respHandler) error {
 	u, err := url.Parse(ws)
 	if err != nil {
 		return err
@@ -42,6 +42,9 @@ func streamResponse(ctx context.Context, cfg *config.Config, ws string, handler 
 			return conn.Close()
 		default:
 			if len(m) == 0 {
+				if h != nil {
+					h.Done()
+				}
 				return nil
 			}
 			ts := &mad.SpecResult{}
@@ -49,8 +52,8 @@ func streamResponse(ctx context.Context, cfg *config.Config, ws string, handler 
 			if err != nil {
 				return err
 			}
-			if handler != nil {
-				handler(ts)
+			if h != nil {
+				h.Handle(ts)
 			}
 			delete(m, ts.Desc)
 		}

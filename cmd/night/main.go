@@ -313,7 +313,6 @@ import(
 )
 
 func main()  {
-	js.Global.Set("startTest", startTest)
 	startTest()
 }
 

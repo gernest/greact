@@ -25,6 +25,7 @@ import (
 
 	"github.com/gernest/mad/api"
 	"github.com/gernest/mad/config"
+	"github.com/gernest/mad/report/console"
 	"github.com/gernest/mad/tools"
 	"github.com/urfave/cli"
 )
@@ -113,7 +114,7 @@ func runTestSuites(ctx *cli.Context) error {
 }
 
 func handleResponse(ts *mad.SpecResult) {
-	println(ts.Desc)
+	console.Report(ts)
 }
 
 func sendTestRequest(cfg *config.Config, req *api.TestRequest) (*api.TestResponse, error) {

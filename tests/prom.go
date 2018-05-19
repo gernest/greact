@@ -40,3 +40,16 @@ func TestAfter() mad.Test {
 		}),
 	)
 }
+
+func TestFailed() mad.Test {
+	return mad.Describe("Render Failures",
+		mad.It("Fails", func(t mad.T) {
+			t.Error("expected 1 got 2")
+			t.Error("expected 2 got 1")
+		}),
+		mad.It("Fails Again", func(t mad.T) {
+			t.Error("expected 1 got 2")
+			t.Error("expected 2 got 1")
+		}),
+	)
+}

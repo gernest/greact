@@ -6,6 +6,7 @@ import (
 	"github.com/gernest/mad"
 )
 
+// Report pretty prints the spec results to stdout.
 func Report(ts *mad.SpecResult) {
 	printResult(ts, 0)
 }

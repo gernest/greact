@@ -108,9 +108,8 @@ func runTestSuites(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(res.IndexURL)
 	return streamResponse(context.Background(),
-		cfg, res.WebsocketURL, &console.ResponseHandler{})
+		cfg, res, &console.ResponseHandler{})
 }
 
 type respHandler interface {
@@ -286,11 +285,9 @@ func writeIndex(cfg *config.Config) error {
 	}
 	pkg := cfg.OutputMainPkg
 	q := make(url.Values)
-	// println(pkg)
 	q.Set("src", pkg+"/main.js")
 	q.Set("id", cfg.UUID)
 	mainFIle := cfg.ServerURL + resourcePath + "?" + q.Encode()
-	println(mainFIle)
 	ctx := map[string]interface{}{
 		"mainFile": mainFIle,
 		"config":   cfg,
@@ -317,7 +314,7 @@ import(
 
 func main()  {
 	js.Global.Set("startTest", startTest)
-	ws.New()
+	startTest()
 }
 
 const testID ="{{.config.UUID}}"

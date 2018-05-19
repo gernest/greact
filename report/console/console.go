@@ -11,7 +11,7 @@ func Report(ts *mad.SpecResult) {
 }
 
 func printResult(ts *mad.SpecResult, level int) {
-	fmt.Printf("%s%s --> \n", ident(level), ts.Desc)
+	fmt.Printf("%s%s: \n", ident(level), ts.Desc)
 	for _, v := range ts.FailedExpectations {
 		fmt.Printf("%s✖ %s :\n", ident(level+1), v.Desc)
 		for _, msg := range v.Messages {

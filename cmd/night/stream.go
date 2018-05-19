@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"time"
 
 	"github.com/gernest/mad"
+	"github.com/gernest/mad/api"
 	"github.com/gernest/mad/config"
 
 	"github.com/gorilla/websocket"
@@ -17,8 +19,15 @@ import (
 //
 // If handler is not nil, for every successful read the handler will be invoked
 // passing the decoded *api.TestSuite as argument.
-func streamResponse(ctx context.Context, cfg *config.Config, ws string, h respHandler) error {
-	u, err := url.Parse(ws)
+func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestResponse, h respHandler) error {
+	nctx, cancel := context.WithCancel(ctx)
+	go func() {
+		err := newBrowser(nctx, res.IndexURL, 30*time.Second)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+	u, err := url.Parse(res.WebsocketURL)
 	if err != nil {
 		return err
 	}
@@ -31,7 +40,6 @@ func streamResponse(ctx context.Context, cfg *config.Config, ws string, h respHa
 	if err != nil {
 		return err
 	}
-	fmt.Printf("socket %s\n", ws)
 	conn, _, err := websocket.NewClient(d, u, nil, 1024, 1024)
 	if err != nil {
 		return err
@@ -39,11 +47,13 @@ func streamResponse(ctx context.Context, cfg *config.Config, ws string, h respHa
 	for {
 		select {
 		case <-ctx.Done():
+			cancel()
 			return conn.Close()
 		default:
 			if len(m) == 0 {
 				if h != nil {
 					h.Done()
+					cancel()
 				}
 				return nil
 			}

@@ -21,7 +21,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/kr/pretty"
+	"github.com/gernest/mad"
 
 	"github.com/gernest/mad/api"
 	"github.com/gernest/mad/config"
@@ -108,7 +108,12 @@ func runTestSuites(ctx *cli.Context) error {
 		return err
 	}
 	fmt.Println(res.IndexURL)
-	return streamResponse(context.Background(), res.WebsocketURL, nil)
+	return streamResponse(context.Background(),
+		cfg, res.WebsocketURL, handleResponse)
+}
+
+func handleResponse(ts *mad.SpecResult) {
+	println(ts.Desc)
 }
 
 func sendTestRequest(cfg *config.Config, req *api.TestRequest) (*api.TestResponse, error) {
@@ -136,12 +141,6 @@ func sendTestRequest(cfg *config.Config, req *api.TestRequest) (*api.TestRespons
 	return r, nil
 }
 
-func callDaemon(r *api.TestResponse) error {
-	return streamResponse(context.Background(), r.WebsocketURL, func(rs *api.TestSuite) {
-		pretty.Println(rs)
-	})
-}
-
 // generateTestPackage process the test directory and generate processed files
 // in the promtest directory.
 //
@@ -156,6 +155,9 @@ func generateTestPackage(cfg *config.Config) error {
 	out := filepath.Join(cfg.OutputPath, tsPkg.Name)
 	os.MkdirAll(out, 0755)
 	set := token.NewFileSet()
+
+	// we need to keet ptrack of the defined unit and integration test functions.
+	// This collects functions from all files.
 	funcs := &tools.TestNames{}
 	for _, v := range tsPkg.GoFiles {
 		f, err := parser.ParseFile(set, filepath.Join(tsPkg.Dir, v), nil, 0)
@@ -168,6 +170,12 @@ func generateTestPackage(cfg *config.Config) error {
 			funcs.Unit = append(funcs.Unit, fn.Unit...)
 		}
 		files = append(files, f)
+	}
+	if funcs.Unit != nil {
+		cfg.UnitFuncs = append(cfg.UnitFuncs, funcs.Unit...)
+	}
+	if funcs.Integration != nil {
+		cfg.Integration = append(cfg.Integration, funcs.Integration...)
 	}
 	for _, v := range files {
 		err := writeFile(out, set, v)

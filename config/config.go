@@ -35,6 +35,9 @@ type Config struct {
 	Build bool
 
 	UUID string
+
+	UnitFuncs   []string
+	Integration []string
 }
 
 // FLags returns configuration flags.

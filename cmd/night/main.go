@@ -307,7 +307,6 @@ var mainUnitTpl = `package main
 
 import(
 	"{{.config.TestUnitPkg}}"
-	"github.com/gopherjs/gopherjs/js"
 	"github.com/gernest/mad/ws"
 	"github.com/gernest/mad"
 )

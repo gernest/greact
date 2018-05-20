@@ -44,7 +44,7 @@ type Config struct {
 	UnitFuncs   []string
 	Integration []string
 
-	// Browser details to use
+	// Browser details to use.
 	Browsers BrowserList
 
 	// if true tells the runner to generate coverage profile.

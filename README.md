@@ -2,6 +2,12 @@
 
 Inter galactic test runner and test framework for  Go frontend projects.
 
+The name madtitan originate from nickname of Thanos (comics character), he
+is obsessed with collecting infinity stones, this project is obsessed with
+collecting all the good parts of javascript testing eco system with the go ones
+to bring smooth developer experience for frontend works using the Go
+programming language.
+
  __ warning__ I have actively tested this on darwin (os x), if you have issue
 with a different os open it here and probably someone else who uses your os
 might help.

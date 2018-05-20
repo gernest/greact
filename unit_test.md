@@ -1,13 +1,13 @@
 # Unit testing
 
-Promnight borrows from go's standard library's`testing` package and some ideas
+madtitan borrows from go's standard library's`testing` package and some ideas
 from many javascript test packages/runners such as jasmine,jest, karma-runner
-etc..
+ etc.
 
 Tests are defined as any function with the signature 
 
 ```go
-func TestXxx() prom.T
+func TestXxx() mad.T
 ```
 
 You can the use `Describe` and `It` functions to compose your test suite.
@@ -16,7 +16,7 @@ You can the use `Describe` and `It` functions to compose your test suite.
 
 This is a container, meant to group/structure your tests.
 
-Describing a test case is done with the `prom.Describe` function, this takes
+Describing a test case is done with the `mad.Describe` function, this takes
 the description string as first argument and arbitrary number of test cases as the
 second argument. The description string is a human readable string stating whatis being tested.
 
@@ -28,8 +28,8 @@ and we want to test it.
 We can start describing our unit test like this
 
 ```go
-func TestRainfall() prom.T {
-	return prom.Describe("Raining")
+func TestRainfall() mad.Test {
+	return mad.Describe("Raining")
 }
 ```
 
@@ -67,12 +67,12 @@ our expectations.
 
 It has the following signature
 ```go
-func It(desc string, fn func(T)) Test {
+func It(desc string, fn func(mad.T)) mad.Test {
 ``
 What the user of the library does is supply the `fn` parameter. First parameter
-tells what expectation we are trying to achieve.
+is a string which tells what expectation we are trying to achieve.
 
-Inside the passed fn you can call `T.Error`, `T.Errorf` to signal failure. You
+Inside the passed `fn` body you can call `T.Error`, `T.Errorf` to signal failure. You
 can call them as many times as you want inside your functions and they will be
 included in the failed test report. If you want to halt the function execution
 then you can use `T.Fatal` or `T.Falatf` as you can see the concept were
@@ -82,17 +82,17 @@ borrowed from the `testing` package.
 We have seen how to describe what we are testing. Now we will see how to assert
 expectation from our functions/piece of code.
 
-We use `prom.It` to state our expectation. It is up for the one writing tests
+We use `mad.It` to state our expectation. It is up for the one writing tests
 to determine if the code meets expectation or not, I will explain this with
 code in a moment.
 
  Let us say, it is only raining whenever there are clouds. We can now update our
  Rainfall test case to look like this.
 
- ```go
- func TestRainfall() prom.Test {
-	return prom.Describe("Raining",
-		prom.It("must be cloudy", func(t prom.T) {
+```go
+ func TestRainfall() mad.Test {
+	return mad.Describe("Raining",
+		mad.It("must be cloudy", func(t mad.T) {
 			ctx := Rainfall()
 			if !ctx.Cloudy {
 				t.Error("expected to be cloudy")
@@ -106,7 +106,7 @@ code in a moment.
 ctx := Rainfall()  #here we execute the function that we want to unit test 
 ```
 
-```go
+```
 			if !ctx.Cloudy {
 				t.Error("expected to be cloudy")
             }
@@ -116,7 +116,7 @@ We are comparing the current behavior/output with our expectation. This test
 will pass because `Rainfall` function sets `Cloudy` to be true, hence it will
 meet expectations.
 
-Promnight favors composition, so build your test suite to suit your needs from
+madtitan favors composition, so build your test suite to suit your needs from
 smaller modular functional components.
 
 __Good  luck__ and happy unit testing

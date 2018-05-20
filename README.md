@@ -32,3 +32,25 @@ at testing with another browser you are welcome.
 - [ ] firefox (not tested)
 - [ ] Add a browser
 
+
+## How it works
+
+This is what happens when you run `mad test`
+
+- Files in the test packages are processed, identifying test functions. After
+ processing the output is saved into a temporary location, by default this is
+the directory `madness` in the root of the project. Check `madness/main.go`
+file to see what is happening.
+
+The generated package is self contained. Capable of running the test suite.
+and collecting results.
+
+- `gopherjs` is used to compile the generated package from the previous step.
+
+- a browser is launched. All unit tests are executed in a single tab. Each
+ integration test is done on separate tab, so be warned about resource limits
+ for integration tests, this will soon be resolved by reusing the tabs but that
+ is not the top priority.
+
+- test results are then streamed back to the user's console via websocket.
+- we close the browser and free any resources acquired while running the steps.

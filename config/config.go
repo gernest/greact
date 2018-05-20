@@ -12,7 +12,7 @@ import (
 type Config struct {
 	// Information about the package.
 	Info *build.Package
-	// URL where the test runner weservice is running.
+	// URL where the test runner service is running.
 	ServerURL string
 
 	// This is absolute path to the root of the package being tested,
@@ -43,6 +43,25 @@ type Config struct {
 
 	UnitFuncs   []string
 	Integration []string
+
+	// Browser details to use
+	Browsers BrowserList
+
+	// if true tells the runner to generate coverage profile.
+	Cover bool
+
+	// the name of the file containing the generated coverage profile.
+	Coverfile string
+}
+
+type BrowserList struct {
+	Browsers []*Browser
+}
+
+// Browser defines a browser that implements chrome debugging protocol.
+type Browser struct {
+	Name    string
+	Options map[string]interface{}
 }
 
 // FLags returns configuration flags.
@@ -70,6 +89,13 @@ func FLags() []cli.Flag {
 		cli.BoolFlag{
 			Name: "build",
 		},
+		cli.BoolFlag{
+			Name: "cover",
+		},
+		cli.StringFlag{
+			Name:  "coverfile",
+			Value: "coverage.json",
+		},
 	}
 }
 
@@ -81,6 +107,8 @@ func Load(ctx *cli.Context) (*Config, error) {
 		TestDirName:   ctx.String("test_dir"),
 		OutputDirName: ctx.String("output_dir"),
 		Build:         ctx.Bool("build"),
+		Cover:         ctx.Bool("cover"),
+		Coverfile:     ctx.String("coverfile"),
 	}
 	if !filepath.IsAbs(c.Root) {
 		p, err := filepath.Abs(c.Root)

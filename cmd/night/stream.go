@@ -53,13 +53,15 @@ func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestRespon
 	}
 	defer conn.Close()
 	c := cdp.NewClient(conn)
-	err = c.Profiler.Enable(ctx)
-	if err != nil {
-		return err
-	}
-	err = c.Profiler.Start(ctx)
-	if err != nil {
-		return err
+	if cfg.Cover {
+		err = c.Profiler.Enable(ctx)
+		if err != nil {
+			return err
+		}
+		err = c.Profiler.Start(ctx)
+		if err != nil {
+			return err
+		}
 	}
 	navArgs := page.NewNavigateArgs(res.IndexURL)
 	_, err = c.Page.Navigate(ctx, navArgs)
@@ -75,15 +77,19 @@ func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestRespon
 				if h != nil {
 					h.Done()
 				}
-				s, err := c.Profiler.Stop(ctx)
-				if err != nil {
-					return err
+				if cfg.Cover {
+					s, err := c.Profiler.Stop(ctx)
+					if err != nil {
+						return err
+					}
+					b, _ := json.Marshal(s.Profile)
+					err = ioutil.WriteFile(
+						filepath.Join(cfg.OutputPath, cfg.Coverfile), b, 0600)
+					if err != nil {
+						return err
+					}
 				}
-				b, _ := json.Marshal(s.Profile)
-				err = ioutil.WriteFile(filepath.Join(cfg.OutputPath, "coverage.json"), b, 0600)
-				if err != nil {
-					return err
-				}
+
 				return nil
 			}
 			ts := &mad.SpecResult{}

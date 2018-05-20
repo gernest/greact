@@ -210,11 +210,11 @@ var itpl = template.Must(template.New("i").Parse(mainIntegrationTpl))
 func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
 	if len(funcs.Integration) > 0 {
 		data := make(map[string]interface{})
-		data["testPkg"] = cfg.TestUnitPkg
+		data["testPkg"] = cfg.GeneratedTestPkg
 		var buf bytes.Buffer
 		for _, v := range funcs.Integration {
 			name := strings.ToLower(v)
-			e := filepath.Join(cfg.TestUnitDir, name)
+			e := filepath.Join(cfg.GeneratedTestPath, name)
 			os.MkdirAll(e, 0755)
 			data["funcName"] = v
 			buf.Reset()
@@ -306,7 +306,7 @@ func writeIndex(cfg *config.Config) error {
 var mainUnitTpl = `package main
 
 import(
-	"{{.config.TestUnitPkg}}"
+	"{{.config.GeneratedTestPkg}}"
 	"github.com/gernest/mad/ws"
 	"github.com/gernest/mad"
 )

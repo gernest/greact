@@ -21,10 +21,15 @@ type Config struct {
 	// The directory where test files stay.
 	TestDirName string
 
+	// Absolute path to the directory containing the tests
 	TestPath string
 
-	TestUnitDir string
-	TestUnitPkg string
+	// This the absolute path of processed test directory.
+	GeneratedTestPath string
+
+	// This is import path for the processed test package
+	// example   github.com/gernest/mad/madness/tests
+	GeneratedTestPkg string
 
 	OutputDirName string
 
@@ -91,8 +96,8 @@ func Load(ctx *cli.Context) (*Config, error) {
 	c.Info = pkg
 	c.TestPath = filepath.Join(c.Info.Dir, c.TestDirName)
 	c.OutputPath = filepath.Join(c.Info.Dir, c.OutputDirName)
-	c.TestUnitDir = filepath.Join(c.OutputPath, c.TestDirName)
-	c.TestUnitPkg = filepath.Join(c.Info.ImportPath, c.OutputDirName, c.TestDirName)
+	c.GeneratedTestPath = filepath.Join(c.OutputPath, c.TestDirName)
+	c.GeneratedTestPkg = filepath.Join(c.Info.ImportPath, c.OutputDirName, c.TestDirName)
 	c.OutputMainPkg = filepath.Join(c.Info.ImportPath, c.OutputDirName)
 	c.UUID = uuid.NewV4().String()
 	return c, nil

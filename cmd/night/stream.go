@@ -19,7 +19,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Opens a websocket wsection using ws as url and reads the received messages
+// Opens a websocket connection using ws as url and reads the received messages
 // as json of type *api.TestSuite.
 //
 // If handler is not nil, for every successful read the handler will be invoked

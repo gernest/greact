@@ -2,7 +2,6 @@ package launcher
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -38,7 +37,7 @@ var priorities = []*priority{
 	},
 }
 
-func resolveChromePath() []string {
+func resolveChromePath() ([]string, error) {
 	suffixes := []string{
 		"/Contents/MacOS/Google Chrome Canary",
 		"/Contents/MacOS/Google Chrome",
@@ -51,21 +50,25 @@ func resolveChromePath() []string {
 	ls := "/System/Library/Frameworks/CoreServices.framework" +
 		"/Versions/A/Frameworks/LaunchServices.framework" +
 		"/Versions/A/Support/lsregister"
-	x := fmt.Sprintf(`%s  -dump| grep -i \'google chrome\\( canary\\)\\?.app$\' | awk \'{$1=""; print $0}\`, ls)
+	x := fmt.Sprintf(`%s  -dump| grep -i "google chrome\\( canary\\)\\?.app$" | awk '{$1=""; print $0}'`, ls)
+	fmt.Println(x)
 	o, err := exec.Command("bash", "-c", x).Output()
 	if err != nil {
-		//handle error
+		return nil, fmt.Errorf("%s %v", string(o), err)
 	}
-	scan := bufio.NewScanner(bytes.NewReader(o))
-	scan.Split(bufio.ScanLines)
-	for scan.Scan() {
-		txt := scan.Text()
-		txt = strings.TrimSpace(txt)
-		for _, v := range suffixes {
-			execPath := filepath.Join(txt, v)
-			_, err := os.Stat(execPath)
-			if err == nil {
-				install = append(install, execPath)
+	str := strings.TrimSpace(string(o))
+	if str != "" {
+		scan := bufio.NewScanner(strings.NewReader(str))
+		scan.Split(bufio.ScanLines)
+		for scan.Scan() {
+			txt := scan.Text()
+			txt = strings.TrimSpace(txt)
+			for _, v := range suffixes {
+				execPath := filepath.Join(txt, v)
+				_, err := os.Stat(execPath)
+				if err == nil {
+					install = append(install, execPath)
+				}
 			}
 		}
 	}
@@ -75,7 +78,7 @@ func resolveChromePath() []string {
 				weight: 150},
 		}, priorities...)
 	}
-	return sortStuff(install, priorities)
+	return sortStuff(install, priorities), nil
 }
 
 func resolve() string {

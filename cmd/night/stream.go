@@ -27,7 +27,8 @@ import (
 // passing the decoded *api.TestSuite as argument.
 func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestResponse, h respHandler) error {
 	chrome, err := launcher.New(launcher.Options{
-		Port: 9222,
+		Port:        9222,
+		ChromeFlags: []string{"--headless"},
 	})
 	if err != nil {
 		return err

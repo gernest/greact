@@ -88,7 +88,6 @@ func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestRespon
 			return ctx.Err()
 		default:
 			if len(m) == 0 {
-				chrome.Stop()
 				if h != nil {
 					h.Done()
 				}
@@ -104,7 +103,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestRespon
 						return err
 					}
 				}
-
+				chrome.Stop()
 				return nil
 			}
 			ts := &mad.SpecResult{}

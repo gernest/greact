@@ -10,34 +10,7 @@ import (
 	"strings"
 )
 
-var priorities = []*priority{
-	{
-		regex:  regexp.MustCompile(fmt.Sprintf(`^%s/Applications/.*Chrome.app`, os.Getenv("HOME"))),
-		weight: 50,
-	},
-	{
-		regex:  regexp.MustCompile(fmt.Sprintf(`^%s/Applications/.*Chrome Canary.app`, os.Getenv("HOME"))),
-		weight: 51,
-	},
-	{
-		regex:  regexp.MustCompile(`^\/Applications\/.*Chrome.app`),
-		weight: 100,
-	},
-	{
-		regex:  regexp.MustCompile(`^\/Applications\/.*Chrome Canary.app`),
-		weight: 101,
-	},
-	{
-		regex:  regexp.MustCompile(`^\/Volumes\/.*Chrome.app`),
-		weight: -2,
-	},
-	{
-		regex:  regexp.MustCompile(`^\/Volumes\/.*Chrome Canary.app/`),
-		weight: -1,
-	},
-}
-
-func resolveChromePath() ([]string, error) {
+func resolveChromePathDarwin() ([]string, error) {
 	suffixes := []string{
 		"/Contents/MacOS/Google Chrome Canary",
 		"/Contents/MacOS/Google Chrome",
@@ -71,6 +44,32 @@ func resolveChromePath() ([]string, error) {
 				}
 			}
 		}
+	}
+	priorities := []*priority{
+		{
+			regex:  regexp.MustCompile(fmt.Sprintf(`^%s/Applications/.*Chrome.app`, os.Getenv("HOME"))),
+			weight: 50,
+		},
+		{
+			regex:  regexp.MustCompile(fmt.Sprintf(`^%s/Applications/.*Chrome Canary.app`, os.Getenv("HOME"))),
+			weight: 51,
+		},
+		{
+			regex:  regexp.MustCompile(`^\/Applications\/.*Chrome.app`),
+			weight: 100,
+		},
+		{
+			regex:  regexp.MustCompile(`^\/Applications\/.*Chrome Canary.app`),
+			weight: 101,
+		},
+		{
+			regex:  regexp.MustCompile(`^\/Volumes\/.*Chrome.app`),
+			weight: -2,
+		},
+		{
+			regex:  regexp.MustCompile(`^\/Volumes\/.*Chrome Canary.app/`),
+			weight: -1,
+		},
 	}
 	if os.Getenv(chromePath) != "" {
 		priorities = append([]*priority{

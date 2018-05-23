@@ -24,7 +24,6 @@ func resolveChromePathDarwin() ([]string, error) {
 		"/Versions/A/Frameworks/LaunchServices.framework" +
 		"/Versions/A/Support/lsregister"
 	x := fmt.Sprintf(`%s  -dump| grep -i "google chrome\\( canary\\)\\?.app$" | awk '{$1=""; print $0}'`, ls)
-	fmt.Println(x)
 	o, err := exec.Command("bash", "-c", x).Output()
 	if err != nil {
 		return nil, fmt.Errorf("%s %v", string(o), err)

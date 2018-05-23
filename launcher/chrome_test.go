@@ -1,8 +1,12 @@
 package launcher
 
 import (
+	"bytes"
+	"context"
+	"fmt"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestFindChrome(t *testing.T) {
@@ -19,4 +23,32 @@ func TestFindChrome(t *testing.T) {
 			t.Errorf("expected file %s to exist", path)
 		}
 	}
+}
+
+func TestNew(t *testing.T) {
+	p, err := randomPort()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(p)
+	var buf bytes.Buffer
+	l, err := New(Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	l.Cmd.Stdout = &buf
+	l.Cmd.Stderr = &buf
+	fmt.Println(l.Cmd.Args)
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		err := l.Run()
+		if err != nil {
+			t.Error(err)
+		}
+		cancel()
+	}()
+	time.Sleep(5 * time.Second)
+	l.Stop()
+	<-ctx.Done()
+	t.Error(buf.String())
 }

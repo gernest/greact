@@ -11,6 +11,7 @@ import (
 	"github.com/gernest/mad"
 	"github.com/gernest/mad/api"
 	"github.com/gernest/mad/config"
+	"github.com/gernest/mad/launcher"
 	"github.com/mafredri/cdp"
 	"github.com/mafredri/cdp/devtool"
 	"github.com/mafredri/cdp/protocol/page"
@@ -25,6 +26,18 @@ import (
 // If handler is not nil, for every successful read the handler will be invoked
 // passing the decoded *api.TestSuite as argument.
 func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestResponse, h respHandler) error {
+	chrome, err := launcher.New(launcher.Options{
+		Port: 9222,
+	})
+	if err != nil {
+		return err
+	}
+	go chrome.Run()
+	defer chrome.Stop()
+	err = chrome.Wait()
+	if err != nil {
+		return err
+	}
 	u, err := url.Parse(res.WebsocketURL)
 	if err != nil {
 		return err
@@ -74,6 +87,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestRespon
 			return ctx.Err()
 		default:
 			if len(m) == 0 {
+				chrome.Stop()
 				if h != nil {
 					h.Done()
 				}

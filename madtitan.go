@@ -23,10 +23,14 @@ type Test interface {
 	run()
 }
 
-// Describe describe what you want to test.
-func Describe(desc string, tc ...Test) Test {
+// Describe describe what you want to test. The first argument desc, can be a
+// simple string for identifier you want to test, that can be a function, as
+// struct method or anything.
+//
+// You can use this to organise your test into a nested tree like structure.
+func Describe(desc string, testCases ...Test) Test {
 	t := &Suite{Desc: desc}
-	for _, v := range tc {
+	for _, v := range testCases {
 		switch e := v.(type) {
 		case *BeforeFuncs:
 			if t.BeforeFuncs != nil {
@@ -58,7 +62,8 @@ type List []Test
 
 func (ls List) run() {}
 
-// Exec implements Test interface.
+// Exec implements Test interface. This will call Exec method of all the list
+// members.
 func (ls List) Exec() {
 	for _, v := range ls {
 		v.Exec()

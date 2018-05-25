@@ -10,17 +10,15 @@ import (
 	"github.com/gopherjs/websocket"
 )
 
-func New() (*WS, error) {
+func New(id string) (*WS, error) {
 	h := js.Global.Get("location").Get("href").String()
 	u, err := url.Parse(h)
 	if err != nil {
 		return nil, err
 	}
-	u.Path = "/results"
+	u.Path = "/" + id
 	u.Scheme = "ws"
-	q := u.Query()
-	q.Del("src")
-	u.RawQuery = q.Encode()
+	u.RawQuery = ""
 	conn, err := websocket.Dial(u.String())
 	if err != nil {
 		return nil, err

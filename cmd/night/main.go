@@ -36,6 +36,7 @@ const (
 	serverURL    = "http://localhost:1955"
 	resourcePath = "/resource"
 	desc         = "Treat your vecty tests like your first date"
+	serviceName  = "madtitan"
 )
 
 func main() {
@@ -44,43 +45,16 @@ func main() {
 	a.Usage = desc
 	a.Commands = []cli.Command{
 		{
-			Name:   "start",
-			Usage:  "starts the test-runner daemon service",
-			Action: startDaemon,
-		},
-		{
-			Name:   "stop",
-			Usage:  "stops the test-runner daemon service",
-			Action: stopDaemon,
-		},
-		{
-			Name:   "install",
-			Usage:  "installs the test-runner daemon service",
-			Action: installDaemon,
-		},
-		{
-			Name:   "remove",
-			Usage:  "uninstall the test-runner daemon service",
-			Action: removeDaemon,
-		},
-		{
-			Name:   "status",
-			Usage:  "shows status of the test-runner daemon service",
-			Action: statusDaemon,
-		},
-		{
 			Name:   "test",
 			Usage:  "runs the test suites",
 			Flags:  config.FLags(),
 			Action: runTestSuites,
 		},
 	}
-	a.Action = deployDaemonService
 	if err := a.Run(os.Args); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
 }
 
 func runTestSuites(ctx *cli.Context) error {
@@ -98,18 +72,8 @@ func runTestSuites(ctx *cli.Context) error {
 			return err
 		}
 	}
-	req := &api.TestRequest{
-		ID:       cfg.UUID,
-		Package:  cfg.Info.ImportPath,
-		Path:     cfg.Info.Dir,
-		Compiled: true,
-	}
-	res, err := sendTestRequest(cfg, req)
-	if err != nil {
-		return err
-	}
 	return streamResponse(context.Background(),
-		cfg, res, &console.ResponseHandler{})
+		cfg, &console.ResponseHandler{})
 }
 
 type respHandler interface {
@@ -283,11 +247,9 @@ func writeIndex(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	pkg := cfg.OutputMainPkg
 	q := make(url.Values)
-	q.Set("src", pkg+"/main.js")
-	q.Set("id", cfg.UUID)
-	mainFIle := cfg.ServerURL + resourcePath + "?" + q.Encode()
+	q.Set("src", "main.js")
+	mainFIle := fmt.Sprintf("http://localhost:%d", cfg.Port) + resourcePath + "?" + q.Encode()
 	ctx := map[string]interface{}{
 		"mainFile": mainFIle,
 		"config":   cfg,
@@ -320,7 +282,7 @@ const testPkg ="{{.config.Info.ImportPath}}"
 
 func startTest(){
 	go func ()  {
-	 w,err:=ws.New()
+	 w,err:=ws.New(testID)
 	 if err!=nil{
 		 panic(err)
 	 }

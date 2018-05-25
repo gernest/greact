@@ -5,23 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net"
-	"net/url"
 	"path/filepath"
 
-	"github.com/gernest/mad"
-	"github.com/gernest/mad/api"
 	"github.com/gernest/mad/config"
 	"github.com/gernest/mad/launcher"
 	"github.com/mafredri/cdp"
 	"github.com/mafredri/cdp/devtool"
 	"github.com/mafredri/cdp/protocol/page"
 	"github.com/mafredri/cdp/rpcc"
-
-	"github.com/gorilla/websocket"
 )
 
-func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestResponse, h respHandler) error {
+func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) error {
+	nctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	server := NewServer(nctx, cfg)
 	chrome, err := launcher.New(launcher.Options{
 		Port:        9222,
 		ChromeFlags: []string{"--headless"},
@@ -35,23 +32,10 @@ func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestRespon
 	if err != nil {
 		return err
 	}
-	u, err := url.Parse(res.WebsocketURL)
-	if err != nil {
-		return err
-	}
 	m := make(map[string]bool)
 	for _, v := range cfg.UnitFuncs {
 		m[v] = true
 	}
-	d, err := net.Dial("tcp", u.Host)
-	if err != nil {
-		return err
-	}
-	ws, _, err := websocket.NewClient(d, u, nil, 1024, 1024)
-	if err != nil {
-		return err
-	}
-	defer ws.Close()
 	devt := devtool.New(fmt.Sprintf("http://127.0.0.1:%d", 9222))
 	pt, err := devt.Get(ctx, devtool.Page)
 	if err != nil {
@@ -64,24 +48,31 @@ func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestRespon
 	defer conn.Close()
 	c := cdp.NewClient(conn)
 	if cfg.Cover {
-		err = c.Profiler.Enable(ctx)
+		err = c.Profiler.Enable(nctx)
 		if err != nil {
 			return err
 		}
-		err = c.Profiler.Start(ctx)
+		err = c.Profiler.Start(nctx)
 		if err != nil {
 			return err
 		}
 	}
-	navArgs := page.NewNavigateArgs(res.IndexURL)
+	navArgs := page.NewNavigateArgs(fmt.Sprintf("http://localhost:%d",
+		cfg.Port) + resourcePath + "?src=index.html")
 	_, err = c.Page.Navigate(ctx, navArgs)
 	if err != nil {
 		return err
 	}
 	for {
 		select {
-		case <-ctx.Done():
+		case <-nctx.Done():
 			return ctx.Err()
+		case ts := <-server:
+
+			if h != nil {
+				h.Handle(ts)
+			}
+			delete(m, ts.Desc)
 		default:
 			if len(m) == 0 {
 				if h != nil {
@@ -100,17 +91,9 @@ func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestRespon
 					}
 				}
 				chrome.Stop()
+				cancel()
 				return nil
 			}
-			ts := &mad.SpecResult{}
-			err = ws.ReadJSON(ts)
-			if err != nil {
-				return err
-			}
-			if h != nil {
-				h.Handle(ts)
-			}
-			delete(m, ts.Desc)
 		}
 	}
 }

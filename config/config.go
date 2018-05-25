@@ -45,6 +45,9 @@ type Config struct {
 	UnitFuncs   []string
 	Integration []string
 
+	// Port is the port on which to run the websocket server.
+	Port int
+
 	// Browser details to use.
 	Browsers BrowserList
 
@@ -104,6 +107,10 @@ func FLags() []cli.Flag {
 			Name:  "coverfile",
 			Value: "coverage.json",
 		},
+		cli.IntFlag{
+			Name:  "port",
+			Value: 1956,
+		},
 	}
 }
 
@@ -117,6 +124,7 @@ func Load(ctx *cli.Context) (*Config, error) {
 		Build:         ctx.Bool("build"),
 		Cover:         ctx.Bool("cover"),
 		Coverfile:     ctx.String("coverfile"),
+		Port:          ctx.Int("port"),
 	}
 	if !filepath.IsAbs(c.Root) {
 		p, err := filepath.Abs(c.Root)

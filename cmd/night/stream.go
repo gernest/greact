@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/url"
@@ -20,11 +21,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Opens a websocket connection using ws as url and reads the received messages
-// as json of type *api.TestSuite.
-//
-// If handler is not nil, for every successful read the handler will be invoked
-// passing the decoded *api.TestSuite as argument.
 func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestResponse, h respHandler) error {
 	chrome, err := launcher.New(launcher.Options{
 		Port:        9222,
@@ -56,7 +52,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, res *api.TestRespon
 		return err
 	}
 	defer ws.Close()
-	devt := devtool.New("http://127.0.0.1:9222")
+	devt := devtool.New(fmt.Sprintf("http://127.0.0.1:%d", 9222))
 	pt, err := devt.Get(ctx, devtool.Page)
 	if err != nil {
 		return err

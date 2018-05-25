@@ -139,10 +139,13 @@ func Load(ctx *cli.Context) (*Config, error) {
 	return c, nil
 }
 
+// GetOutDir returns absolute path to the directory where generated output
+// stays.
 func (c *Config) GetOutDir() string {
 	return filepath.Join(c.Info.Dir, c.OutputDirName)
 }
 
+// GetTestDirName returns absolute path where the tests are.
 func (c *Config) GetTestDirName() string {
 	return filepath.Join(c.Info.Dir, c.TestDirName)
 }

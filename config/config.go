@@ -12,6 +12,7 @@ import (
 type Config struct {
 	// Information about the package.
 	Info *build.Package
+
 	// URL where the test runner service is running.
 	ServerURL string
 
@@ -52,6 +53,13 @@ type Config struct {
 
 	// the name of the file containing the generated coverage profile.
 	Coverfile string
+
+	Chrome *ChromeOptions
+}
+
+type ChromeOptions struct {
+	Port  int
+	Flags []string
 }
 
 type BrowserList struct {

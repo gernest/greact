@@ -99,7 +99,7 @@ func generateTestPackage(cfg *config.Config) error {
 	os.MkdirAll(out, 0755)
 	set := token.NewFileSet()
 
-	// we need to keet ptrack of the defined unit and integration test functions.
+	// we need to kee track of the defined unit and integration test functions.
 	// This collects functions from all files.
 	funcs := &tools.TestNames{}
 	for _, v := range tsPkg.GoFiles {

@@ -7,9 +7,17 @@ import (
 )
 
 func Build() error {
-	return sh.RunV("go", "build", "-o", "prom", "./cmd/night/")
+	return sh.RunV("go", "build", "-o", "prom", "./cmd/mad/")
 }
 
 func Install() error {
-	return sh.RunV("go", "install", "./cmd/night/")
+	return sh.RunV("go", "install", "./cmd/mad/")
+}
+
+func Test() error {
+	return sh.RunV("mad", "test")
+}
+
+func V() error {
+	return sh.RunV("mad", "test", "--v")
 }

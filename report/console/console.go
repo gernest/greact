@@ -20,7 +20,7 @@ func printResult(ts *mad.SpecResult, level int) {
 		}
 	}
 	for _, v := range ts.PassedExpectations {
-		fmt.Printf("%s✔ %s \n", ident(level+1), v.Desc)
+		fmt.Printf("%s✔ %s  %v\n", ident(level+1), v.Desc, v.Duration)
 	}
 	for _, v := range ts.Children {
 		printResult(v, level+1)

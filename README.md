@@ -1,3 +1,4 @@
+![](logo.png)
 # MadTitan
 
 Inter galactic test runner and test framework for  Go frontend projects.
@@ -29,28 +30,43 @@ work. Unfortunate I'm only interested in chrome so if you want to take a stab
 at testing with another browser you are welcome.
 
 - [x] chrome
-- [ ] firefox (not tested)
 - [ ] Add a browser
 
 
-## How it works
 
-This is what happens when you run `mad test`
+## Show me the code 
 
-- Files in the test packages are processed, identifying test functions. After
- processing the output is saved into a temporary location, by default this is
-the directory `madness` in the root of the project. Check `madness/main.go`
-file to see what is happening.
+```go
+ func TestRainfall() mad.Test {
+	return mad.Describe("Raining",
+		mad.It("must be cloudy", func(t mad.T) {
+			ctx := Rainfall()
+			if !ctx.Cloudy {
+				t.Error("expected to be cloudy")
+			}
+		}),
+	)
+}
+```
 
-The generated package is self contained. Capable of running the test suite.
-and collecting results.
+## I want to write unit tests
 
-- `gopherjs` is used to compile the generated package from the previous step.
+We got you covered [Take a look at this page](unit_test.md)
 
-- a browser is launched. All unit tests are executed in a single tab. Each
- integration test is done on separate tab, so be warned about resource limits
- for integration tests, this will soon be resolved by reusing the tabs but that
- is not the top priority.
+## I want to write integration tests 
 
-- test results are then streamed back to the user's console via websocket.
-- we close the browser and free any resources acquired while running the steps.
+__NOTE__ This only works with vecty projects
+
+We got you covered [Take a look at this page](integration_test.md)
+
+
+# Credits
+
+This would have never be possible without these projects
+
+- [karma](https://github.com/karma-runner/karma)
+- [jasmine](https://github.com/jasmine/jasmine.github.io)
+- [chrome-launcher](https://github.com/GoogleChrome/chrome-launcher)
+- [gopjerjs](https://github.com/gopherjs/vecty)
+- `testing` package from the go standard library.
+- And all the projects I picked ideas from that I can't remember.

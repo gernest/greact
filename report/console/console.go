@@ -65,6 +65,8 @@ func (r *ResponseHandler) Handle(ts *mad.SpecResult) {
 	} else {
 		if fail > 0 {
 			Report(ts)
+		} else {
+			fmt.Printf("%s✔ %s \n", ident(0), ts.Desc)
 		}
 	}
 }

@@ -9,7 +9,7 @@ collecting all the good parts of javascript testing eco system with the go ones
 to bring smooth developer experience for frontend works using the Go
 programming language.
 
- __ warning__ I have actively tested this on darwin (os x), if you have issue
+__warning__ I have actively tested this on darwin (os x), if you have issue
 with a different os open it here and probably someone else who uses your os
 might help.
 

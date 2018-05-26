@@ -16,6 +16,7 @@ type Integration struct {
 	Component *mad.Component
 }
 
+// Mount runs the integration tests and reports results via websocket.
 func (c *Integration) Mount() {
 	go func() {
 		w, err := ws.New(c.UUID)
@@ -31,6 +32,8 @@ func (c *Integration) Mount() {
 	}()
 }
 
+// Render implements vecty.Component interface. This works under the assumption
+// the Component field call returns a vecty.ComponentOrHTML
 func (c *Integration) Render() vecty.ComponentOrHTML {
 	if c.Component.IsBody {
 		return c.Component.Component().(vecty.ComponentOrHTML)

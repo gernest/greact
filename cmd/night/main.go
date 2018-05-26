@@ -29,7 +29,7 @@ import (
 const (
 	testsDir     = "tests"
 	testsOutDir  = "madness"
-	serverURL    = "http://localhost:1955"
+	localhost    = "http://localhost"
 	resourcePath = "/resource"
 	desc         = "Treat your vecty tests like your first date"
 	serviceName  = "madtitan"
@@ -167,8 +167,8 @@ func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
 			}
 			q := make(url.Values)
 			q.Set("src", name+"/main.js")
-			mainFIle := fmt.Sprintf("http://localhost:%d%s?%s",
-				cfg.Port, resourcePath, q.Encode())
+			mainFIle := fmt.Sprintf("%s:%d%s?%s",
+				localhost, cfg.Port, resourcePath, q.Encode())
 			ctx := map[string]interface{}{
 				"mainFile": mainFIle,
 				"config":   cfg,
@@ -183,8 +183,8 @@ func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
 			query := make(url.Values)
 			query.Set("src", name+"/index.html")
 			cfg.IntegrationIndexPages = append(cfg.IntegrationIndexPages,
-				fmt.Sprintf("http://localhost:%d%s?%s",
-					cfg.Port, resourcePath, query.Encode()))
+				fmt.Sprintf("%s:%d%s?%s",
+					localhost, cfg.Port, resourcePath, query.Encode()))
 			if cfg.Build {
 				o := filepath.Join(e, "main.js")
 				cmd := exec.Command("gopherjs", "build", "-o", o, pkg)
@@ -239,8 +239,8 @@ func writeMain(dst string, ctx interface{}) error {
 func writeIndex(cfg *config.Config) error {
 	q := make(url.Values)
 	q.Set("src", "main.js")
-	mainFIle := fmt.Sprintf("http://localhost:%d%s?%s",
-		cfg.Port, resourcePath, q.Encode())
+	mainFIle := fmt.Sprintf("%s:%d%s?%s",
+		localhost, cfg.Port, resourcePath, q.Encode())
 	ctx := map[string]interface{}{
 		"mainFile": mainFIle,
 		"config":   cfg,
@@ -254,8 +254,8 @@ func writeIndex(cfg *config.Config) error {
 	}
 	query := make(url.Values)
 	query.Set("src", "index.html")
-	cfg.UnitIndexPage = fmt.Sprintf("http://localhost:%d%s?%s",
-		cfg.Port, resourcePath, query.Encode())
+	cfg.UnitIndexPage = fmt.Sprintf("%s:%d%s?%s",
+		localhost, cfg.Port, resourcePath, query.Encode())
 	return nil
 }
 

@@ -3,8 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"go/ast"
 	"go/build"
@@ -13,7 +11,6 @@ import (
 	"go/printer"
 	"go/token"
 	"io/ioutil"
-	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -23,7 +20,6 @@ import (
 
 	"github.com/gernest/mad"
 
-	"github.com/gernest/mad/api"
 	"github.com/gernest/mad/config"
 	"github.com/gernest/mad/report/console"
 	"github.com/gernest/mad/tools"
@@ -90,31 +86,6 @@ type respHandler interface {
 
 func handleResponse(ts *mad.SpecResult) {
 	console.Report(ts)
-}
-
-func sendTestRequest(cfg *config.Config, req *api.TestRequest) (*api.TestResponse, error) {
-	b, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
-	res, err := http.Post(cfg.ServerURL, "application/json", bytes.NewReader(b))
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-	b, err = ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New(string(b))
-	}
-	r := &api.TestResponse{}
-	err = json.Unmarshal(b, r)
-	if err != nil {
-		return nil, err
-	}
-	return r, nil
 }
 
 // generateTestPackage process the test directory and generate processed files

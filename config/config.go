@@ -61,6 +61,10 @@ type Config struct {
 	// This is the list of urls of index.html pages of the generated integration
 	// unit test.
 	IntegrationIndexPages []string
+
+	// When true, this will output a lot of text to stdout. Also it will print
+	// console output from the test package.
+	Verbose bool
 }
 
 // FLags returns configuration flags.
@@ -85,7 +89,7 @@ func FLags() []cli.Flag {
 			Usage: "relative path to the generated tests directory",
 			Value: "madness",
 		},
-		cli.BoolFlag{
+		cli.BoolTFlag{
 			Name: "build",
 		},
 		cli.BoolFlag{
@@ -99,6 +103,10 @@ func FLags() []cli.Flag {
 			Name:  "port",
 			Value: 1956,
 		},
+		cli.BoolFlag{
+			Name:  "v",
+			Usage: "enables verbose output",
+		},
 	}
 }
 
@@ -109,10 +117,11 @@ func Load(ctx *cli.Context) (*Config, error) {
 		Root:          ctx.String("root"),
 		TestDirName:   ctx.String("test_dir"),
 		OutputDirName: ctx.String("output_dir"),
-		Build:         ctx.Bool("build"),
+		Build:         ctx.BoolT("build"),
 		Cover:         ctx.Bool("cover"),
 		Coverfile:     ctx.String("coverfile"),
 		Port:          ctx.Int("port"),
+		Verbose:       ctx.Bool("v"),
 	}
 	if !filepath.IsAbs(c.Root) {
 		p, err := filepath.Abs(c.Root)

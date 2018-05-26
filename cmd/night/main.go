@@ -76,7 +76,7 @@ func runTestSuites(ctx *cli.Context) error {
 		}
 	}
 	return streamResponse(context.Background(),
-		cfg, &console.ResponseHandler{})
+		cfg, &console.ResponseHandler{Verbose: cfg.Verbose})
 }
 
 type respHandler interface {
@@ -289,7 +289,7 @@ func startTest(){
 		 v:=mad.Exec(ts)
 		 err=w.Report(v,testPkg,testID)
 		 if err!=nil{
-			 println(err)
+			println("error "+testID+" "+testPkg+" "+err.Error())
 		 }
 	 }
 	}()

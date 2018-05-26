@@ -90,7 +90,9 @@ func NewServer(ctx context.Context, cfg *config.Config) <-chan *mad.SpecResult {
 		}
 	}()
 	go func() {
-		fmt.Printf("starting websocket server at :%d\n", cfg.Port)
+		if cfg.Verbose {
+			fmt.Printf("starting websocket server at :%d\n", cfg.Port)
+		}
 		err := s.ListenAndServe()
 		if err != nil {
 			fmt.Printf("exit websocket server with error %s\n", err)

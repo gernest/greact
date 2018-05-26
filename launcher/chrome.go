@@ -178,8 +178,10 @@ func (l *Launcher) Stop() {
 	l.cancel()
 }
 
-func (l *Launcher) Wait() error {
-	fmt.Print("Waiting for chrome ...")
+func (l *Launcher) Wait(verbose bool) error {
+	if verbose {
+		fmt.Print("Waiting for chrome ...")
+	}
 	status := "."
 	tick := time.NewTicker(time.Second / 3)
 	defer tick.Stop()
@@ -188,17 +190,23 @@ func (l *Launcher) Wait() error {
 	for {
 		select {
 		case <-o.C:
-			fmt.Println(".")
+			if verbose {
+				fmt.Println(".")
+			}
 			return errors.New("timeout waiting for chrome to be ready")
 		case <-tick.C:
 			conn, err := net.Dial("tcp", fmt.Sprintf(":%d", l.Opts.Port))
 			if err != nil {
-				fmt.Print(status)
+				if verbose {
+					fmt.Print(status)
+				}
 				status += "."
 				continue
 			}
 			conn.Close()
-			fmt.Println("done")
+			if verbose {
+				fmt.Println("done")
+			}
 			return nil
 		}
 	}

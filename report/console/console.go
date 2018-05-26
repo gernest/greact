@@ -50,8 +50,9 @@ func calcStats(ts *mad.SpecResult) (int, int) {
 // ResponseHandler implements mad.respHandler interface. This handles pretty
 // printing spec results to stdout.
 type ResponseHandler struct {
-	passed int
-	failed int
+	passed  int
+	failed  int
+	Verbose bool
 }
 
 // Handle tracks the stats about the spec result and pretty prints the results to stdout.
@@ -59,7 +60,13 @@ func (r *ResponseHandler) Handle(ts *mad.SpecResult) {
 	pass, fail := calcStats(ts)
 	r.passed += pass
 	r.failed += fail
-	Report(ts)
+	if r.Verbose {
+		Report(ts)
+	} else {
+		if fail > 0 {
+			Report(ts)
+		}
+	}
 }
 
 // Done prints the stats to stdout.

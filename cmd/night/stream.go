@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"sync"
 
 	"github.com/gernest/mad/config"
 	"github.com/gernest/mad/launcher"
@@ -28,13 +29,13 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	}
 	go chrome.Run()
 	defer chrome.Stop()
-	err = chrome.Wait()
+	err = chrome.Wait(cfg.Verbose)
 	if err != nil {
 		return err
 	}
-	m := make(map[string]bool)
+	tabs := &sync.Map{}
 	for _, v := range cfg.UnitFuncs {
-		m[v] = true
+		tabs.Store(v, true)
 	}
 	devt := devtool.New(fmt.Sprintf("http://127.0.0.1:%d", 9222))
 	pt, err := devt.Get(ctx, devtool.Page)
@@ -57,6 +58,25 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 			return err
 		}
 	}
+	if cfg.Verbose {
+		if err = c.Console.Enable(nctx); err != nil {
+			return err
+		}
+		console, err := c.Console.MessageAdded(nctx)
+		if err != nil {
+			return err
+		}
+
+		go func() {
+			for {
+				msg, err := console.Recv()
+				if err != nil {
+					return
+				}
+				fmt.Println(msg.Message.Text)
+			}
+		}()
+	}
 	navArgs := page.NewNavigateArgs(cfg.UnitIndexPage)
 	_, err = c.Page.Navigate(ctx, navArgs)
 	if err != nil {
@@ -67,13 +87,17 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 		case <-nctx.Done():
 			return ctx.Err()
 		case ts := <-server:
-
 			if h != nil {
 				h.Handle(ts)
 			}
-			delete(m, ts.Desc)
+			tabs.Delete(ts.Desc)
 		default:
-			if len(m) == 0 {
+			complete := true
+			tabs.Range(func(_, _ interface{}) bool {
+				complete = false
+				return false
+			})
+			if complete {
 				if h != nil {
 					h.Done()
 				}

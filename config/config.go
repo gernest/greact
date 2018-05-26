@@ -58,6 +58,8 @@ type Config struct {
 	Coverfile string
 
 	Chrome *ChromeOptions
+
+	IndexPages []string
 }
 
 type ChromeOptions struct {

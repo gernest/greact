@@ -1,6 +1,9 @@
 package tests
 
-import "github.com/gernest/mad"
+import (
+	"github.com/gernest/mad"
+	"github.com/gernest/naaz/elem"
+)
 
 func TestBefore() mad.Test {
 	return mad.Describe("Before",
@@ -51,5 +54,13 @@ func TestFailed() mad.Test {
 			t.Error("expected 1 got 2")
 			t.Error("expected 2 got 1")
 		}),
+	)
+}
+
+func TestHello() mad.Integration {
+	return mad.RenderBody("hello world",
+		func() interface{} {
+			return elem.Body()
+		},
 	)
 }

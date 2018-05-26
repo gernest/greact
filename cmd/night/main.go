@@ -155,9 +155,9 @@ func generateTestPackage(cfg *config.Config) error {
 	if err = writeUnitMain(cfg, funcs); err != nil {
 		return err
 	}
-	// if err = writeIntegrationMain(cfg, funcs); err != nil {
-	// 	return err
-	// }
+	if err = writeIntegrationMain(cfg, funcs); err != nil {
+		return err
+	}
 	return writeIndex(cfg)
 }
 
@@ -172,15 +172,22 @@ func writeUnitMain(cfg *config.Config, funcs *tools.TestNames) error {
 var itpl = template.Must(template.New("i").Parse(mainIntegrationTpl))
 
 func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
+	idx, err := template.New("idx").Parse(idxTpl)
+	if err != nil {
+		return err
+	}
 	if len(funcs.Integration) > 0 {
 		data := make(map[string]interface{})
-		data["testPkg"] = cfg.GeneratedTestPkg
+		data["config"] = cfg
 		var buf bytes.Buffer
 		for _, v := range funcs.Integration {
 			name := strings.ToLower(v)
+			data["PkgName"] = name
+			pkg := cfg.GeneratedTestPkg + "/" + name
+			data["IntegrationPkg"] = pkg
 			e := filepath.Join(cfg.GeneratedTestPath, name)
 			os.MkdirAll(e, 0755)
-			data["funcName"] = v
+			data["FuncName"] = v
 			buf.Reset()
 			err := itpl.Execute(&buf, data)
 			if err != nil {
@@ -190,12 +197,35 @@ func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
 			if err != nil {
 				return err
 			}
+			q := make(url.Values)
+			q.Set("src", name+"/main.js")
+			mainFIle := fmt.Sprintf("http://localhost:%d%s?%s",
+				cfg.Port, resourcePath, q.Encode())
+			ctx := map[string]interface{}{
+				"mainFile": mainFIle,
+				"config":   cfg,
+			}
+			var buf bytes.Buffer
+			err = idx.Execute(&buf, ctx)
+			m := filepath.Join(e, "index.html")
+			err = ioutil.WriteFile(m, buf.Bytes(), 0600)
+			if err != nil {
+				return err
+			}
+			query := make(url.Values)
+			query.Set("src", name+"/index.html")
+			cfg.IndexPages = append(cfg.IndexPages,
+				fmt.Sprintf("http://localhost:%d%s?%s",
+					cfg.Port, resourcePath, query.Encode()))
 			if cfg.Build {
-				if err = buildGeneratedTestPackage(cfg); err != nil {
+				o := filepath.Join(e, "main.js")
+				cmd := exec.Command("gopherjs", "build", "-o", o, pkg)
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stdout
+				if err := cmd.Run(); err != nil {
 					return err
 				}
 			}
-
 		}
 	}
 	return nil
@@ -249,7 +279,8 @@ func writeIndex(cfg *config.Config) error {
 	}
 	q := make(url.Values)
 	q.Set("src", "main.js")
-	mainFIle := fmt.Sprintf("http://localhost:%d", cfg.Port) + resourcePath + "?" + q.Encode()
+	mainFIle := fmt.Sprintf("http://localhost:%d%s?%s",
+		cfg.Port, resourcePath, q.Encode())
 	ctx := map[string]interface{}{
 		"mainFile": mainFIle,
 		"config":   cfg,
@@ -257,7 +288,16 @@ func writeIndex(cfg *config.Config) error {
 	var buf bytes.Buffer
 	err = idx.Execute(&buf, ctx)
 	m := filepath.Join(cfg.OutputPath, "index.html")
-	return ioutil.WriteFile(m, buf.Bytes(), 0600)
+	err = ioutil.WriteFile(m, buf.Bytes(), 0600)
+	if err != nil {
+		return err
+	}
+	query := make(url.Values)
+	query.Set("src", "index.html")
+	cfg.IndexPages = append(cfg.IndexPages,
+		fmt.Sprintf("http://localhost:%d%s?%s",
+			cfg.Port, resourcePath, query.Encode()))
+	return nil
 }
 
 // This is the template for the main entrypoint of the generated unit test
@@ -313,11 +353,25 @@ func allTests()[]mad.Test  {
 `
 
 var mainIntegrationTpl = `package main
+import (
+	"{{.config.GeneratedTestPkg}}"
+	"github.com/gernest/mad/integration"
+	"github.com/gernest/mad"
+	"github.com/gopherjs/vecty"
+)
 
+const testID ="{{.config.UUID}}"
+const testPkg ="{{.config.Info.ImportPath}}"
+{{$n:=.config.TestDirName}}
 func main()  {
-	// Integration tests are not supported yet
+	vecty.RenderBody(
+		&integration.Integration{
+			UUID: testID,
+			Pkg: testPkg,
+			Component: {{$n}}.{{.FuncName}}().(*mad.Component),
+		},
+	)
 }
-
 `
 
 const idxTpl = `<!DOCTYPE html>

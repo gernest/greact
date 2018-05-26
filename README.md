@@ -62,7 +62,7 @@ We got you covered [Take a look at this page](integration_test.md)
 
 # Credits
 
-This would have never be possible without these projects
+This would have never been possible without these projects
 
 - [karma](https://github.com/karma-runner/karma)
 - [jasmine](https://github.com/jasmine/jasmine.github.io)

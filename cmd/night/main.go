@@ -39,6 +39,13 @@ const (
 	serviceName  = "madtitan"
 )
 
+// precompile templates
+var (
+	integrationTpl  = template.Must(template.New("i").Parse(mainIntegrationTpl))
+	indexHTMLTpl    = template.Must(template.New("idx").Parse(idxTpl))
+	mainUnitTestTpl = template.Must(template.New("main").Parse(mainUnitTpl))
+)
+
 func main() {
 	a := cli.NewApp()
 	a.Name = serviceName
@@ -169,13 +176,7 @@ func writeUnitMain(cfg *config.Config, funcs *tools.TestNames) error {
 	})
 }
 
-var itpl = template.Must(template.New("i").Parse(mainIntegrationTpl))
-
 func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
-	idx, err := template.New("idx").Parse(idxTpl)
-	if err != nil {
-		return err
-	}
 	if len(funcs.Integration) > 0 {
 		data := make(map[string]interface{})
 		data["config"] = cfg
@@ -189,7 +190,7 @@ func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
 			os.MkdirAll(e, 0755)
 			data["FuncName"] = v
 			buf.Reset()
-			err := itpl.Execute(&buf, data)
+			err := integrationTpl.Execute(&buf, data)
 			if err != nil {
 				return err
 			}
@@ -206,7 +207,7 @@ func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
 				"config":   cfg,
 			}
 			var buf bytes.Buffer
-			err = idx.Execute(&buf, ctx)
+			err = indexHTMLTpl.Execute(&buf, ctx)
 			m := filepath.Join(e, "index.html")
 			err = ioutil.WriteFile(m, buf.Bytes(), 0600)
 			if err != nil {
@@ -254,12 +255,8 @@ func writeFile(to string, fset *token.FileSet, f *ast.File) error {
 // writeMain creates main.go file which wraps the compiled test functions with
 // extra logic for running the tests.
 func writeMain(dst string, ctx interface{}) error {
-	tpl, err := template.New("main").Parse(mainUnitTpl)
-	if err != nil {
-		return err
-	}
 	var buf bytes.Buffer
-	err = tpl.Execute(&buf, ctx)
+	err := mainUnitTestTpl.Execute(&buf, ctx)
 	if err != nil {
 		return err
 	}
@@ -273,10 +270,6 @@ func writeMain(dst string, ctx interface{}) error {
 
 //creates index.html file which loads the generated test suite js file.
 func writeIndex(cfg *config.Config) error {
-	idx, err := template.New("idx").Parse(idxTpl)
-	if err != nil {
-		return err
-	}
 	q := make(url.Values)
 	q.Set("src", "main.js")
 	mainFIle := fmt.Sprintf("http://localhost:%d%s?%s",
@@ -286,7 +279,7 @@ func writeIndex(cfg *config.Config) error {
 		"config":   cfg,
 	}
 	var buf bytes.Buffer
-	err = idx.Execute(&buf, ctx)
+	err := indexHTMLTpl.Execute(&buf, ctx)
 	m := filepath.Join(cfg.OutputPath, "index.html")
 	err = ioutil.WriteFile(m, buf.Bytes(), 0600)
 	if err != nil {

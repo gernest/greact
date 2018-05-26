@@ -57,8 +57,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 			return err
 		}
 	}
-	navArgs := page.NewNavigateArgs(fmt.Sprintf("http://localhost:%d",
-		cfg.Port) + resourcePath + "?src=index.html")
+	navArgs := page.NewNavigateArgs(cfg.UnitIndexPage)
 	_, err = c.Page.Navigate(ctx, navArgs)
 	if err != nil {
 		return err

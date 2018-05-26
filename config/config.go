@@ -48,33 +48,19 @@ type Config struct {
 	// Port is the port on which to run the websocket server.
 	Port int
 
-	// Browser details to use.
-	Browsers BrowserList
-
 	// if true tells the runner to generate coverage profile.
 	Cover bool
 
 	// the name of the file containing the generated coverage profile.
 	Coverfile string
 
-	Chrome *ChromeOptions
+	// UnitIndexPage this is the url to the index.html page of the generated unit
+	// test package.
+	UnitIndexPage string
 
-	IndexPages []string
-}
-
-type ChromeOptions struct {
-	Port  int
-	Flags []string
-}
-
-type BrowserList struct {
-	Browsers []*Browser
-}
-
-// Browser defines a browser that implements chrome debugging protocol.
-type Browser struct {
-	Name    string
-	Options map[string]interface{}
+	// This is the list of urls of index.html pages of the generated integration
+	// unit test.
+	IntegrationIndexPages []string
 }
 
 // FLags returns configuration flags.

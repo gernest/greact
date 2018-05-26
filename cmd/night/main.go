@@ -215,7 +215,7 @@ func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
 			}
 			query := make(url.Values)
 			query.Set("src", name+"/index.html")
-			cfg.IndexPages = append(cfg.IndexPages,
+			cfg.IntegrationIndexPages = append(cfg.IntegrationIndexPages,
 				fmt.Sprintf("http://localhost:%d%s?%s",
 					cfg.Port, resourcePath, query.Encode()))
 			if cfg.Build {
@@ -287,9 +287,8 @@ func writeIndex(cfg *config.Config) error {
 	}
 	query := make(url.Values)
 	query.Set("src", "index.html")
-	cfg.IndexPages = append(cfg.IndexPages,
-		fmt.Sprintf("http://localhost:%d%s?%s",
-			cfg.Port, resourcePath, query.Encode()))
+	cfg.UnitIndexPage = fmt.Sprintf("http://localhost:%d%s?%s",
+		cfg.Port, resourcePath, query.Encode())
 	return nil
 }
 

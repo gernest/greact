@@ -84,10 +84,6 @@ type respHandler interface {
 	Done()
 }
 
-func handleResponse(ts *mad.SpecResult) {
-	console.Report(ts)
-}
-
 // generateTestPackage process the test directory and generate processed files
 // in the promtest directory.
 //

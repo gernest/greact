@@ -31,7 +31,7 @@ const (
 	testsOutDir  = "madness"
 	localhost    = "http://localhost"
 	resourcePath = "/resource"
-	desc         = "Treat your vecty tests like your first date"
+	desc         = "Inter galactic test runner for Go frontend projects"
 	serviceName  = "madtitan"
 )
 

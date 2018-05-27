@@ -84,6 +84,19 @@ __NOTE__ This only works with vecty projects
 We got you covered [Take a look at this page](integration_test.md)
 
 
+# FAQ
+
+## what is unit test ?
+
+For mad tests, unit tests are tests which cover a small chunk of functionality.
+They must not include any use of code that requires rendering/interacting with
+the browser `dom`
+
+## what is integration test ?
+
+For mad tests. Integration tests are tests which cover a component/components
+rendered on the `dom`.
+
 # Credits
 
 This would have never been possible without these projects

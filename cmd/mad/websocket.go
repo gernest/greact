@@ -95,7 +95,9 @@ func NewServer(ctx context.Context, cfg *config.Config) <-chan *mad.SpecResult {
 		}
 		err := s.ListenAndServe()
 		if err != nil {
-			fmt.Printf("exit websocket server with error %s\n", err)
+			if err != http.ErrServerClosed {
+				fmt.Printf("exit websocket server with error %s\n", err)
+			}
 		}
 	}()
 	return out

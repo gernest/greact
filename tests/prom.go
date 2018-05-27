@@ -2,7 +2,9 @@ package tests
 
 import (
 	"github.com/gernest/mad"
-	"github.com/gernest/naaz/elem"
+	"github.com/gopherjs/gopherjs/js"
+	"github.com/gopherjs/vecty"
+	"github.com/gopherjs/vecty/elem"
 )
 
 func TestBefore() mad.Test {
@@ -44,23 +46,24 @@ func TestAfter() mad.Test {
 	)
 }
 
-func TestFailed() mad.Test {
-	return mad.Describe("Render Failures",
-		mad.It("Fails", func(t mad.T) {
-			t.Error("expected 1 got 2")
-			t.Error("expected 2 got 1")
-		}),
-		mad.It("Fails Again", func(t mad.T) {
-			t.Error("expected 1 got 2")
-			t.Error("expected 2 got 1")
-		}),
-	)
-}
-
-func TestHello() mad.Integration {
-	return mad.RenderBody("hello world",
+func TestRenderBody() mad.Integration {
+	txt := "hello,world"
+	return mad.RenderBody("mad.RenderBody",
 		func() interface{} {
-			return elem.Body()
+			return elem.Body(
+				vecty.Text(txt),
+			)
 		},
+		mad.It("must have text node", func(t mad.T) {
+			defer func() {
+				if err := recover(); err != nil {
+					t.Error(err)
+				}
+			}()
+			o := js.Global.Get("document").Get("body").Get("textContent").String()
+			if o != txt {
+				t.Errorf("expected %s got %s", txt, o)
+			}
+		}),
 	)
 }

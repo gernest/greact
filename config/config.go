@@ -42,8 +42,8 @@ type Config struct {
 
 	UUID string
 
-	UnitFuncs   []string
-	Integration []string
+	UnitFuncs        []string
+	IntegrationFuncs []string
 
 	// Port is the port on which to run the websocket server.
 	Port int

@@ -3,6 +3,7 @@ package config
 import (
 	"go/build"
 	"path/filepath"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/urfave/cli"
@@ -65,6 +66,12 @@ type Config struct {
 	// When true, this will output a lot of text to stdout. Also it will print
 	// console output from the test package.
 	Verbose bool
+
+	// Time to wait before stoping tests execution.
+	Timeout time.Duration
+
+	DevtoolURL  string
+	DevtoolPort int
 }
 
 // FLags returns configuration flags.
@@ -107,6 +114,19 @@ func FLags() []cli.Flag {
 			Name:  "v",
 			Usage: "enables verbose output",
 		},
+		cli.DurationFlag{
+			Name:  "timeout",
+			Usage: "time before stoping test execution",
+			Value: 30 * time.Second,
+		},
+		cli.IntFlag{
+			Name:  "devtool-port",
+			Value: 9222,
+		},
+		cli.StringFlag{
+			Name:  "devtool-url",
+			Value: "http://127.0.0.1",
+		},
 	}
 }
 
@@ -122,6 +142,9 @@ func Load(ctx *cli.Context) (*Config, error) {
 		Coverfile:     ctx.String("coverfile"),
 		Port:          ctx.Int("port"),
 		Verbose:       ctx.Bool("v"),
+		Timeout:       ctx.Duration("timeout"),
+		DevtoolPort:   ctx.Int("devtool-port"),
+		DevtoolURL:    ctx.String("devtool-url"),
 	}
 	if !filepath.IsAbs(c.Root) {
 		p, err := filepath.Abs(c.Root)

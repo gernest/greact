@@ -26,7 +26,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	defer cancel()
 	server := newServer(nctx, cfg)
 	chrome, err := launcher.New(launcher.Options{
-		Port:        9222,
+		Port:        cfg.DevtoolPort,
 		ChromeFlags: []string{"--headless"},
 	})
 	if err != nil {
@@ -45,7 +45,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	for _, v := range cfg.IntegrationFuncs {
 		tabs.Store(v, true)
 	}
-	devt := devtool.New(fmt.Sprintf("http://127.0.0.1:%d", 9222))
+	devt := devtool.New(fmt.Sprintf("%s:%d", cfg.DevtoolURL, cfg.DevtoolPort))
 	pt, err := devt.Get(ctx, devtool.Page)
 	if err != nil {
 		return err
@@ -64,9 +64,21 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	var pages []string
 	pages = append(pages, cfg.UnitIndexPage)
 	pages = append(pages, cfg.IntegrationIndexPages...)
+
+	// We need a way to collect coverage profile before exiting the chrome tabs.
+	// we use profileCtx to signal the tab execution goroutine to collect the
+	// profiles.
+	//
+	// We then call <-profileCtx.Done() to trigger profile collection.
 	profileCtx, cancelProfile := context.WithCancel(context.Background())
+
+	// This is the channel we use to send the profile data collected from test
+	// running tabs.
 	profiles := make(chan profiler.Profile)
 	for _, v := range pages {
+		// Each test execution script is done in a separate tab. All unit tests are
+		// compiled to a single execution script while each integration test is
+		// compiled to a separate execution script.
 		go func(idx string) {
 			target, err := c.Target.CreateTarget(nctx,
 				target.NewCreateTargetArgs(idx),
@@ -130,17 +142,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 			}
 		}(v)
 	}
-	if cfg.Cover {
-		err = c.Profiler.Enable(nctx)
-		if err != nil {
-			return err
-		}
-		err = c.Profiler.Start(nctx)
-		if err != nil {
-			return err
-		}
-	}
-	timeout := time.NewTimer(30 * time.Second)
+	timeout := time.NewTimer(cfg.Timeout)
 	defer timeout.Stop()
 	for {
 		select {

@@ -15,15 +15,9 @@ import (
 	"github.com/gernest/mad/config"
 )
 
-type Server struct {
-	mux    *alien.Mux
-	cancel func()
-	out    chan *mad.SpecResult
-}
-
 var upgrade = websocket.Upgrader{}
 
-func NewServer(ctx context.Context, cfg *config.Config) <-chan *mad.SpecResult {
+func newServer(ctx context.Context, cfg *config.Config) <-chan *mad.SpecResult {
 	mux := alien.New()
 	out := make(chan *mad.SpecResult)
 	mux.Get("/"+cfg.UUID, func(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +89,9 @@ func NewServer(ctx context.Context, cfg *config.Config) <-chan *mad.SpecResult {
 		}
 		err := s.ListenAndServe()
 		if err != nil {
-			fmt.Printf("exit websocket server with error %s\n", err)
+			if err != http.ErrServerClosed {
+				fmt.Printf("exit websocket server with error %s\n", err)
+			}
 		}
 	}()
 	return out

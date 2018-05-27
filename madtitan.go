@@ -311,7 +311,7 @@ type Component struct {
 	ID        string
 	Component func() interface{}
 	IsBody    bool
-	Cases     List
+	Cases     Test
 }
 
 func (c *Component) runIntegration() {}
@@ -330,15 +330,24 @@ type Integration interface {
 // browser.
 func Render(desc string, c func() interface{}, cases ...Test) Integration {
 	return &Component{
-		ID: desc, Component: c, Cases: cases,
+		ID: desc, Component: c, Cases: Describe(desc, cases...),
 	}
 }
 
 // RenderBody is like Render but the Component is expected to be elem.Body
 func RenderBody(desc string, c func() interface{}, cases ...Test) Integration {
 	return &Component{
-		ID: desc, Component: c, Cases: cases, IsBody: true,
+		ID: desc, Component: c, Cases: Describe(desc, cases...), IsBody: true,
 	}
+}
+
+// SetupIntegration returns an Integration test ready for execution. name is the
+// name of the test function.
+func SetupIntegration(name string, i Integration) Integration {
+	v := i.(*Component)
+	v.ID = name
+	v.Cases = Describe(name, v.Cases)
+	return v
 }
 
 // BeforeFuncs contains functions that are supposed to be executed before a

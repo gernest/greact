@@ -7,21 +7,26 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sync"
+	"time"
+
+	"github.com/mafredri/cdp/protocol/console"
+	"github.com/mafredri/cdp/protocol/profiler"
+	"github.com/mafredri/cdp/protocol/target"
+	"github.com/mafredri/cdp/session"
 
 	"github.com/gernest/mad/config"
 	"github.com/gernest/mad/launcher"
 	"github.com/mafredri/cdp"
 	"github.com/mafredri/cdp/devtool"
-	"github.com/mafredri/cdp/protocol/page"
 	"github.com/mafredri/cdp/rpcc"
 )
 
 func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) error {
 	nctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	server := NewServer(nctx, cfg)
+	server := newServer(nctx, cfg)
 	chrome, err := launcher.New(launcher.Options{
-		Port:        9222,
+		Port:        cfg.DevtoolPort,
 		ChromeFlags: []string{"--headless"},
 	})
 	if err != nil {
@@ -37,7 +42,10 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	for _, v := range cfg.UnitFuncs {
 		tabs.Store(v, true)
 	}
-	devt := devtool.New(fmt.Sprintf("http://127.0.0.1:%d", 9222))
+	for _, v := range cfg.IntegrationFuncs {
+		tabs.Store(v, true)
+	}
+	devt := devtool.New(fmt.Sprintf("%s:%d", cfg.DevtoolURL, cfg.DevtoolPort))
 	pt, err := devt.Get(ctx, devtool.Page)
 	if err != nil {
 		return err
@@ -48,42 +56,98 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	}
 	defer conn.Close()
 	c := cdp.NewClient(conn)
-	if cfg.Cover {
-		err = c.Profiler.Enable(nctx)
-		if err != nil {
-			return err
-		}
-		err = c.Profiler.Start(nctx)
-		if err != nil {
-			return err
-		}
-	}
-	if cfg.Verbose {
-		if err = c.Console.Enable(nctx); err != nil {
-			return err
-		}
-		console, err := c.Console.MessageAdded(nctx)
-		if err != nil {
-			return err
-		}
-
-		go func() {
-			for {
-				msg, err := console.Recv()
-				if err != nil {
-					return
-				}
-				fmt.Println(msg.Message.Text)
-			}
-		}()
-	}
-	navArgs := page.NewNavigateArgs(cfg.UnitIndexPage)
-	_, err = c.Page.Navigate(ctx, navArgs)
+	m, err := session.NewManager(c)
 	if err != nil {
 		return err
 	}
+	defer m.Close()
+	var pages []string
+	pages = append(pages, cfg.UnitIndexPage)
+	pages = append(pages, cfg.IntegrationIndexPages...)
+
+	// We need a way to collect coverage profile before exiting the chrome tabs.
+	// we use profileCtx to signal the tab execution goroutine to collect the
+	// profiles.
+	//
+	// We then call <-profileCtx.Done() to trigger profile collection.
+	profileCtx, cancelProfile := context.WithCancel(context.Background())
+
+	// This is the channel we use to send the profile data collected from test
+	// running tabs.
+	profiles := make(chan profiler.Profile)
+	for _, v := range pages {
+		// Each test execution script is done in a separate tab. All unit tests are
+		// compiled to a single execution script while each integration test is
+		// compiled to a separate execution script.
+		go func(idx string) {
+			target, err := c.Target.CreateTarget(nctx,
+				target.NewCreateTargetArgs(idx),
+			)
+			if err != nil {
+				fmt.Printf("%s :%v\n", idx, err)
+				return
+			}
+			pageConn, err := m.Dial(nctx, target.TargetID)
+			if err != nil {
+				fmt.Printf("%s :%v\n", idx, err)
+				return
+			}
+			defer pageConn.Close()
+			pageClient := cdp.NewClient(pageConn)
+			if cfg.Verbose {
+				if err = pageClient.Console.Enable(nctx); err != nil {
+					fmt.Printf("%s :%v\n", idx, err)
+					return
+				}
+				csLog, err := pageClient.Console.MessageAdded(nctx)
+				if err != nil {
+					fmt.Printf("%s :%v\n", idx, err)
+					return
+				}
+				go func(cs console.MessageAddedClient) {
+					for {
+						msg, err := cs.Recv()
+						if err != nil {
+							return
+						}
+						fmt.Println(msg.Message.Text)
+					}
+				}(csLog)
+			}
+			if cfg.Cover {
+				err := pageClient.Profiler.Enable(nctx)
+				if err != nil {
+					fmt.Printf("%s :%v\n", idx, err)
+					return
+				}
+				err = pageClient.Profiler.Start(nctx)
+				if err != nil {
+					fmt.Printf("%s :%v\n", idx, err)
+					return
+				}
+			}
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-profileCtx.Done():
+					s, err := pageClient.Profiler.Stop(nctx)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+					profiles <- s.Profile
+					return
+				}
+			}
+		}(v)
+	}
+	timeout := time.NewTimer(cfg.Timeout)
+	defer timeout.Stop()
 	for {
 		select {
+		case <-timeout.C:
+			cancel()
 		case <-nctx.Done():
 			return ctx.Err()
 		case ts := <-server:
@@ -102,15 +166,20 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 					h.Done()
 				}
 				if cfg.Cover {
-					s, err := c.Profiler.Stop(ctx)
-					if err != nil {
-						return err
+					cancelProfile()
+					n := 1
+					var p []profiler.Profile
+					for v := range profiles {
+						p = append(p, v)
+						if n == len(pages) {
+							break
+						}
+						n++
 					}
-					b, _ := json.Marshal(s.Profile)
-					err = ioutil.WriteFile(
-						filepath.Join(cfg.OutputPath, cfg.Coverfile), b, 0600)
+					data, _ := json.Marshal(p)
+					err := ioutil.WriteFile(filepath.Join(cfg.OutputPath, cfg.Coverfile), data, 0600)
 					if err != nil {
-						return err
+						fmt.Println(err)
 					}
 				}
 				chrome.Stop()

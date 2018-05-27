@@ -118,7 +118,7 @@ func generateTestPackage(cfg *config.Config) error {
 		cfg.UnitFuncs = append(cfg.UnitFuncs, funcs.Unit...)
 	}
 	if funcs.Integration != nil {
-		cfg.Integration = append(cfg.Integration, funcs.Integration...)
+		cfg.IntegrationFuncs = append(cfg.IntegrationFuncs, funcs.Integration...)
 	}
 	for _, v := range files {
 		err := writeFile(out, set, v)
@@ -166,7 +166,7 @@ func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
 				return err
 			}
 			q := make(url.Values)
-			q.Set("src", name+"/main.js")
+			q.Set("src", filepath.Join(cfg.TestDirName, name, "main.js"))
 			mainFIle := fmt.Sprintf("%s:%d%s?%s",
 				localhost, cfg.Port, resourcePath, q.Encode())
 			ctx := map[string]interface{}{
@@ -181,7 +181,7 @@ func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
 				return err
 			}
 			query := make(url.Values)
-			query.Set("src", name+"/index.html")
+			query.Set("src", filepath.Join(cfg.TestDirName, name, "index.html"))
 			cfg.IntegrationIndexPages = append(cfg.IntegrationIndexPages,
 				fmt.Sprintf("%s:%d%s?%s",
 					localhost, cfg.Port, resourcePath, query.Encode()))
@@ -327,9 +327,12 @@ func main()  {
 		&integration.Integration{
 			UUID: testID,
 			Pkg: testPkg,
-			Component: {{$n}}.{{.FuncName}}().(*mad.Component),
+			Component: testFunc().(*mad.Component),
 		},
 	)
+}
+func testFunc() mad.Integration {
+	return mad.SetupIntegration("{{.FuncName}}",{{$n}}.{{.FuncName}}() )
 }
 `
 

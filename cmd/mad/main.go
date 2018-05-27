@@ -53,6 +53,12 @@ func main() {
 			Flags:  config.FLags(),
 			Action: runTestSuites,
 		},
+		{
+			Name:   "coverage",
+			Usage:  "calculate code coverage",
+			Flags:  config.FLags(),
+			Action: runCoverage,
+		},
 	}
 	if err := a.Run(os.Args); err != nil {
 		fmt.Println(err)

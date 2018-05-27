@@ -68,7 +68,7 @@ our expectations.
 It has the following signature
 ```go
 func It(desc string, fn func(mad.T)) mad.Test {
-``
+```
 What the user of the library does is supply the `fn` parameter. First parameter
 is a string which tells what expectation we are trying to achieve.
 

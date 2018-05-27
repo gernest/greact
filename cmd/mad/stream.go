@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mafredri/cdp/protocol/console"
+	"github.com/mafredri/cdp/protocol/profiler"
 	"github.com/mafredri/cdp/protocol/target"
 	"github.com/mafredri/cdp/session"
 
@@ -63,6 +64,8 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	var pages []string
 	pages = append(pages, cfg.UnitIndexPage)
 	pages = append(pages, cfg.IntegrationIndexPages...)
+	profileCtx, cancelProfile := context.WithCancel(context.Background())
+	profiles := make(chan profiler.Profile)
 	for _, v := range pages {
 		go func(idx string) {
 			target, err := c.Target.CreateTarget(nctx,
@@ -99,7 +102,32 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 					}
 				}(csLog)
 			}
-			<-nctx.Done()
+			if cfg.Cover {
+				err := pageClient.Profiler.Enable(nctx)
+				if err != nil {
+					fmt.Printf("%s :%v\n", idx, err)
+					return
+				}
+				err = pageClient.Profiler.Start(nctx)
+				if err != nil {
+					fmt.Printf("%s :%v\n", idx, err)
+					return
+				}
+			}
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-profileCtx.Done():
+					s, err := pageClient.Profiler.Stop(nctx)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+					profiles <- s.Profile
+					return
+				}
+			}
 		}(v)
 	}
 	if cfg.Cover {
@@ -136,15 +164,20 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 					h.Done()
 				}
 				if cfg.Cover {
-					s, err := c.Profiler.Stop(ctx)
-					if err != nil {
-						return err
+					cancelProfile()
+					n := 1
+					var p []profiler.Profile
+					for v := range profiles {
+						p = append(p, v)
+						if n == len(pages) {
+							break
+						}
+						n++
 					}
-					b, _ := json.Marshal(s.Profile)
-					err = ioutil.WriteFile(
-						filepath.Join(cfg.OutputPath, cfg.Coverfile), b, 0600)
+					data, _ := json.Marshal(p)
+					err := ioutil.WriteFile(filepath.Join(cfg.OutputPath, cfg.Coverfile), data, 0600)
 					if err != nil {
-						return err
+						fmt.Println(err)
 					}
 				}
 				chrome.Stop()

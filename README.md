@@ -20,7 +20,7 @@ might help.
 - [x] Write unit tests.
 - [x] Write integration tests (vecty only), yep now you can test your vecty components.
 - [x] Code coverage
- - [x] Like thanos who aims to destroy half of the universe, we will destroy half
+- [x] Like thanos who aims to destroy half of the universe, we will destroy half
  of your frontend project's problems by ensuring it meets your expectations.
 
 ## Supported browsers

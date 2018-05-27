@@ -23,7 +23,7 @@ import (
 func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) error {
 	nctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	server := NewServer(nctx, cfg)
+	server := newServer(nctx, cfg)
 	chrome, err := launcher.New(launcher.Options{
 		Port:        9222,
 		ChromeFlags: []string{"--headless"},

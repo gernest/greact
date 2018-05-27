@@ -37,12 +37,36 @@ at testing with another browser you are welcome.
 ## Show me the code 
 
 ```go
+// Unit test
  func TestRainfall() mad.Test {
 	return mad.Describe("Raining",
 		mad.It("must be cloudy", func(t mad.T) {
 			ctx := Rainfall()
 			if !ctx.Cloudy {
 				t.Error("expected to be cloudy")
+			}
+		}),
+	)
+}
+
+// Integration test
+func TestRenderBody() mad.Integration {
+	txt := "hello,world"
+	return mad.RenderBody("mad.RenderBody",
+		func() interface{} {
+			return elem.Body(
+				vecty.Text(txt),
+			)
+		},
+		mad.It("must have text node", func(t mad.T) {
+			defer func() {
+				if err := recover(); err != nil {
+					t.Error(err)
+				}
+			}()
+			o := js.Global.Get("document").Get("body").Get("textContent").String()
+			if o != txt {
+				t.Errorf("expected %s got %s", txt, o)
 			}
 		}),
 	)

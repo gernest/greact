@@ -28,12 +28,18 @@ import (
 )
 
 const (
-	testsDir     = "tests"
-	testsOutDir  = "madness"
-	localhost    = "http://localhost"
-	resourcePath = "/resource"
-	desc         = "Inter galactic test runner for Go frontend projects"
-	serviceName  = "madtitan"
+	testsDir           = "tests"
+	testsOutDir        = "madness"
+	localhost          = "http://localhost"
+	resourcePath       = "/resource"
+	projectDescription = "Inter galactic test runner for Go frontend projects"
+	serviceName        = "madtitan"
+
+	// hardcoded import paths
+	madImportPath         = "github.com/gernest/mad"
+	integrationImportPath = "github.com/gernest/mad/integration"
+	coverImportPath       = "github.com/gernest/mad/cover"
+	websocketImportPath   = "github.com/gernest/mad/ws"
 )
 
 // precompile templates
@@ -46,13 +52,13 @@ var (
 func main() {
 	a := cli.NewApp()
 	a.Name = serviceName
-	a.Usage = desc
+	a.Usage = projectDescription
 	a.Commands = []cli.Command{
 		{
 			Name:   "test",
 			Usage:  "runs the test suites",
 			Flags:  config.FLags(),
-			Action: runTestSuites,
+			Action: runTestsCommand,
 		},
 		{
 			Name:   "coverage",
@@ -67,7 +73,7 @@ func main() {
 	}
 }
 
-func runTestSuites(ctx *cli.Context) error {
+func runTestsCommand(ctx *cli.Context) error {
 	cfg, err := config.Load(ctx)
 	if err != nil {
 		return err
@@ -111,17 +117,16 @@ func generateTestPackage(cfg *config.Config) error {
 	funcs := &tools.TestNames{}
 	importMap := make(map[string]string)
 	if cfg.Cover {
-
 		for _, v := range tsPkg.Imports {
 			err := instrumentImport(cfg, importMap, v)
 			if err != nil {
 				return err
 			}
 		}
-		if cfg.Info.ImportPath == "github.com/gernest/mad" {
+		if cfg.Info.ImportPath == madImportPath {
 			//WORKAROUND : when we testing the mad package
 			imports := []string{
-				"github.com/gernest/mad/integration", "github.com/gernest/mad/cover",
+				integrationImportPath,
 			}
 			for _, v := range imports {
 				err := instrumentImport(cfg, importMap, v)
@@ -159,13 +164,13 @@ func generateTestPackage(cfg *config.Config) error {
 			return err
 		}
 	}
-	madImport := importMap["github.com/gernest/mad"]
+	madImport := importMap[madImportPath]
 	if madImport == "" {
-		madImport = "github.com/gernest/mad"
+		madImport = madImportPath
 	}
-	wsImport := importMap["github.com/gernest/mad/ws"]
+	wsImport := importMap[websocketImportPath]
 	if wsImport == "" {
-		wsImport = "github.com/gernest/mad/ws"
+		wsImport = websocketImportPath
 	}
 	ctx := map[string]interface{}{
 		"config":    cfg,
@@ -190,7 +195,7 @@ func instrumentImport(cfg *config.Config, importMap map[string]string, pkg strin
 	if _, ok := importMap[pkg]; ok {
 		return nil
 	}
-	if pkg == "github.com/gernest/mad/cover" {
+	if pkg == coverImportPath {
 		importMap[pkg] = pkg
 		return nil
 	}
@@ -204,8 +209,7 @@ func instrumentImport(cfg *config.Config, importMap map[string]string, pkg strin
 		}
 		info = newPkg
 	}
-	imports := info.Imports
-	for _, v := range imports {
+	for _, v := range info.Imports {
 		err := instrumentImport(cfg, importMap, v)
 		if err != nil {
 			return err
@@ -252,13 +256,13 @@ func writeIntegrationMain(cfg *config.Config, importMap map[string]string) error
 	if len(cfg.IntegrationFuncs) > 0 {
 		data := make(map[string]interface{})
 		data["config"] = cfg
-		madImport := importMap["github.com/gernest/mad"]
+		madImport := importMap[madImportPath]
 		if madImport == "" {
-			madImport = "github.com/gernest/mad"
+			madImport = madImportPath
 		}
-		interImport := importMap["github.com/gernest/mad/integration"]
+		interImport := importMap[integrationImportPath]
 		if interImport == "" {
-			interImport = "github.com/gernest/mad/integration"
+			interImport = integrationImportPath
 		}
 		data["madImport"] = madImport
 		data["interImport"] = interImport
@@ -470,15 +474,6 @@ const idxTpl = `<!DOCTYPE html>
 
 // test package is compiked to javascript using the gopherjs command. This
 // requites gopherjs to be installed and in PATH.
-//
-// source map is important for coverage computation. So nodejs is required and
-// sourcemap module must be installed.
-// Taken from the gopherjs README this command
-// 	npm install --global source-map-support
-// should take care of the sourcemap support.
-//
-// The output is main.js file in the root directory of the generated test
-// package.
 func buildGeneratedTestPackage(cfg *config.Config) error {
 	o := filepath.Join(cfg.OutputPath, "main.js")
 	cmd := exec.Command("gopherjs", "build", "-o", o, cfg.OutputMainPkg)

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	coverageID = "_cov_id"
+	coverageID = "instrumentCodeID"
 )
 
 type TestNames struct {

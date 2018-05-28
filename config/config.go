@@ -153,7 +153,7 @@ func Load(ctx *cli.Context) (*Config, error) {
 		}
 		c.Root = p
 	}
-	pkg, err := build.ImportDir(c.Root, build.FindOnly)
+	pkg, err := build.ImportDir(c.Root, 0)
 	if err != nil {
 		return nil, err
 	}

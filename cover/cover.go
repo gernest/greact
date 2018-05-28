@@ -1,6 +1,7 @@
 package cover
 
 import (
+	"encoding/json"
 	"go/token"
 	"sync"
 )
@@ -28,21 +29,21 @@ type State struct {
 }
 
 type CoverStats struct {
-	profile *Profile
+	Profile *Profile
 	mu      sync.RWMutex
 }
 
 func (c *CoverStats) Mark(p *ProfileBlock) int {
 	c.mu.Lock()
-	c.profile.Blocks = append(c.profile.Blocks, p)
-	idx := len(c.profile.Blocks) - 1
+	c.Profile.Blocks = append(c.Profile.Blocks, p)
+	idx := len(c.Profile.Blocks) - 1
 	c.mu.Unlock()
 	return idx
 }
 
 func (c *CoverStats) Hit(idx int, pos *token.Position) {
 	c.mu.Lock()
-	b := c.profile.Blocks[idx]
+	b := c.Profile.Blocks[idx]
 	b.EndPosition = pos
 	c.mu.Unlock()
 }
@@ -54,7 +55,7 @@ func Mark(numStmt int, pos *token.Position) int {
 	fileName := p.StartPosition.Filename
 	f, ok := state.files[fileName]
 	if !ok {
-		f = &CoverStats{profile: &Profile{
+		f = &CoverStats{Profile: &Profile{
 			FileName: fileName,
 		}}
 		state.files[fileName] = f
@@ -80,4 +81,9 @@ func Stats() []*CoverStats {
 	}
 	state.mu.RUnlock()
 	return o
+}
+
+func JSON() string {
+	b, _ := json.MarshalIndent(Stats(), "", "  ")
+	return string(b)
 }

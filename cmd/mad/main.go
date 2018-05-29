@@ -389,6 +389,7 @@ import(
 	"{{.config.GeneratedTestPkg}}"
 	"{{.wsImport}}"
 	"{{.madImport}}"
+	"github.com/gernest/mad/cover"
 )
 
 func main()  {
@@ -400,6 +401,9 @@ const testPkg ="{{.config.Info.ImportPath}}"
 
 func startTest(){
 	go func ()  {
+	defer func ()  {
+		println(cover.Key+cover.JSON())
+	}()
 	 w,err:=ws.New(testID)
 	 if err!=nil{
 		 panic(err)

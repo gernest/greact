@@ -2,8 +2,15 @@ package cover
 
 import (
 	"encoding/json"
+	"fmt"
 	"go/token"
 	"sync"
+
+	"github.com/gopherjs/gopherjs/js"
+)
+
+const (
+	Key = "mad_coverage_stats"
 )
 
 type Profile struct {
@@ -83,7 +90,19 @@ func Stats() []*CoverStats {
 	return o
 }
 
+// JSON marshals current coverage state to json string.
 func JSON() string {
 	b, _ := json.MarshalIndent(Stats(), "", "  ")
 	return string(b)
+}
+
+// Dump calls console.info("coverage",$COVERAGE_DATA_IN_JSON)
+func Dump() (err error) {
+	defer func() {
+		if perr := recover(); perr != nil {
+			err = fmt.Errorf("%v", perr)
+		}
+	}()
+	js.Global.Get("console").Call("info", "coverage", JSON())
+	return
 }

@@ -2,7 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,6 +15,7 @@ import (
 	"github.com/mafredri/cdp/session"
 
 	"github.com/gernest/mad/config"
+	"github.com/gernest/mad/cover"
 	"github.com/gernest/mad/launcher"
 	"github.com/mafredri/cdp"
 	"github.com/mafredri/cdp/devtool"
@@ -60,7 +65,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	var pages []string
 	pages = append(pages, cfg.UnitIndexPage)
 	pages = append(pages, cfg.IntegrationIndexPages...)
-
+	profiles := make(chan []*cover.Profile)
 	// This is the channel we use to send the profile data collected from test
 	// running tabs.
 	for _, v := range pages {
@@ -98,7 +103,23 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 						if err != nil {
 							return
 						}
-						fmt.Println(msg.Message.Text)
+						if cfg.Cover {
+							txt := msg.Message.Text
+							if strings.HasPrefix(txt, cover.Key) {
+								txt := strings.TrimPrefix(txt, cover.Key)
+								prof := []*cover.CoverStats{}
+								err := json.Unmarshal([]byte(txt), &prof)
+								if err != nil {
+									fmt.Println(err)
+								} else {
+									var profList []*cover.Profile
+									for _, cprof := range prof {
+										profList = append(profList, cprof.Profile)
+									}
+									profiles <- profList
+								}
+							}
+						}
 					}
 				}(csLog)
 			}
@@ -132,6 +153,29 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 			if complete {
 				if h != nil {
 					h.Done()
+				}
+				if cfg.Cover {
+					totalProfiles := len(cfg.IntegrationFuncs)
+					if len(cfg.UnitFuncs) > 0 {
+
+						// All unit functions are executed in a single package. Which means they
+						// will only give one profile.
+						totalProfiles++
+					}
+					count := 1
+					var collect []*cover.Profile
+					for p := range profiles {
+						collect = append(collect, p...)
+						if count == totalProfiles {
+							break
+						}
+						count++
+					}
+					b, _ := json.Marshal(collect)
+					err := ioutil.WriteFile(filepath.Join(cfg.OutputPath, cfg.Coverfile), b, 0600)
+					if err != nil {
+						fmt.Println(err)
+					}
 				}
 				chrome.Stop()
 				cancel()

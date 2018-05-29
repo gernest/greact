@@ -2,6 +2,7 @@ package integration
 
 import (
 	"github.com/gernest/mad"
+	"github.com/gernest/mad/cover"
 	"github.com/gernest/mad/ws"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
@@ -28,6 +29,7 @@ func (c *Integration) Mount() {
 		if err != nil {
 			println(err)
 		}
+		println(cover.Key + cover.JSON())
 	}()
 }
 

@@ -250,11 +250,11 @@ func hit(pos token.Position) *ast.ExprStmt {
 	}
 }
 
-func hitFuncBody(pos token.Position) *ast.DeferStmt {
-	return &ast.DeferStmt{
-		Call: hitExr(pos),
-	}
-}
+// func hitFuncBody(pos token.Position) *ast.DeferStmt {
+// 	return &ast.DeferStmt{
+// 		Call: hitExr(pos),
+// 	}
+// }
 
 func hitExr(pos token.Position) *ast.CallExpr {
 	return &ast.CallExpr{
@@ -329,8 +329,6 @@ func applyCoverage(set *token.FileSet, pre bool) func(*astutil.Cursor) bool {
 		}
 		switch e := node.(type) {
 		case *ast.FuncDecl:
-			markFuncBlock(set, e.Body)
-		case *ast.IfStmt:
 			markBlock(set, e.Body)
 		}
 		return true
@@ -341,15 +339,26 @@ func markBlock(set *token.FileSet, block *ast.BlockStmt) {
 	size := len(block.List)
 	start := set.Position(block.Lbrace)
 	end := set.Position(block.Rbrace)
-	list := append([]ast.Stmt{mark(size, start)}, block.List...)
-	list = append(list, hit(end))
-	block.List = list
-}
-
-func markFuncBlock(set *token.FileSet, block *ast.BlockStmt) {
-	size := len(block.List)
-	start := set.Position(block.Lbrace)
-	end := set.Position(block.Rbrace)
-	list := append([]ast.Stmt{mark(size, start), hitFuncBody(end)}, block.List...)
+	list := []ast.Stmt{mark(size, start)}
+	if size > 0 {
+		last := block.List[size-1]
+		switch last.(type) {
+		case *ast.ReturnStmt,
+			*ast.SwitchStmt,
+			*ast.TypeSwitchStmt:
+			if size == 1 {
+				list = append(list, hit(end))
+			} else {
+				list = append(list, block.List[:size-1]...)
+				list = append(list, hit(end))
+			}
+			list = append(list, last)
+		default:
+			list = append(list, block.List...)
+			list = append(list, hit(end))
+		}
+	} else {
+		list = append(list, hit(end))
+	}
 	block.List = list
 }

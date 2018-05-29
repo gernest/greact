@@ -24,6 +24,7 @@ func (c *Integration) Mount() {
 		if err != nil {
 			panic(err)
 		}
+		defer w.Close()
 		v := mad.Exec(c.Component.Cases)
 		err = w.Report(v, c.Pkg, c.UUID)
 		if err != nil {

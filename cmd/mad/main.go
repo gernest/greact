@@ -408,6 +408,7 @@ func startTest(){
 	 if err!=nil{
 		 panic(err)
 	 }
+	 defer w.Close()
 	 for _,ts:=range allTests(){
 		 v:=mad.Exec(ts)
 		 err=w.Report(v,testPkg,testID)

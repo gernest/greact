@@ -34,7 +34,9 @@ func newServer(ctx context.Context, cfg *config.Config) <-chan *mad.SpecResult {
 			default:
 				typ, data, err := conn.ReadMessage()
 				if err != nil {
-					fmt.Printf(" reading response %s\n", err)
+					if !websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+						fmt.Printf(" reading response %s\n", err)
+					}
 					return
 				}
 				switch typ {

@@ -246,62 +246,72 @@ func mark(num int, pos token.Position) *ast.AssignStmt {
 
 func hit(pos token.Position) *ast.ExprStmt {
 	return &ast.ExprStmt{
-		X: &ast.CallExpr{
-			Fun: &ast.SelectorExpr{
-				X:   &ast.Ident{Name: "cover"},
-				Sel: &ast.Ident{Name: "Hit"},
+		X: hitExr(pos),
+	}
+}
+
+func hitFuncBody(pos token.Position) *ast.DeferStmt {
+	return &ast.DeferStmt{
+		Call: hitExr(pos),
+	}
+}
+
+func hitExr(pos token.Position) *ast.CallExpr {
+	return &ast.CallExpr{
+		Fun: &ast.SelectorExpr{
+			X:   &ast.Ident{Name: "cover"},
+			Sel: &ast.Ident{Name: "Hit"},
+		},
+		Args: []ast.Expr{
+			&ast.Ident{
+				Name: coverageID,
 			},
-			Args: []ast.Expr{
-				&ast.Ident{
-					Name: coverageID,
-				},
-				&ast.UnaryExpr{
-					Op: token.AND,
-					X: &ast.CompositeLit{
-						Type: &ast.SelectorExpr{
-							X: &ast.Ident{
-								Name: "token",
+			&ast.UnaryExpr{
+				Op: token.AND,
+				X: &ast.CompositeLit{
+					Type: &ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "token",
+						},
+						Sel: &ast.Ident{
+							Name: "Position",
+						},
+					},
+					Elts: []ast.Expr{
+						&ast.KeyValueExpr{
+							Key: &ast.Ident{
+								Name: "Filename",
 							},
-							Sel: &ast.Ident{
-								Name: "Position",
+							Value: &ast.BasicLit{
+								Kind:  token.STRING,
+								Value: fmt.Sprintf(`"%s"`, pos.Filename),
 							},
 						},
-						Elts: []ast.Expr{
-							&ast.KeyValueExpr{
-								Key: &ast.Ident{
-									Name: "Filename",
-								},
-								Value: &ast.BasicLit{
-									Kind:  token.STRING,
-									Value: fmt.Sprintf(`"%s"`, pos.Filename),
-								},
+						&ast.KeyValueExpr{
+							Key: &ast.Ident{
+								Name: "Offset",
 							},
-							&ast.KeyValueExpr{
-								Key: &ast.Ident{
-									Name: "Offset",
-								},
-								Value: &ast.BasicLit{
-									Kind:  token.INT,
-									Value: fmt.Sprint(pos.Offset),
-								},
+							Value: &ast.BasicLit{
+								Kind:  token.INT,
+								Value: fmt.Sprint(pos.Offset),
 							},
-							&ast.KeyValueExpr{
-								Key: &ast.Ident{
-									Name: "Column",
-								},
-								Value: &ast.BasicLit{
-									Kind:  token.INT,
-									Value: fmt.Sprint(pos.Line),
-								},
+						},
+						&ast.KeyValueExpr{
+							Key: &ast.Ident{
+								Name: "Column",
 							},
-							&ast.KeyValueExpr{
-								Key: &ast.Ident{
-									Name: "Line",
-								},
-								Value: &ast.BasicLit{
-									Kind:  token.INT,
-									Value: fmt.Sprint(pos.Line),
-								},
+							Value: &ast.BasicLit{
+								Kind:  token.INT,
+								Value: fmt.Sprint(pos.Line),
+							},
+						},
+						&ast.KeyValueExpr{
+							Key: &ast.Ident{
+								Name: "Line",
+							},
+							Value: &ast.BasicLit{
+								Kind:  token.INT,
+								Value: fmt.Sprint(pos.Line),
 							},
 						},
 					},
@@ -317,16 +327,29 @@ func applyCoverage(set *token.FileSet, pre bool) func(*astutil.Cursor) bool {
 		if pre {
 			return true
 		}
-		if e, ok := node.(*ast.IfStmt); ok {
-			if len(e.Body.List) > 0 {
-				size := len(e.Body.List)
-				start := set.Position(e.Body.Lbrace)
-				end := set.Position(e.Body.Rbrace)
-				list := append([]ast.Stmt{mark(size, start)}, e.Body.List...)
-				list = append(list, hit(end))
-				e.Body.List = list
-			}
+		switch e := node.(type) {
+		case *ast.FuncDecl:
+			markFuncBlock(set, e.Body)
+		case *ast.IfStmt:
+			markBlock(set, e.Body)
 		}
 		return true
 	}
+}
+
+func markBlock(set *token.FileSet, block *ast.BlockStmt) {
+	size := len(block.List)
+	start := set.Position(block.Lbrace)
+	end := set.Position(block.Rbrace)
+	list := append([]ast.Stmt{mark(size, start)}, block.List...)
+	list = append(list, hit(end))
+	block.List = list
+}
+
+func markFuncBlock(set *token.FileSet, block *ast.BlockStmt) {
+	size := len(block.List)
+	start := set.Position(block.Lbrace)
+	end := set.Position(block.Rbrace)
+	list := append([]ast.Stmt{mark(size, start), hitFuncBody(end)}, block.List...)
+	block.List = list
 }

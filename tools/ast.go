@@ -330,6 +330,12 @@ func applyCoverage(set *token.FileSet, pre bool) func(*astutil.Cursor) bool {
 		switch e := node.(type) {
 		case *ast.FuncDecl:
 			markBlock(set, e.Body)
+		case *ast.RangeStmt:
+			markBlock(set, e.Body)
+		case *ast.IfStmt:
+			markBlock(set, e.Body)
+		case *ast.CaseClause:
+			markCaseClauseBlock(set, e)
 		}
 		return true
 	}
@@ -345,7 +351,8 @@ func markBlock(set *token.FileSet, block *ast.BlockStmt) {
 		switch last.(type) {
 		case *ast.ReturnStmt,
 			*ast.SwitchStmt,
-			*ast.TypeSwitchStmt:
+			*ast.TypeSwitchStmt,
+			*ast.BranchStmt:
 			if size == 1 {
 				list = append(list, hit(end))
 			} else {
@@ -361,4 +368,31 @@ func markBlock(set *token.FileSet, block *ast.BlockStmt) {
 		list = append(list, hit(end))
 	}
 	block.List = list
+}
+
+func markCaseClauseBlock(set *token.FileSet, block *ast.CaseClause) {
+	size := len(block.Body)
+	start := set.Position(block.Colon)
+	list := []ast.Stmt{mark(size, start)}
+	if size > 0 {
+		last := block.Body[size-1]
+		end := set.Position(last.End())
+		switch last.(type) {
+		case *ast.ReturnStmt,
+			*ast.SwitchStmt,
+			*ast.TypeSwitchStmt,
+			*ast.BranchStmt:
+			if size == 1 {
+				list = append(list, hit(end))
+			} else {
+				list = append(list, block.Body[:size-1]...)
+				list = append(list, hit(end))
+			}
+			list = append(list, last)
+		default:
+			list = append(list, block.Body...)
+			list = append(list, hit(end))
+		}
+		block.Body = list
+	}
 }

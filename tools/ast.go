@@ -88,21 +88,6 @@ func checkSignature(typ *ast.FuncType) (isUnit, ok bool) {
 	return
 }
 
-// func checkSignature(field *ast.Field) bool {
-// 	if a, ok := field.Type.(*ast.SelectorExpr); ok {
-// 		id, ok := a.X.(*ast.Ident)
-// 		if !ok {
-// 			return false
-// 		}
-// 		n := a.Sel.Name
-// 		if id.Name == "prom" && (n == "Test" || n == "Integration") {
-// 			return true
-// 		}
-// 		return true
-// 	}
-// 	return false
-// }
-
 func applyLineNumber(set *token.FileSet, pre bool, match *testNameMap) func(*astutil.Cursor) bool {
 	units := 0
 	integrations := 0
@@ -249,12 +234,6 @@ func hit(pos token.Position) *ast.ExprStmt {
 		X: hitExr(pos),
 	}
 }
-
-// func hitFuncBody(pos token.Position) *ast.DeferStmt {
-// 	return &ast.DeferStmt{
-// 		Call: hitExr(pos),
-// 	}
-// }
 
 func hitExr(pos token.Position) *ast.CallExpr {
 	return &ast.CallExpr{

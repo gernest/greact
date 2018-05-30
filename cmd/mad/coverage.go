@@ -51,7 +51,6 @@ func coverToXCover(cfg *config.Config, c []*cover.Profile) (profiles []xcover.Pr
 		}
 		p := xcover.Profile{
 			FileName: name,
-			Mode:     "set",
 		}
 		for _, block := range v.Blocks {
 			p.Blocks = append(p.Blocks, xcover.ProfileBlock{

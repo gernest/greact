@@ -6,15 +6,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/mafredri/cdp/protocol/console"
-	"github.com/mafredri/cdp/protocol/profiler"
 	"github.com/mafredri/cdp/protocol/target"
 	"github.com/mafredri/cdp/session"
 
 	"github.com/gernest/mad/config"
+	"github.com/gernest/mad/cover"
 	"github.com/gernest/mad/launcher"
 	"github.com/mafredri/cdp"
 	"github.com/mafredri/cdp/devtool"
@@ -64,17 +65,9 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	var pages []string
 	pages = append(pages, cfg.UnitIndexPage)
 	pages = append(pages, cfg.IntegrationIndexPages...)
-
-	// We need a way to collect coverage profile before exiting the chrome tabs.
-	// we use profileCtx to signal the tab execution goroutine to collect the
-	// profiles.
-	//
-	// We then call <-profileCtx.Done() to trigger profile collection.
-	profileCtx, cancelProfile := context.WithCancel(context.Background())
-
+	profiles := make(chan []cover.Profile)
 	// This is the channel we use to send the profile data collected from test
 	// running tabs.
-	profiles := make(chan profiler.Profile)
 	for _, v := range pages {
 		// Each test execution script is done in a separate tab. All unit tests are
 		// compiled to a single execution script while each integration test is
@@ -94,7 +87,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 			}
 			defer pageConn.Close()
 			pageClient := cdp.NewClient(pageConn)
-			if cfg.Verbose {
+			if cfg.Verbose || cfg.Cover {
 				if err = pageClient.Console.Enable(nctx); err != nil {
 					fmt.Printf("%s :%v\n", idx, err)
 					return
@@ -110,33 +103,25 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 						if err != nil {
 							return
 						}
-						fmt.Println(msg.Message.Text)
+						if cfg.Cover {
+							txt := msg.Message.Text
+							if strings.HasPrefix(txt, cover.Key) {
+								txt := strings.TrimPrefix(txt, cover.Key)
+								prof := []cover.Profile{}
+								err := json.Unmarshal([]byte(txt), &prof)
+								if err != nil {
+									fmt.Println(err)
+								} else {
+									profiles <- prof
+								}
+							}
+						}
 					}
 				}(csLog)
-			}
-			if cfg.Cover {
-				err := pageClient.Profiler.Enable(nctx)
-				if err != nil {
-					fmt.Printf("%s :%v\n", idx, err)
-					return
-				}
-				err = pageClient.Profiler.Start(nctx)
-				if err != nil {
-					fmt.Printf("%s :%v\n", idx, err)
-					return
-				}
 			}
 			for {
 				select {
 				case <-ctx.Done():
-					return
-				case <-profileCtx.Done():
-					s, err := pageClient.Profiler.Stop(nctx)
-					if err != nil {
-						fmt.Println(err)
-						return
-					}
-					profiles <- s.Profile
 					return
 				}
 			}
@@ -166,18 +151,24 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 					h.Done()
 				}
 				if cfg.Cover {
-					cancelProfile()
-					n := 1
-					var p []profiler.Profile
-					for v := range profiles {
-						p = append(p, v)
-						if n == len(pages) {
+					totalProfiles := len(cfg.IntegrationFuncs)
+					if len(cfg.UnitFuncs) > 0 {
+
+						// All unit functions are executed in a single package. Which means they
+						// will only give one profile.
+						totalProfiles++
+					}
+					count := 1
+					var collect []cover.Profile
+					for p := range profiles {
+						collect = append(collect, p...)
+						if count == totalProfiles {
 							break
 						}
-						n++
+						count++
 					}
-					data, _ := json.Marshal(p)
-					err := ioutil.WriteFile(filepath.Join(cfg.OutputPath, cfg.Coverfile), data, 0600)
+					b, _ := json.Marshal(collect)
+					err := ioutil.WriteFile(filepath.Join(cfg.OutputPath, cfg.Coverfile), b, 0600)
 					if err != nil {
 						fmt.Println(err)
 					}

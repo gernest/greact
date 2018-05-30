@@ -30,7 +30,7 @@ type Test interface {
 // You can use this to organise your test into a nested tree like structure.
 func Describe(desc string, testCases ...Test) Test {
 	t := &Suite{Desc: desc}
-	for _, v := range testCases {
+	for _, v := range flatCases(testCases...) {
 		switch e := v.(type) {
 		case *BeforeFuncs:
 			if t.BeforeFuncs != nil {
@@ -55,6 +55,19 @@ func Describe(desc string, testCases ...Test) Test {
 		}
 	}
 	return t
+}
+
+func flatCases(cases ...Test) []Test {
+	var o []Test
+	for _, v := range cases {
+		switch e := v.(type) {
+		case List:
+			o = append(o, flatCases(e...)...)
+		default:
+			o = append(o, e)
+		}
+	}
+	return o
 }
 
 // List is a list of tests.
@@ -208,7 +221,7 @@ type T interface {
 	Error(...interface{})
 	Errorf(string, ...interface{})
 	Fatal(...interface{})
-	FatalF(string, ...interface{})
+	Fatalf(string, ...interface{})
 	Errors() []string
 }
 
@@ -299,7 +312,7 @@ func (b *baseT) Errorf(s string, v ...interface{}) {
 	b.err = append(b.err, fmt.Sprintf(s, v...))
 }
 
-func (b *baseT) FatalF(s string, v ...interface{}) {
+func (b *baseT) Fatalf(s string, v ...interface{}) {
 	panic(&Error{Message: fmt.Errorf(s, v...)})
 }
 

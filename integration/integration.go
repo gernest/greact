@@ -2,6 +2,7 @@ package integration
 
 import (
 	"github.com/gernest/mad"
+	"github.com/gernest/mad/cover"
 	"github.com/gernest/mad/ws"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
@@ -23,11 +24,13 @@ func (c *Integration) Mount() {
 		if err != nil {
 			panic(err)
 		}
+		defer w.Close()
 		v := mad.Exec(c.Component.Cases)
 		err = w.Report(v, c.Pkg, c.UUID)
 		if err != nil {
 			println(err)
 		}
+		println(cover.Key + cover.JSON())
 	}()
 }
 

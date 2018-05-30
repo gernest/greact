@@ -72,6 +72,8 @@ type Config struct {
 
 	DevtoolURL  string
 	DevtoolPort int
+
+	Covermode string
 }
 
 // FLags returns configuration flags.
@@ -105,6 +107,10 @@ func FLags() []cli.Flag {
 		cli.StringFlag{
 			Name:  "coverfile",
 			Value: "coverage.json",
+		},
+		cli.StringFlag{
+			Name:  "mode",
+			Value: "set",
 		},
 		cli.IntFlag{
 			Name:  "port",
@@ -140,6 +146,7 @@ func Load(ctx *cli.Context) (*Config, error) {
 		Build:         ctx.BoolT("build"),
 		Cover:         ctx.Bool("cover"),
 		Coverfile:     ctx.String("coverfile"),
+		Covermode:     ctx.String("mode"),
 		Port:          ctx.Int("port"),
 		Verbose:       ctx.Bool("v"),
 		Timeout:       ctx.Duration("timeout"),
@@ -153,7 +160,7 @@ func Load(ctx *cli.Context) (*Config, error) {
 		}
 		c.Root = p
 	}
-	pkg, err := build.ImportDir(c.Root, build.FindOnly)
+	pkg, err := build.ImportDir(c.Root, 0)
 	if err != nil {
 		return nil, err
 	}

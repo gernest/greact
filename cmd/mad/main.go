@@ -19,7 +19,9 @@ import (
 	"text/template"
 
 	"github.com/gernest/mad"
+	"golang.org/x/tools/go/ast/astutil"
 
+	"github.com/gernest/mad/annotate"
 	"github.com/gernest/mad/config"
 	"github.com/gernest/mad/report/console"
 	"github.com/gernest/mad/tools"
@@ -27,12 +29,18 @@ import (
 )
 
 const (
-	testsDir     = "tests"
-	testsOutDir  = "madness"
-	localhost    = "http://localhost"
-	resourcePath = "/resource"
-	desc         = "Inter galactic test runner for Go frontend projects"
-	serviceName  = "madtitan"
+	testsDir           = "tests"
+	testsOutDir        = "madness"
+	localhost          = "http://localhost"
+	resourcePath       = "/resource"
+	projectDescription = "Inter galactic test runner for Go frontend projects"
+	serviceName        = "madtitan"
+
+	// hardcoded import paths
+	madImportPath         = "github.com/gernest/mad"
+	integrationImportPath = "github.com/gernest/mad/integration"
+	coverImportPath       = "github.com/gernest/mad/cover"
+	websocketImportPath   = "github.com/gernest/mad/ws"
 )
 
 // precompile templates
@@ -40,18 +48,25 @@ var (
 	integrationTpl  = template.Must(template.New("i").Parse(mainIntegrationTpl))
 	indexHTMLTpl    = template.Must(template.New("idx").Parse(idxTpl))
 	mainUnitTestTpl = template.Must(template.New("main").Parse(mainUnitTpl))
+	mainCoverTpl    = template.Must(template.New("cover").Parse(coverTpl))
 )
 
 func main() {
 	a := cli.NewApp()
 	a.Name = serviceName
-	a.Usage = desc
+	a.Usage = projectDescription
 	a.Commands = []cli.Command{
 		{
 			Name:   "test",
 			Usage:  "runs the test suites",
 			Flags:  config.FLags(),
-			Action: runTestSuites,
+			Action: runTestsCommand,
+		},
+		{
+			Name:   "coverage",
+			Usage:  "calculate code coverage",
+			Flags:  config.FLags(),
+			Action: runCoverage,
 		},
 	}
 	if err := a.Run(os.Args); err != nil {
@@ -60,7 +75,7 @@ func main() {
 	}
 }
 
-func runTestSuites(ctx *cli.Context) error {
+func runTestsCommand(ctx *cli.Context) error {
 	cfg, err := config.Load(ctx)
 	if err != nil {
 		return err
@@ -102,6 +117,28 @@ func generateTestPackage(cfg *config.Config) error {
 	// we need to kee track of the defined unit and integration test functions.
 	// This collects functions from all files.
 	funcs := &tools.TestNames{}
+	importMap := make(map[string]string)
+	if cfg.Cover {
+		for _, v := range tsPkg.Imports {
+			err := instrumentImport(cfg, importMap, v)
+			if err != nil {
+				return err
+			}
+		}
+		if cfg.Info.ImportPath == madImportPath {
+			//WORKAROUND : when we testing the mad package
+			imports := []string{
+				integrationImportPath,
+			}
+			for _, v := range imports {
+				err := instrumentImport(cfg, importMap, v)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+	}
 	for _, v := range tsPkg.GoFiles {
 		f, err := parser.ParseFile(set, filepath.Join(tsPkg.Dir, v), nil, 0)
 		if err != nil {
@@ -111,6 +148,9 @@ func generateTestPackage(cfg *config.Config) error {
 		if fn != nil {
 			funcs.Integration = append(funcs.Integration, fn.Integration...)
 			funcs.Unit = append(funcs.Unit, fn.Unit...)
+		}
+		for old, newImport := range importMap {
+			astutil.RewriteImport(set, f, old, newImport)
 		}
 		files = append(files, f)
 	}
@@ -126,29 +166,166 @@ func generateTestPackage(cfg *config.Config) error {
 			return err
 		}
 	}
-	if err = writeUnitMain(cfg, funcs); err != nil {
+	madImport := importMap[madImportPath]
+	if madImport == "" {
+		madImport = madImportPath
+	}
+	wsImport := importMap[websocketImportPath]
+	if wsImport == "" {
+		wsImport = websocketImportPath
+	}
+	ctx := map[string]interface{}{
+		"config":    cfg,
+		"funcs":     funcs,
+		"madImport": madImport,
+		"wsImport":  wsImport,
+	}
+	if err = writeMain(cfg.OutputPath, ctx); err != nil {
 		return err
 	}
-	if err = writeIntegrationMain(cfg, funcs); err != nil {
+	if err = writeIntegrationMain(cfg, importMap); err != nil {
 		return err
 	}
 	return writeIndex(cfg)
 }
 
-// generates main package for running all unit tests.
-func writeUnitMain(cfg *config.Config, funcs *tools.TestNames) error {
-	return writeMain(cfg.OutputPath, map[string]interface{}{
-		"config": cfg,
-		"funcs":  funcs,
-	})
+const coverTpl = `
+package {{.pkgName}}
+import(
+	"github.com/gernest/mad/cover"
+)
+
+func coverage()[]cover.Profile  {
+	return []cover.Profile{
+	{{- $mode:=.mode}}
+	{{- range $k,$v:=.vars}}
+	cover.File("{{$k}}","{{$mode}}", {{$v}}.Count[:], {{$v}}.Pos[:], {{$v}}.NumStmt[:]),
+	{{- end}}
+	}
+}
+func init()  {
+	cover.Register("{{.pkg}}",coverage)
 }
 
-func writeIntegrationMain(cfg *config.Config, funcs *tools.TestNames) error {
-	if len(funcs.Integration) > 0 {
+
+
+`
+
+// instrumentImport processes pkg and adds instrumentation for coverage analysis.
+func instrumentImport(cfg *config.Config, importMap map[string]string, pkg string) error {
+	if !strings.HasPrefix(pkg, cfg.Info.ImportPath) {
+		return nil
+	}
+	if _, ok := importMap[pkg]; ok {
+		return nil
+	}
+	if pkg == coverImportPath {
+		importMap[pkg] = pkg
+		return nil
+	}
+	info := cfg.Info
+	if pkg != cfg.Info.ImportPath {
+		path := strings.TrimPrefix(pkg, cfg.Info.ImportPath)
+		dir := filepath.Join(cfg.Info.Dir, path)
+		newPkg, err := build.ImportDir(dir, 0)
+		if err != nil {
+			return err
+		}
+		info = newPkg
+	}
+	for _, v := range info.Imports {
+		err := instrumentImport(cfg, importMap, v)
+		if err != nil {
+			return err
+		}
+	}
+	set := token.NewFileSet()
+	base := filepath.Base(pkg)
+	if pkg != cfg.Info.ImportPath {
+		rel, err := filepath.Rel(cfg.Info.ImportPath, pkg)
+		if err != nil {
+			return err
+		}
+		base = rel
+	}
+	out := filepath.Join(cfg.GeneratedTestPath, base)
+	outPkg := filepath.Join(cfg.Info.ImportPath, cfg.OutputDirName, cfg.TestDirName, base)
+	os.MkdirAll(out, 0755)
+	var buf bytes.Buffer
+	coverVarNames := make(map[string]string)
+	for k, v := range info.GoFiles {
+		f, err := parser.ParseFile(set, filepath.Join(info.Dir, v), nil, parser.ParseComments)
+		if err != nil {
+			return err
+		}
+		buf.Reset()
+		varName := fmt.Sprintf("coverStats%d", k)
+		fullName := info.ImportPath + "/" + v
+		coverVarNames[fullName] = varName
+		err = annotate.Annotate(&buf, set, f, annotate.Options{
+			Name:    fullName,
+			VarName: varName,
+			Mode:    cfg.Covermode,
+		})
+		if err != nil {
+			return err
+		}
+		varDef := buf.String()
+		buf.Reset()
+		for old, newImport := range importMap {
+			astutil.RewriteImport(set, f, old, newImport)
+		}
+		filename := filepath.Join(out, v)
+		err = printer.Fprint(&buf, set, f)
+		if err != nil {
+			return err
+		}
+		buf.WriteString(varDef)
+		err = ioutil.WriteFile(filename, buf.Bytes(), 0600)
+		if err != nil {
+			return err
+		}
+	}
+	buf.Reset()
+	data := map[string]interface{}{
+		"pkgName": info.Name,
+		"vars":    coverVarNames,
+		"mode":    cfg.Covermode,
+		"pkg":     pkg,
+	}
+	err := mainCoverTpl.Execute(&buf, data)
+	if err != nil {
+		return err
+	}
+	filename := filepath.Join(out, "coverrage_stats.go")
+	b, err := format.Source(buf.Bytes())
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filename, b, 0600)
+	if err != nil {
+		return err
+	}
+	importMap[pkg] = outPkg
+	return nil
+}
+
+func writeIntegrationMain(cfg *config.Config, importMap map[string]string) error {
+	if len(cfg.IntegrationFuncs) > 0 {
 		data := make(map[string]interface{})
 		data["config"] = cfg
+		madImport := importMap[madImportPath]
+		if madImport == "" {
+			madImport = madImportPath
+		}
+		interImport := importMap[integrationImportPath]
+		if interImport == "" {
+			interImport = integrationImportPath
+		}
+		data["madImport"] = madImport
+		data["interImport"] = interImport
 		var buf bytes.Buffer
-		for _, v := range funcs.Integration {
+		for _, v := range cfg.IntegrationFuncs {
 			name := strings.ToLower(v)
 			data["PkgName"] = name
 			pkg := cfg.GeneratedTestPkg + "/" + name
@@ -268,8 +445,9 @@ var mainUnitTpl = `package main
 
 import(
 	"{{.config.GeneratedTestPkg}}"
-	"github.com/gernest/mad/ws"
-	"github.com/gernest/mad"
+	"{{.wsImport}}"
+	"{{.madImport}}"
+	"github.com/gernest/mad/cover"
 )
 
 func main()  {
@@ -281,10 +459,14 @@ const testPkg ="{{.config.Info.ImportPath}}"
 
 func startTest(){
 	go func ()  {
+	defer func ()  {
+		println(cover.Key+cover.JSON())
+	}()
 	 w,err:=ws.New(testID)
 	 if err!=nil{
 		 panic(err)
 	 }
+	 defer w.Close()
 	 for _,ts:=range allTests(){
 		 v:=mad.Exec(ts)
 		 err=w.Report(v,testPkg,testID)
@@ -314,8 +496,8 @@ func allTests()[]mad.Test  {
 var mainIntegrationTpl = `package main
 import (
 	"{{.config.GeneratedTestPkg}}"
-	"github.com/gernest/mad/integration"
-	"github.com/gernest/mad"
+	"{{.interImport}}"
+	"{{.madImport}}"
 	"github.com/gopherjs/vecty"
 )
 
@@ -355,15 +537,6 @@ const idxTpl = `<!DOCTYPE html>
 
 // test package is compiked to javascript using the gopherjs command. This
 // requites gopherjs to be installed and in PATH.
-//
-// source map is important for coverage computation. So nodejs is required and
-// sourcemap module must be installed.
-// Taken from the gopherjs README this command
-// 	npm install --global source-map-support
-// should take care of the sourcemap support.
-//
-// The output is main.js file in the root directory of the generated test
-// package.
 func buildGeneratedTestPackage(cfg *config.Config) error {
 	o := filepath.Join(cfg.OutputPath, "main.js")
 	cmd := exec.Command("gopherjs", "build", "-o", o, cfg.OutputMainPkg)

@@ -6,41 +6,37 @@ import (
 )
 
 func TestPrefix() mad.Test {
-	return mad.Describe("Basic",
-		mad.It("adds vendor prefix", func(t mad.T) {
-			s := []struct {
-				src, expect string
-			}{
-				{src: "-moz-tab-size", expect: "-moz-"},
-			}
+	return mad.It("adds vendor prefix", func(t mad.T) {
+		s := []struct {
+			src, expect string
+		}{
+			{src: "-moz-tab-size", expect: "-moz-"},
+		}
 
-			for _, v := range s {
-				g := prefix.Prefix(v.src)
-				if g != v.expect {
-					t.Errorf("expected %s got %s", v.expect, g)
-				}
+		for _, v := range s {
+			g := prefix.Prefix(v.src)
+			if g != v.expect {
+				t.Errorf("expected %s got %s", v.expect, g)
 			}
-		}),
-	)
+		}
+	})
 }
 
 func TestUnPrefix() mad.Test {
-	return mad.Describe("Basic",
-		mad.It("removes vendor prefix", func(t mad.T) {
-			s := []struct {
-				src, expect string
-			}{
-				{src: "-moz-tab-size", expect: "tab-size"},
-			}
+	return mad.It("removes vendor prefix", func(t mad.T) {
+		s := []struct {
+			src, expect string
+		}{
+			{src: "-moz-tab-size", expect: "tab-size"},
+		}
 
-			for _, v := range s {
-				g := prefix.UnPrefix(v.src)
-				if g != v.expect {
-					t.Errorf("expected %s got %s", v.expect, g)
-				}
+		for _, v := range s {
+			g := prefix.UnPrefix(v.src)
+			if g != v.expect {
+				t.Errorf("expected %s got %s", v.expect, g)
 			}
-		}),
-	)
+		}
+	})
 }
 
 func TestBrowser() mad.Test {

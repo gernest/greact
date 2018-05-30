@@ -54,13 +54,14 @@ func File(fileName, mode string, counter []uint32, pos []uint32, numStmts []uint
 		panic("coverage: mismatched sizes")
 	}
 	block := make([]ProfileBlock, len(counter))
-	for i := range counter {
+	for i, v := range counter {
 		block[i] = ProfileBlock{
 			StartLine: int(pos[3*i+0]),
 			StartCol:  int(uint16(pos[3*i+2])),
 			EndLine:   int(pos[3*i+1]),
 			EndCol:    int(uint16(pos[3*i+2] >> 16)),
 			NumStmt:   int(numStmts[i]),
+			Count:     int(v),
 		}
 	}
 	return Profile{

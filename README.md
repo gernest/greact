@@ -1,2 +1,2 @@
-# goss
+# gs
 write css in go

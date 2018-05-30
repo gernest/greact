@@ -7,7 +7,7 @@ import (
 
 func TestPrefix() mad.Test {
 	return mad.Describe("Basic",
-		mad.It("add vendor prefix", func(t mad.T) {
+		mad.It("adds vendor prefix", func(t mad.T) {
 			s := []struct {
 				src, expect string
 			}{

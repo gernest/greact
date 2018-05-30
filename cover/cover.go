@@ -27,12 +27,11 @@ type ProfileBlock struct {
 }
 
 var state = &State{
-	files: make(map[string]*CoverStats),
+	files: &sync.Map{},
 }
 
 type State struct {
-	files map[string]*CoverStats
-	mu    sync.RWMutex
+	files *sync.Map
 }
 
 type CoverStats struct {
@@ -56,41 +55,35 @@ func (c *CoverStats) Hit(idx int, pos *token.Position) {
 }
 
 func Mark(numStmt int, start, end *token.Position) int {
-	state.mu.Lock()
-	defer state.mu.Unlock()
 	p := &ProfileBlock{
 		StartPosition: start,
 		EndPosition:   end,
 		NumStmt:       numStmt,
 	}
 	fileName := p.StartPosition.Filename
-	f, ok := state.files[fileName]
+	f, ok := state.files.Load(fileName)
 	if !ok {
-		f = &CoverStats{Profile: &Profile{
+		f := &CoverStats{Profile: &Profile{
 			FileName: fileName,
 		}}
-		state.files[fileName] = f
+		state.files.Store(fileName, f)
 		return f.Mark(p)
-
 	}
-	return f.Mark(p)
+	return f.(*CoverStats).Mark(p)
 }
 
 func Hit(idx int, pos *token.Position) {
-	state.mu.Lock()
-	defer state.mu.Unlock()
-	if f, ok := state.files[pos.Filename]; ok {
-		f.Hit(idx, pos)
+	if f, ok := state.files.Load(pos.Filename); ok {
+		f.(*CoverStats).Hit(idx, pos)
 	}
 }
 
 func Stats() []*CoverStats {
-	state.mu.RLock()
 	var o []*CoverStats
-	for _, v := range state.files {
-		o = append(o, v)
-	}
-	state.mu.RUnlock()
+	state.files.Range(func(_, v interface{}) bool {
+		o = append(o, v.(*CoverStats))
+		return true
+	})
 	return o
 }
 

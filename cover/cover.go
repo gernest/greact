@@ -71,3 +71,17 @@ func File(fileName, mode string, counter []uint32, pos []uint32, numStmts []uint
 }
 
 type CoverFunc func() []Profile
+
+func Calc(profiles []Profile) float64 {
+	var n, d int64
+	for _, p := range profiles {
+		for _, v := range p.Blocks {
+			if v.Count > 0 {
+				n++
+			} else {
+				d++
+			}
+		}
+	}
+	return float64(n) / float64(d)
+}

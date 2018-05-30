@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/token"
+	"sort"
 	"sync"
 
 	"github.com/gopherjs/gopherjs/js"
@@ -36,22 +37,37 @@ type State struct {
 
 type CoverStats struct {
 	Profile *Profile
-	mu      sync.RWMutex
+	blocks  *sync.Map
+}
+
+func (c *CoverStats) FillBlocks() {
+	var keys []int
+	c.blocks.Range(func(k, _ interface{}) bool {
+		keys = append(keys, k.(int))
+		return true
+	})
+	sort.Ints(keys)
+	c.Profile.Blocks = nil
+	for _, k := range keys {
+		if v, ok := c.blocks.Load(k); ok {
+			c.Profile.Blocks = append(c.Profile.Blocks, v.(*ProfileBlock))
+		}
+	}
 }
 
 func (c *CoverStats) Mark(p *ProfileBlock) int {
-	c.mu.Lock()
-	c.Profile.Blocks = append(c.Profile.Blocks, p)
-	idx := len(c.Profile.Blocks) - 1
-	c.mu.Unlock()
-	return idx
+	if idx, ok := c.blocks.Load(p.StartPosition.Line); ok {
+		idx.(*ProfileBlock).Count++
+		return p.StartPosition.Line
+	}
+	c.blocks.Store(p.StartPosition.Line, p)
+	return p.StartPosition.Line
 }
 
-func (c *CoverStats) Hit(idx int, pos *token.Position) {
-	c.mu.Lock()
-	b := c.Profile.Blocks[idx]
-	b.Count++
-	c.mu.Unlock()
+func (c *CoverStats) Hit(pos *token.Position) {
+	if block, ok := c.blocks.Load(pos.Line); ok {
+		block.(*ProfileBlock).Count++
+	}
 }
 
 func Mark(numStmt int, start, end *token.Position) int {
@@ -63,26 +79,34 @@ func Mark(numStmt int, start, end *token.Position) int {
 	fileName := p.StartPosition.Filename
 	f, ok := state.files.Load(fileName)
 	if !ok {
-		f := &CoverStats{Profile: &Profile{
-			FileName: fileName,
-		}}
+		f := &CoverStats{
+			blocks: &sync.Map{},
+			Profile: &Profile{
+				FileName: fileName,
+			},
+		}
 		state.files.Store(fileName, f)
 		return f.Mark(p)
 	}
 	return f.(*CoverStats).Mark(p)
 }
 
-func Hit(idx int, pos *token.Position) {
+func Hit(pos *token.Position) {
 	if f, ok := state.files.Load(pos.Filename); ok {
-		f.(*CoverStats).Hit(idx, pos)
+		f.(*CoverStats).Hit(pos)
 	}
 }
 
 func Stats() []*CoverStats {
 	var o []*CoverStats
 	state.files.Range(func(_, v interface{}) bool {
-		o = append(o, v.(*CoverStats))
+		c := v.(*CoverStats)
+		c.FillBlocks()
+		o = append(o, c)
 		return true
+	})
+	sort.Slice(o, func(i, j int) bool {
+		return o[i].Profile.FileName < o[j].Profile.FileName
 	})
 	return o
 }

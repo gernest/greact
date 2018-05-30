@@ -153,33 +153,25 @@ func AddCoverage(set *token.FileSet, file *ast.File) *ast.File {
 	return file
 }
 
-func mark(num int, start, end token.Position) *ast.AssignStmt {
-	return &ast.AssignStmt{
-		Lhs: []ast.Expr{
-			&ast.Ident{
-				Name: coverageID,
+func mark(num int, start, end token.Position) *ast.ExprStmt {
+	return &ast.ExprStmt{
+		X: &ast.CallExpr{
+			Fun: &ast.SelectorExpr{
+				X:   &ast.Ident{Name: "cover"},
+				Sel: &ast.Ident{Name: "Mark"},
 			},
-		},
-		Tok: token.DEFINE,
-		Rhs: []ast.Expr{
-			&ast.CallExpr{
-				Fun: &ast.SelectorExpr{
-					X:   &ast.Ident{Name: "cover"},
-					Sel: &ast.Ident{Name: "Mark"},
+			Args: []ast.Expr{
+				&ast.BasicLit{
+					Kind:  token.INT,
+					Value: fmt.Sprint(num),
 				},
-				Args: []ast.Expr{
-					&ast.BasicLit{
-						Kind:  token.INT,
-						Value: fmt.Sprint(num),
-					},
-					&ast.UnaryExpr{
-						Op: token.AND,
-						X:  addToken(start),
-					},
-					&ast.UnaryExpr{
-						Op: token.AND,
-						X:  addToken(end),
-					},
+				&ast.UnaryExpr{
+					Op: token.AND,
+					X:  addToken(start),
+				},
+				&ast.UnaryExpr{
+					Op: token.AND,
+					X:  addToken(end),
 				},
 			},
 		},
@@ -249,9 +241,6 @@ func hitExr(pos token.Position) *ast.CallExpr {
 			Sel: &ast.Ident{Name: "Hit"},
 		},
 		Args: []ast.Expr{
-			&ast.Ident{
-				Name: coverageID,
-			},
 			&ast.UnaryExpr{
 				Op: token.AND,
 				X: &ast.CompositeLit{
@@ -340,18 +329,18 @@ func markBlock(set *token.FileSet, block *ast.BlockStmt) {
 			*ast.TypeSwitchStmt,
 			*ast.BranchStmt:
 			if size == 1 {
-				list = append(list, hit(end))
+				list = append(list, hit(start))
 			} else {
 				list = append(list, block.List[:size-1]...)
-				list = append(list, hit(end))
+				list = append(list, hit(start))
 			}
 			list = append(list, last)
 		default:
 			list = append(list, block.List...)
-			list = append(list, hit(end))
+			list = append(list, hit(start))
 		}
 	} else {
-		list = append(list, hit(end))
+		list = append(list, hit(start))
 	}
 	block.List = list
 }
@@ -369,15 +358,15 @@ func markCaseClauseBlock(set *token.FileSet, block *ast.CaseClause) {
 			*ast.TypeSwitchStmt,
 			*ast.BranchStmt:
 			if size == 1 {
-				list = append(list, hit(end))
+				list = append(list, hit(start))
 			} else {
 				list = append(list, block.Body[:size-1]...)
-				list = append(list, hit(end))
+				list = append(list, hit(start))
 			}
 			list = append(list, last)
 		default:
 			list = append(list, block.Body...)
-			list = append(list, hit(end))
+			list = append(list, hit(start))
 		}
 		block.Body = list
 	}

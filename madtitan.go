@@ -208,7 +208,7 @@ type T interface {
 	Error(...interface{})
 	Errorf(string, ...interface{})
 	Fatal(...interface{})
-	FatalF(string, ...interface{})
+	Fatalf(string, ...interface{})
 	Errors() []string
 }
 
@@ -299,7 +299,7 @@ func (b *baseT) Errorf(s string, v ...interface{}) {
 	b.err = append(b.err, fmt.Sprintf(s, v...))
 }
 
-func (b *baseT) FatalF(s string, v ...interface{}) {
+func (b *baseT) Fatalf(s string, v ...interface{}) {
 	panic(&Error{Message: fmt.Errorf(s, v...)})
 }
 

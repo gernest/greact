@@ -8,11 +8,9 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/printer"
 	"go/token"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -213,41 +211,22 @@ func initialComments(content []byte) []byte {
 	}
 	return content[:end]
 }
-
-func annotate(name, mode, output string) {
-	fset := token.NewFileSet()
-	content, err := ioutil.ReadFile(name)
-	if err != nil {
-		log.Fatalf("cover: %s: %s", name, err)
-	}
-	parsedFile, err := parser.ParseFile(fset, name, content, parser.ParseComments)
-	if err != nil {
-		log.Fatalf("cover: %s: %s", name, err)
-	}
-	parsedFile.Comments = trimComments(parsedFile, fset)
-
-	file := &File{
+func Annotate(output io.Writer, name string, content []byte, fset *token.FileSet, file *ast.File, mode string) {
+	file.Comments = trimComments(file, fset)
+	f := &File{
 		fset:    fset,
 		name:    name,
-		astFile: parsedFile,
+		astFile: file,
 	}
 	if mode == "atomic" {
-		file.atomicPkg = file.addImport(atomicPackagePath)
+		f.atomicPkg = f.addImport(atomicPackagePath)
 	}
-	ast.Walk(file, file.astFile)
-	fd := os.Stdout
-	if output != "" {
-		var err error
-		fd, err = os.Create(output)
-		if err != nil {
-			log.Fatalf("cover: %s", err)
-		}
-	}
-	fd.Write(initialComments(content)) // Retain '// +build' directives.
-	file.print(fd)
+	ast.Walk(f, f.astFile)
+	output.Write(initialComments(content)) // Retain '// +build' directives.
+	f.print(output)
 	// After printing the source tree, add some declarations for the counters etc.
 	// We could do this by adding to the tree, but it's easier just to print the text.
-	file.addVariables(fd)
+	f.addVariables(output)
 }
 
 // trimComments drops all but the //go: comments, some of which are semantically important.

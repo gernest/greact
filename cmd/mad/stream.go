@@ -87,7 +87,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 			}
 			defer pageConn.Close()
 			pageClient := cdp.NewClient(pageConn)
-			if cfg.Verbose {
+			if cfg.Verbose || cfg.Cover {
 				if err = pageClient.Console.Enable(nctx); err != nil {
 					fmt.Printf("%s :%v\n", idx, err)
 					return

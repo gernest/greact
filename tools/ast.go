@@ -153,7 +153,7 @@ func AddCoverage(set *token.FileSet, file *ast.File) *ast.File {
 	return file
 }
 
-func mark(num int, pos token.Position) *ast.AssignStmt {
+func mark(num int, start, end token.Position) *ast.AssignStmt {
 	return &ast.AssignStmt{
 		Lhs: []ast.Expr{
 			&ast.Ident{
@@ -174,54 +174,11 @@ func mark(num int, pos token.Position) *ast.AssignStmt {
 					},
 					&ast.UnaryExpr{
 						Op: token.AND,
-						X: &ast.CompositeLit{
-							Type: &ast.SelectorExpr{
-								X: &ast.Ident{
-									Name: "token",
-								},
-								Sel: &ast.Ident{
-									Name: "Position",
-								},
-							},
-							Elts: []ast.Expr{
-								&ast.KeyValueExpr{
-									Key: &ast.Ident{
-										Name: "Filename",
-									},
-									Value: &ast.BasicLit{
-										Kind:  token.STRING,
-										Value: fmt.Sprintf(`"%s"`, pos.Filename),
-									},
-								},
-								&ast.KeyValueExpr{
-									Key: &ast.Ident{
-										Name: "Offset",
-									},
-									Value: &ast.BasicLit{
-										Kind:  token.INT,
-										Value: fmt.Sprint(pos.Offset),
-									},
-								},
-								&ast.KeyValueExpr{
-									Key: &ast.Ident{
-										Name: "Column",
-									},
-									Value: &ast.BasicLit{
-										Kind:  token.INT,
-										Value: fmt.Sprint(pos.Line),
-									},
-								},
-								&ast.KeyValueExpr{
-									Key: &ast.Ident{
-										Name: "Line",
-									},
-									Value: &ast.BasicLit{
-										Kind:  token.INT,
-										Value: fmt.Sprint(pos.Line),
-									},
-								},
-							},
-						},
+						X:  addToken(start),
+					},
+					&ast.UnaryExpr{
+						Op: token.AND,
+						X:  addToken(end),
 					},
 				},
 			},
@@ -229,6 +186,56 @@ func mark(num int, pos token.Position) *ast.AssignStmt {
 	}
 }
 
+func addToken(pos token.Position) *ast.CompositeLit {
+	return &ast.CompositeLit{
+		Type: &ast.SelectorExpr{
+			X: &ast.Ident{
+				Name: "token",
+			},
+			Sel: &ast.Ident{
+				Name: "Position",
+			},
+		},
+		Elts: []ast.Expr{
+			&ast.KeyValueExpr{
+				Key: &ast.Ident{
+					Name: "Filename",
+				},
+				Value: &ast.BasicLit{
+					Kind:  token.STRING,
+					Value: fmt.Sprintf(`"%s"`, pos.Filename),
+				},
+			},
+			&ast.KeyValueExpr{
+				Key: &ast.Ident{
+					Name: "Offset",
+				},
+				Value: &ast.BasicLit{
+					Kind:  token.INT,
+					Value: fmt.Sprint(pos.Offset),
+				},
+			},
+			&ast.KeyValueExpr{
+				Key: &ast.Ident{
+					Name: "Column",
+				},
+				Value: &ast.BasicLit{
+					Kind:  token.INT,
+					Value: fmt.Sprint(pos.Line),
+				},
+			},
+			&ast.KeyValueExpr{
+				Key: &ast.Ident{
+					Name: "Line",
+				},
+				Value: &ast.BasicLit{
+					Kind:  token.INT,
+					Value: fmt.Sprint(pos.Line),
+				},
+			},
+		},
+	}
+}
 func hit(pos token.Position) *ast.ExprStmt {
 	return &ast.ExprStmt{
 		X: hitExr(pos),
@@ -324,7 +331,7 @@ func markBlock(set *token.FileSet, block *ast.BlockStmt) {
 	size := len(block.List)
 	start := set.Position(block.Lbrace)
 	end := set.Position(block.Rbrace)
-	list := []ast.Stmt{mark(size, start)}
+	list := []ast.Stmt{mark(size, start, end)}
 	if size > 0 {
 		last := block.List[size-1]
 		switch last.(type) {
@@ -352,10 +359,10 @@ func markBlock(set *token.FileSet, block *ast.BlockStmt) {
 func markCaseClauseBlock(set *token.FileSet, block *ast.CaseClause) {
 	size := len(block.Body)
 	start := set.Position(block.Colon)
-	list := []ast.Stmt{mark(size, start)}
 	if size > 0 {
 		last := block.Body[size-1]
 		end := set.Position(last.End())
+		list := []ast.Stmt{mark(size, start, end)}
 		switch last.(type) {
 		case *ast.ReturnStmt,
 			*ast.SwitchStmt,

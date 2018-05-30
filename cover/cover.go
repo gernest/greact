@@ -51,14 +51,18 @@ func (c *CoverStats) Mark(p *ProfileBlock) int {
 func (c *CoverStats) Hit(idx int, pos *token.Position) {
 	c.mu.Lock()
 	b := c.Profile.Blocks[idx]
-	b.EndPosition = pos
+	b.Count++
 	c.mu.Unlock()
 }
 
-func Mark(numStmt int, pos *token.Position) int {
+func Mark(numStmt int, start, end *token.Position) int {
 	state.mu.Lock()
 	defer state.mu.Unlock()
-	p := &ProfileBlock{StartPosition: pos, NumStmt: numStmt}
+	p := &ProfileBlock{
+		StartPosition: start,
+		EndPosition:   end,
+		NumStmt:       numStmt,
+	}
 	fileName := p.StartPosition.Filename
 	f, ok := state.files[fileName]
 	if !ok {

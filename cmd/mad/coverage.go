@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"github.com/gernest/mad/config"
 	"github.com/gernest/mad/cover"
@@ -16,7 +17,6 @@ func runCoverage(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	println(cfg.Info.SrcRoot)
 	file := filepath.Join(cfg.OutputPath, cfg.Coverfile)
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -27,8 +27,18 @@ func runCoverage(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = coverToXCover(cfg, c)
-	return err
+	cov, err := coverToXCover(cfg, c)
+	if err != nil {
+		return err
+	}
+	ext := filepath.Ext(cfg.Coverfile)
+	name := strings.TrimSuffix(cfg.Coverfile, ext)
+	pprofName := filepath.Join(name + ".pprof" + ext)
+	data, err := json.Marshal(cov)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filepath.Join(cfg.OutputPath, pprofName), data, 0600)
 }
 
 func coverToXCover(cfg *config.Config, c []*cover.Profile) (profiles []xcover.Profile, err error) {
@@ -47,10 +57,10 @@ func coverToXCover(cfg *config.Config, c []*cover.Profile) (profiles []xcover.Pr
 			p.Blocks = append(p.Blocks, xcover.ProfileBlock{
 				StartLine: block.StartPosition.Line,
 				StartCol:  block.StartPosition.Column,
-				// EndLine:   block.EndPosition.Line,
-				// EndCol:    block.EndPosition.Column,
-				NumStmt: block.NumStmt,
-				Count:   block.Count,
+				EndLine:   block.EndPosition.Line,
+				EndCol:    block.EndPosition.Column,
+				NumStmt:   block.NumStmt,
+				Count:     block.Count,
 			})
 		}
 		profiles = append(profiles, p)

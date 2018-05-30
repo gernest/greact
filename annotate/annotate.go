@@ -12,7 +12,6 @@ import (
 	"go/token"
 	"io"
 	"log"
-	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -211,22 +210,30 @@ func initialComments(content []byte) []byte {
 	}
 	return content[:end]
 }
-func Annotate(output io.Writer, name string, content []byte, fset *token.FileSet, file *ast.File, mode string) {
+
+type Options struct {
+	Name    string
+	Mode    string
+	VarName string
+}
+
+func Annotate(output io.Writer, fset *token.FileSet, file *ast.File, opts Options) error {
 	file.Comments = trimComments(file, fset)
 	f := &File{
-		fset:    fset,
-		name:    name,
-		astFile: file,
+		fset:        fset,
+		name:        opts.Name,
+		astFile:     file,
+		varVar:      opts.VarName,
+		counterStmt: setCounterStmt,
 	}
-	if mode == "atomic" {
+	if opts.Mode == "atomic" {
 		f.atomicPkg = f.addImport(atomicPackagePath)
 	}
 	ast.Walk(f, f.astFile)
-	output.Write(initialComments(content)) // Retain '// +build' directives.
-	f.print(output)
+	// f.print(output)
 	// After printing the source tree, add some declarations for the counters etc.
 	// We could do this by adding to the tree, but it's easier just to print the text.
-	f.addVariables(output)
+	return f.addVariables(output)
 }
 
 // trimComments drops all but the //go: comments, some of which are semantically important.
@@ -527,8 +534,18 @@ func (f *File) offset(pos token.Pos) int {
 	return f.fset.Position(pos).Offset
 }
 
+type errList []string
+
+func (e errList) Error() string {
+	o := ""
+	for _, v := range e {
+		o += v + "\n"
+	}
+	return o
+}
+
 // addVariables adds to the end of the file the declarations to set up the counter and position variables.
-func (f *File) addVariables(w io.Writer) {
+func (f *File) addVariables(w io.Writer) error {
 	// Self-check: Verify that the instrumented basic blocks are disjoint.
 	t := make([]block1, len(f.blocks))
 	for i := range f.blocks {
@@ -536,14 +553,20 @@ func (f *File) addVariables(w io.Writer) {
 		t[i].index = i
 	}
 	sort.Sort(blockSlice(t))
+	var errs errList
 	for i := 1; i < len(t); i++ {
 		if t[i-1].endByte > t[i].startByte {
-			fmt.Fprintf(os.Stderr, "cover: internal error: block %d overlaps block %d\n", t[i-1].index, t[i].index)
+			s := fmt.Sprintf("cover: internal error: block %d overlaps block %d\n", t[i-1].index, t[i].index)
+			errs = append(errs, s)
 			// Note: error message is in byte positions, not token positions.
-			fmt.Fprintf(os.Stderr, "\t%s:#%d,#%d %s:#%d,#%d\n",
+			s = fmt.Sprint("\t%s:#%d,#%d %s:#%d,#%d\n",
 				f.name, f.offset(t[i-1].startByte), f.offset(t[i-1].endByte),
 				f.name, f.offset(t[i].startByte), f.offset(t[i].endByte))
+			errs = append(errs, s)
 		}
+	}
+	if errs != nil {
+		return errs
 	}
 
 	// Declare the coverage struct as a package-level variable.
@@ -588,4 +611,5 @@ func (f *File) addVariables(w io.Writer) {
 
 	// Close the struct initialization.
 	fmt.Fprintf(w, "}\n")
+	return nil
 }

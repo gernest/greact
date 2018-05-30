@@ -65,7 +65,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	var pages []string
 	pages = append(pages, cfg.UnitIndexPage)
 	pages = append(pages, cfg.IntegrationIndexPages...)
-	profiles := make(chan []*cover.Profile)
+	profiles := make(chan []cover.Profile)
 	// This is the channel we use to send the profile data collected from test
 	// running tabs.
 	for _, v := range pages {
@@ -107,16 +107,12 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 							txt := msg.Message.Text
 							if strings.HasPrefix(txt, cover.Key) {
 								txt := strings.TrimPrefix(txt, cover.Key)
-								prof := []*cover.CoverStats{}
+								prof := []cover.Profile{}
 								err := json.Unmarshal([]byte(txt), &prof)
 								if err != nil {
 									fmt.Println(err)
 								} else {
-									var profList []*cover.Profile
-									for _, cprof := range prof {
-										profList = append(profList, cprof.Profile)
-									}
-									profiles <- profList
+									profiles <- prof
 								}
 							}
 						}
@@ -163,7 +159,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 						totalProfiles++
 					}
 					count := 1
-					var collect []*cover.Profile
+					var collect []cover.Profile
 					for p := range profiles {
 						collect = append(collect, p...)
 						if count == totalProfiles {

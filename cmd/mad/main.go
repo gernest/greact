@@ -21,6 +21,7 @@ import (
 	"github.com/gernest/mad"
 	"golang.org/x/tools/go/ast/astutil"
 
+	"github.com/gernest/mad/annotate"
 	"github.com/gernest/mad/config"
 	"github.com/gernest/mad/report/console"
 	"github.com/gernest/mad/tools"
@@ -47,6 +48,7 @@ var (
 	integrationTpl  = template.Must(template.New("i").Parse(mainIntegrationTpl))
 	indexHTMLTpl    = template.Must(template.New("idx").Parse(idxTpl))
 	mainUnitTestTpl = template.Must(template.New("main").Parse(mainUnitTpl))
+	mainCoverTpl    = template.Must(template.New("cover").Parse(coverTpl))
 )
 
 func main() {
@@ -187,6 +189,28 @@ func generateTestPackage(cfg *config.Config) error {
 	return writeIndex(cfg)
 }
 
+const coverTpl = `
+package {{.pkgName}}
+import(
+	"github.com/gernest/mad/cover"
+)
+
+func coverage()[]cover.Profile  {
+	return []cover.Profile{
+	{{- $mode:=.mode}}
+	{{- range $k,$v:=.vars}}
+	cover.File("{{$k}}","{{$mode}}", {{$v}}.Count[:], {{$v}}.Pos[:], {{$v}}.NumStmt[:]),
+	{{- end}}
+	}
+}
+func init()  {
+	cover.Register("{{.pkg}}",coverage)
+}
+
+
+
+`
+
 // instrumentImport processes pkg and adds instrumentation for coverage analysis.
 func instrumentImport(cfg *config.Config, importMap map[string]string, pkg string) error {
 	if !strings.HasPrefix(pkg, cfg.Info.ImportPath) {
@@ -228,13 +252,26 @@ func instrumentImport(cfg *config.Config, importMap map[string]string, pkg strin
 	outPkg := filepath.Join(cfg.Info.ImportPath, cfg.OutputDirName, cfg.TestDirName, base)
 	os.MkdirAll(out, 0755)
 	var buf bytes.Buffer
-	for _, v := range info.GoFiles {
-		f, err := parser.ParseFile(set, filepath.Join(info.Dir, v), nil, 0)
+	coverVarNames := make(map[string]string)
+	for k, v := range info.GoFiles {
+		f, err := parser.ParseFile(set, filepath.Join(info.Dir, v), nil, parser.ParseComments)
 		if err != nil {
 			return err
 		}
-
-		f = tools.AddCoverage(set, f)
+		buf.Reset()
+		varName := fmt.Sprintf("coverStats%d", k)
+		fullName := info.ImportPath + "/" + v
+		coverVarNames[fullName] = varName
+		err = annotate.Annotate(&buf, set, f, annotate.Options{
+			Name:    fullName,
+			VarName: varName,
+			Mode:    cfg.Covermode,
+		})
+		if err != nil {
+			return err
+		}
+		varDef := buf.String()
+		buf.Reset()
 		for old, newImport := range importMap {
 			astutil.RewriteImport(set, f, old, newImport)
 		}
@@ -243,10 +280,31 @@ func instrumentImport(cfg *config.Config, importMap map[string]string, pkg strin
 		if err != nil {
 			return err
 		}
+		buf.WriteString(varDef)
 		err = ioutil.WriteFile(filename, buf.Bytes(), 0600)
 		if err != nil {
 			return err
 		}
+	}
+	buf.Reset()
+	data := map[string]interface{}{
+		"pkgName": info.Name,
+		"vars":    coverVarNames,
+		"mode":    cfg.Covermode,
+		"pkg":     pkg,
+	}
+	err := mainCoverTpl.Execute(&buf, data)
+	if err != nil {
+		return err
+	}
+	filename := filepath.Join(out, "coverrage_stats.go")
+	b, err := format.Source(buf.Bytes())
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filename, b, 0600)
+	if err != nil {
+		return err
 	}
 	importMap[pkg] = outPkg
 	return nil

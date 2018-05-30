@@ -1,129 +1,73 @@
+// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package cover
 
 import (
 	"encoding/json"
-	"fmt"
-	"go/token"
 	"sort"
 	"sync"
-
-	"github.com/gopherjs/gopherjs/js"
 )
 
 const (
 	Key = "mad_coverage_stats"
 )
 
+var profileStats = &sync.Map{}
+
+type ProfileBlock struct {
+	StartLine, StartCol int
+	EndLine, EndCol     int
+	NumStmt, Count      int
+}
+
 type Profile struct {
 	FileName string
 	Mode     string
-	Blocks   []*ProfileBlock
-}
-
-// ProfileBlock represents a single block of profiling data.
-type ProfileBlock struct {
-	StartPosition  *token.Position
-	EndPosition    *token.Position
-	NumStmt, Count int
-}
-
-var state = &State{
-	files: &sync.Map{},
-}
-
-type State struct {
-	files *sync.Map
-}
-
-type CoverStats struct {
-	Profile *Profile
-	blocks  *sync.Map
-}
-
-func (c *CoverStats) FillBlocks() {
-	var keys []int
-	c.blocks.Range(func(k, _ interface{}) bool {
-		keys = append(keys, k.(int))
-		return true
-	})
-	sort.Ints(keys)
-	c.Profile.Blocks = nil
-	for _, k := range keys {
-		if v, ok := c.blocks.Load(k); ok {
-			c.Profile.Blocks = append(c.Profile.Blocks, v.(*ProfileBlock))
-		}
-	}
-}
-
-func (c *CoverStats) Mark(p *ProfileBlock) int {
-	if idx, ok := c.blocks.Load(p.StartPosition.Line); ok {
-		idx.(*ProfileBlock).Count++
-		return p.StartPosition.Line
-	}
-	c.blocks.Store(p.StartPosition.Line, p)
-	return p.StartPosition.Line
-}
-
-func (c *CoverStats) Hit(pos *token.Position) {
-	if block, ok := c.blocks.Load(pos.Line); ok {
-		block.(*ProfileBlock).Count++
-	}
-}
-
-func Mark(numStmt int, start, end *token.Position) int {
-	p := &ProfileBlock{
-		StartPosition: start,
-		EndPosition:   end,
-		NumStmt:       numStmt,
-	}
-	fileName := p.StartPosition.Filename
-	f, ok := state.files.Load(fileName)
-	if !ok {
-		f := &CoverStats{
-			blocks: &sync.Map{},
-			Profile: &Profile{
-				FileName: fileName,
-			},
-		}
-		state.files.Store(fileName, f)
-		return f.Mark(p)
-	}
-	return f.(*CoverStats).Mark(p)
-}
-
-func Hit(pos *token.Position) {
-	if f, ok := state.files.Load(pos.Filename); ok {
-		f.(*CoverStats).Hit(pos)
-	}
-}
-
-func Stats() []*CoverStats {
-	var o []*CoverStats
-	state.files.Range(func(_, v interface{}) bool {
-		c := v.(*CoverStats)
-		c.FillBlocks()
-		o = append(o, c)
-		return true
-	})
-	sort.Slice(o, func(i, j int) bool {
-		return o[i].Profile.FileName < o[j].Profile.FileName
-	})
-	return o
+	Blocks   []ProfileBlock
 }
 
 // JSON marshals current coverage state to json string.
 func JSON() string {
-	b, _ := json.MarshalIndent(Stats(), "", "  ")
+	var profiles []Profile
+	profileStats.Range(func(_, v interface{}) bool {
+		fn := v.(CoverFunc)
+		profiles = append(profiles, fn()...)
+		return true
+	})
+	sort.Slice(profiles, func(i, j int) bool {
+		return profiles[i].FileName < profiles[j].FileName
+	})
+	b, _ := json.Marshal(profiles)
 	return string(b)
 }
 
-// Dump calls console.info("coverage",$COVERAGE_DATA_IN_JSON)
-func Dump() (err error) {
-	defer func() {
-		if perr := recover(); perr != nil {
-			err = fmt.Errorf("%v", perr)
-		}
-	}()
-	js.Global.Get("console").Call("info", "coverage", JSON())
-	return
+func Register(packageName string, coverFunc CoverFunc) {
+	if _, ok := profileStats.Load(packageName); !ok {
+		profileStats.Store(packageName, coverFunc)
+	}
 }
+
+func File(fileName, mode string, counter []uint32, pos []uint32, numStmts []uint16) Profile {
+	if 3*len(counter) != len(pos) || len(counter) != len(numStmts) {
+		panic("coverage: mismatched sizes")
+	}
+	block := make([]ProfileBlock, len(counter))
+	for i := range counter {
+		block[i] = ProfileBlock{
+			StartLine: int(pos[3*i+0]),
+			StartCol:  int(uint16(pos[3*i+2])),
+			EndLine:   int(pos[3*i+1]),
+			EndCol:    int(uint16(pos[3*i+2] >> 16)),
+			NumStmt:   int(numStmts[i]),
+		}
+	}
+	return Profile{
+		FileName: fileName,
+		Mode:     mode,
+		Blocks:   block,
+	}
+}
+
+type CoverFunc func() []Profile

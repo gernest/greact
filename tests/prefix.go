@@ -65,7 +65,7 @@ func TestBrowser() mad.Test {
 					t.Error("expected to be true")
 				}
 			}),
-			mad.It("must return false when the prefix exist", func(t mad.T) {
+			mad.It("must return false when the prefix does not exist", func(t mad.T) {
 				s := "1 calc(1)"
 				b := prefix.NewBrowser()
 				if b.WithPrefix(s) {

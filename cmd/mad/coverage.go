@@ -27,6 +27,6 @@ func runCoverage(ctx *cli.Context) error {
 		return err
 	}
 	v := cover.Calc(p)
-	fmt.Printf("coverage: %.1f%%\n", v)
+	fmt.Printf("coverage: %.1f%%\n", 100*v)
 	return nil
 }

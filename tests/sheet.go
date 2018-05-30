@@ -10,7 +10,7 @@ func TestSheet() mad.Test {
 		return "id"
 	}
 	return mad.Describe("AddRule",
-		mad.It("adds generate classes with new id", func(t mad.T) {
+		mad.It("generate classes with new id", func(t mad.T) {
 			s := gs.CSS(
 				gs.S(".hello",
 					gs.P("key", "value"),

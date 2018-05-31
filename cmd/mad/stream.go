@@ -161,7 +161,11 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 					count := 1
 					var collect []cover.Profile
 					for p := range profiles {
-						collect = append(collect, p...)
+						if collect != nil {
+							collect = mergeProfiles(collect, p)
+						} else {
+							collect = p
+						}
 						if count == totalProfiles {
 							break
 						}

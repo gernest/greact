@@ -73,15 +73,17 @@ func File(fileName, mode string, counter []uint32, pos []uint32, numStmts []uint
 
 type CoverFunc func() []Profile
 
+// Calc returns the code covearge for the given profiles. We just take the total
+// number of profile blocks with Count >0 divide by the total number of profile
+// blocks.
 func Calc(profiles []Profile) float64 {
 	var n, d int64
 	for _, p := range profiles {
 		for _, v := range p.Blocks {
 			if v.Count > 0 {
 				n++
-			} else {
-				d++
 			}
+			d++
 		}
 	}
 	return float64(n) / float64(d)

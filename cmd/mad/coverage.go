@@ -30,3 +30,25 @@ func runCoverage(ctx *cli.Context) error {
 	fmt.Printf("coverage: %.1f%%\n", 100*v)
 	return nil
 }
+
+func mergeProfiles(a, b []cover.Profile) []cover.Profile {
+	cache := make(map[string]cover.Profile)
+	for _, v := range a {
+		cache[v.FileName] = v
+	}
+	for _, v := range b {
+		if c, ok := cache[v.FileName]; ok {
+			for key, value := range c.Blocks {
+				c.Blocks[key].Count = c.Blocks[key].Count + value.Count
+			}
+			cache[v.FileName] = c
+		} else {
+			cache[v.FileName] = v
+		}
+	}
+	var o []cover.Profile
+	for _, v := range cache {
+		o = append(o, v)
+	}
+	return o
+}

@@ -125,6 +125,53 @@ func TestRenderBody() mad.Integration {
 
 check [this  project tests for inspiration](https://github.com/gernest/gs)
 
+## Running the tests
+
+In the root of your package (where the tests directory is) execute
+
+```
+mad test
+```
+```
+✔ TestBefore
+✔ TestAfter
+✔ TestRenderBody
+ Passed :3 Failed:0
+ ```
+
+for verbose output
+```
+mad tes --v
+```
+```
+starting websocket server at :1956
+Waiting for chrome ...done
+TestBefore:
+  Before:
+    ✔ be called before the testcase  1ms
+TestAfter:
+  After:
+    ✔ should be called after the testcase  1ms
+TestRenderBody:
+  mad.RenderBody:
+    ✔ must have text node  0s
+ Passed :3 Failed:0
+ ```
+
+ With code coverage
+```
+ mad test --cover
+```
+```
+✔ TestRenderBody
+✔ TestBefore
+✔ TestAfter
+ Passed :3 Failed:0
+             github.com/gernest/mad 54.4%
+ github.com/gernest/mad/integration 66.7%
+          github.com/gernest/mad/ws 80.0%
+                              Total 58.8%
+```
 ## I want to write unit tests
 
 We got you covered [Take a look at this page](unit_test.md)

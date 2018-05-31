@@ -33,17 +33,29 @@ type Config struct {
 	// example   github.com/gernest/mad/madness/tests
 	GeneratedTestPkg string
 
+	// This is the name of the directory in which generated test files are saved.
+	// Default is madness.
 	OutputDirName string
 
+	// Absolute path to the directory in which generated test files are save.
 	OutputPath string
 
+	// Import path pointing to the main package that will be compiled by gopherjs
+	// example github.com/gernest/mad/madness
 	OutputMainPkg string
 
+	// WHen true it will compile the generated test packages with gopherjs The
+	// default value is true.
 	Build bool
 
+	// This is a uuid v4 string which is generated for every test run. It is used
+	// internally to collect test results through websocket.
 	UUID string
 
-	UnitFuncs        []string
+	// This is a list of all the unit test functions registered on a test run.
+	UnitFuncs []string
+
+	// This is a list of all integration tests registered on the test run
 	IntegrationFuncs []string
 
 	// Port is the port on which to run the websocket server.

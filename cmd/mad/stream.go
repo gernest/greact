@@ -148,7 +148,6 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 			if h != nil {
 				h.Handle(ts)
 			}
-
 			// Do not keep tabs on this function. This function was successful executed.
 			tabs.Delete(ts.Desc)
 		default:

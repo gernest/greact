@@ -86,5 +86,8 @@ func Calc(profiles []Profile) float64 {
 			d++
 		}
 	}
+	if d == 0 {
+		return 0
+	}
 	return float64(n) / float64(d)
 }

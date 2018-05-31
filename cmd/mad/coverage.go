@@ -4,7 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+	"sort"
+	"strings"
+	"text/tabwriter"
 
 	"github.com/gernest/mad/config"
 	"github.com/gernest/mad/cover"
@@ -31,8 +35,29 @@ func runCoverage(ctx *cli.Context) error {
 }
 
 func printCoverage(p []cover.Profile) {
+	m := make(map[string][]cover.Profile)
+	var keys []string
+	for _, v := range p {
+		b := filepath.Base(v.FileName)
+		pkgName := strings.TrimSuffix(v.FileName, b)
+		pkgName = strings.TrimSuffix(pkgName, "/")
+		if pkg, ok := m[pkgName]; ok {
+			pkg = append(pkg, v)
+			m[pkgName] = pkg
+			continue
+		}
+		keys = append(keys, pkgName)
+		m[pkgName] = []cover.Profile{v}
+	}
+	sort.Strings(keys)
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.AlignRight)
+	for _, v := range keys {
+		c := cover.Calc(m[v])
+		fmt.Fprintf(w, "%s\t %.1f%%\n", v, 100*c)
+	}
 	v := cover.Calc(p)
-	fmt.Printf("coverage: %.1f%%\n", 100*v)
+	fmt.Fprintf(w, "Total\t %.1f%%\n", 100*v)
+	w.Flush()
 }
 
 func mergeProfiles(a, b []cover.Profile) []cover.Profile {

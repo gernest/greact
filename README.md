@@ -58,7 +58,9 @@ go get github.com/gernest/madtitan/cmd/mad
 ## Getting started
 
 Create a tests directory in the root of your go package. Then write test
-functions. There is no convention over the filenames.
+functions. There is no convention over the filenames, however the function
+names follow the convention of the testing package. So, test functions must be
+of the form `TestXxxx` and must return either `mad.Test` or `mad.Integration`.
 
 
 ## Show me the code 

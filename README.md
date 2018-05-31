@@ -52,6 +52,7 @@ Available tools
 Familiar               | Yes                       | Yes
 Fast                   | Yes                       | ?
 Dom mangling tests     | No                        | Yes
+run tests in browser   | No                        | Yes
 nice with go tools     | Yes                       | No
 
 It is obvious now, no such tool existed to suit my needs so I built such tool
@@ -65,6 +66,7 @@ This is the table again with madtitan in it.
 Familiar               | Yes     | Yes      | Yes
 Fast                   | Yes     | Yes      | ?
 Dom mangling tests     | No      | Yes      | Yes
+run tests in browser   | No      | Yes      | Yes
 nice with go tools     | Yes     | Yes      | No
 
 

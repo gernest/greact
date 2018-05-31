@@ -33,8 +33,53 @@ at testing with another browser you are welcome.
 - [ ] Add a browser
 
 
+## What is this? and why?
+I have been interested in frontend web development using the Go programming
+language. One challenge that I faced was the way to test my code. 
+
+Things that I wanted in any test solution
+ - Go 100% (yep I believe Go is much cooler that js)
+ - must look familiar
+ - must be fast
+ - must run on the browser for tests that need access to the dom
+ - must be friendly with go tool chain
+
+Available tools 
+
+ spec                  |go test (`testing` package)| js based (karma & co)
+ ----------------------|---------------------------|-----------------------
+100% go                | Yes                       | No
+Familiar               | Yes                       | Yes
+Fast                   | Yes                       | ?
+Dom mangling tests     | No                        | Yes
+nice with go tools     | Yes                       | No
+
+It is obvious now, no such tool existed to suit my needs so I built such tool
+suit my need.
+
+This is the table again with madtitan in it.
+
+ spec                  |go test  | madtitan | js based (karma & co)
+ ----------------------|---------|--------- |-----------------------
+100% go                | Yes     | Yes      | No
+Familiar               | Yes     | Yes      | Yes
+Fast                   | Yes     | Yes      | ?
+Dom mangling tests     | No      | Yes      | Yes
+nice with go tools     | Yes     | Yes      | No
+
+
+## Installing
+
+We need both the library and the `mad` command
+
+```
+go get github.com/gernest/madtitan/cmd/mad
+```
+
+
 
 ## Show me the code 
+
 
 ```go
 // Unit test

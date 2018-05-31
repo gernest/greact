@@ -105,8 +105,7 @@ func FLags() []cli.Flag {
 			Name: "cover",
 		},
 		cli.StringFlag{
-			Name:  "coverfile",
-			Value: "coverage.json",
+			Name: "coverfile",
 		},
 		cli.StringFlag{
 			Name:  "mode",

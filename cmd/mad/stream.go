@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -171,11 +170,14 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 						}
 						count++
 					}
-					b, _ := json.Marshal(collect)
-					err := ioutil.WriteFile(filepath.Join(cfg.OutputPath, cfg.Coverfile), b, 0600)
-					if err != nil {
-						fmt.Println(err)
+					if cfg.Coverfile != "" {
+						b, _ := json.Marshal(collect)
+						err := ioutil.WriteFile(cfg.Coverfile, b, 0600)
+						if err != nil {
+							fmt.Println(err)
+						}
 					}
+					printCoverage(collect)
 				}
 				chrome.Stop()
 				cancel()

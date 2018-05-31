@@ -26,9 +26,13 @@ func runCoverage(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	printCoverage(p)
+	return nil
+}
+
+func printCoverage(p []cover.Profile) {
 	v := cover.Calc(p)
 	fmt.Printf("coverage: %.1f%%\n", 100*v)
-	return nil
 }
 
 func mergeProfiles(a, b []cover.Profile) []cover.Profile {

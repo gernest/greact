@@ -105,7 +105,7 @@ func FLags() []cli.Flag {
 			Name: "cover",
 		},
 		cli.StringFlag{
-			Name: "coverfile",
+			Name: "coverprofile",
 		},
 		cli.StringFlag{
 			Name:  "mode",
@@ -144,7 +144,7 @@ func Load(ctx *cli.Context) (*Config, error) {
 		OutputDirName: ctx.String("output_dir"),
 		Build:         ctx.BoolT("build"),
 		Cover:         ctx.Bool("cover"),
-		Coverfile:     ctx.String("coverfile"),
+		Coverfile:     ctx.String("coverprofile"),
 		Covermode:     ctx.String("mode"),
 		Port:          ctx.Int("port"),
 		Verbose:       ctx.Bool("v"),

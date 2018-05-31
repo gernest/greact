@@ -44,31 +44,7 @@ Things that I wanted in any test solution
  - must run on the browser for tests that need access to the dom
  - must be friendly with go tool chain
 
-Available tools 
-
- spec                  |go test (`testing` package)| js based (karma & co)
- ----------------------|---------------------------|-----------------------
-100% go                | Yes                       | No
-Familiar               | Yes                       | Yes
-Fast                   | Yes                       | ?
-Dom mangling tests     | No                        | Yes
-run tests in browser   | No                        | Yes
-nice with go tools     | Yes                       | No
-
-It is obvious now, no such tool existed to suit my needs so I built such tool
-suit my need.
-
-This is the table again with madtitan in it.
-
- spec                  |go test  | madtitan | js based (karma & co)
- ----------------------|---------|--------- |-----------------------
-100% go                | Yes     | Yes      | No
-Familiar               | Yes     | Yes      | Yes
-Fast                   | Yes     | Yes      | ?
-Dom mangling tests     | No      | Yes      | Yes
-run tests in browser   | No      | Yes      | Yes
-nice with go tools     | Yes     | Yes      | No
-
+This inspired me to build such tool.
 
 ## Installing
 
@@ -79,21 +55,48 @@ go get github.com/gernest/madtitan/cmd/mad
 ```
 
 
+## Getting started
+
+Create a tests directory in the root of your go package. Then write test
+functions. There is no convention over the filenames.
+
 
 ## Show me the code 
 
 
 ```go
-// Unit test
- func TestRainfall() mad.Test {
-	return mad.Describe("Raining",
-		mad.It("must be cloudy", func(t mad.T) {
-			ctx := Rainfall()
-			if !ctx.Cloudy {
-				t.Error("expected to be cloudy")
-			}
-		}),
-	)
+// Unit tests
+func TestBrowser() mad.Test {
+	return mad.List{
+		mad.Describe("Prefixes",
+			mad.It("must contain all browser vendor prefixes", func(t mad.T) {
+				b := prefix.NewBrowser()
+				expect := []string{"-moz-", "-ms-", "-o-", "-webkit-"}
+				g := b.Prefixcache
+				for k, v := range expect {
+					if g[k] != v {
+						t.Fatalf("expected %v got %v", expect, g)
+					}
+				}
+			}),
+		),
+		mad.Describe("WithPrefix",
+			mad.It("must return true when the prefix exist", func(t mad.T) {
+				s := "1 -o-calc(1)"
+				b := prefix.NewBrowser()
+				if !b.WithPrefix(s) {
+					t.Error("expected to be true")
+				}
+			}),
+			mad.It("must return false when the prefix does not exist", func(t mad.T) {
+				s := "1 calc(1)"
+				b := prefix.NewBrowser()
+				if b.WithPrefix(s) {
+					t.Error("expected to be false")
+				}
+			}),
+		),
+	}
 }
 
 // Integration test
@@ -120,6 +123,8 @@ func TestRenderBody() mad.Integration {
 }
 ```
 
+check [this  project tests for inspiration](https://github.com/gernest/gs)
+
 ## I want to write unit tests
 
 We got you covered [Take a look at this page](unit_test.md)
@@ -135,13 +140,13 @@ We got you covered [Take a look at this page](integration_test.md)
 
 ## what is unit test ?
 
-For mad tests, unit tests are tests which cover a small chunk of functionality.
+For `mad` , unit tests are tests which cover a small chunk of functionality.
 They must not include any use of code that requires rendering/interacting with
 the browser `dom`
 
 ## what is integration test ?
 
-For mad tests. Integration tests are tests which cover a component/components
+For `mad` . Integration tests are tests which cover a component/components
 rendered on the `dom`.
 
 # Credits

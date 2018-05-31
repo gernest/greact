@@ -21,6 +21,8 @@ import (
 	"github.com/mafredri/cdp/rpcc"
 )
 
+// streamResponse runs the compiled tests in a web browser and displays the
+// results to stdout.
 func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) error {
 	nctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -38,6 +40,14 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	if err != nil {
 		return err
 	}
+
+	// keep track on which functions have been executed. The trick here is, we
+	// first store all functions which are eligible for execution, then whenever we
+	// receive report for a successful function execution, we remove the function
+	// from this map until we have no function left on the map.
+	//
+	// So, by checking if there is no more keys stored in the map we will be sure
+	// that the execution of all tests was complete.
 	tabs := &sync.Map{}
 	for _, v := range cfg.UnitFuncs {
 		tabs.Store(v, true)
@@ -138,6 +148,8 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 			if h != nil {
 				h.Handle(ts)
 			}
+
+			// Do not keep tabs on this function. This function was successful executed.
 			tabs.Delete(ts.Desc)
 		default:
 			complete := true

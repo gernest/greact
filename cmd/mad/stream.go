@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -182,10 +184,24 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 						count++
 					}
 					if cfg.Coverfile != "" {
-						b, _ := json.Marshal(collect)
-						err := ioutil.WriteFile(cfg.Coverfile, b, 0600)
-						if err != nil {
-							fmt.Println(err)
+						ext := filepath.Ext(cfg.Coverfile)
+						if ext == ".json" {
+							b, _ := json.Marshal(collect)
+							err := ioutil.WriteFile(cfg.Coverfile, b, 0600)
+							if err != nil {
+								fmt.Println(err)
+							}
+						} else {
+							var buf bytes.Buffer
+							err := cover.FormatLine(&buf, cfg.Covermode, collect)
+							if err != nil {
+								fmt.Println(err)
+							} else {
+								err = ioutil.WriteFile(cfg.Coverfile, buf.Bytes(), 0600)
+								if err != nil {
+									fmt.Println(err)
+								}
+							}
 						}
 					}
 					printCoverage(collect)

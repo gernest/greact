@@ -3,6 +3,7 @@ package launcher
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,6 +11,8 @@ import (
 	"path/filepath"
 	"regexp"
 )
+
+var errChromePathNotSet = errors.New("the environment variable CHROME_PATH must be set to executable of a build of Chromium version 54.0 or later")
 
 func resolveChromePathLinux() ([]string, error) {
 	var install []string
@@ -47,6 +50,38 @@ func resolveChromePathLinux() ([]string, error) {
 		}
 		install = append(install, str)
 	}
+	if len(install) == 0 {
+		return nil, errChromePathNotSet
+	}
+	priorities := []priority{
+		{
+			regex:  regexp.MustCompile(`/chrome-wrapper$/`),
+			weight: 51,
+		},
+		{
+			regex:  regexp.MustCompile(`/google-chrome-stable$/`),
+			weight: 50,
+		},
+		{
+			regex:  regexp.MustCompile(`/google-chrome$/`),
+			weight: 49,
+		},
+		{
+			regex:  regexp.MustCompile(`/chromium-browser$/`),
+			weight: 48,
+		},
+		{
+			regex:  regexp.MustCompile(`/chromium$/`),
+			weight: 42,
+		},
+	}
+	if os.Getenv(chromePath) != "" {
+		priorities = append([]priority{
+			{regex: regexp.MustCompile(os.Getenv(chromePath)),
+				weight: 150},
+		}, priorities...)
+	}
+	return sortStuff(install, priorities), nil
 
 }
 

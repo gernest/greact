@@ -79,19 +79,19 @@ type CoverFunc func() []Profile
 // number of profile blocks with Count >0 divide by the total number of profile
 // blocks.
 func Calc(profiles []Profile) float64 {
-	var n, d int64
+	var total, covered int64
 	for _, p := range profiles {
 		for _, v := range p.Blocks {
+			total += int64(v.NumStmt)
 			if v.Count > 0 {
-				n++
+				covered += int64(v.NumStmt)
 			}
-			d++
 		}
 	}
-	if d == 0 {
+	if total == 0 {
 		return 0
 	}
-	return float64(n) / float64(d)
+	return float64(covered) / float64(total)
 }
 
 // FormatLine will write the same output as go test -cover does to the out writer.

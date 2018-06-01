@@ -34,7 +34,7 @@ type Profile struct {
 func JSON() string {
 	var profiles []Profile
 	profileStats.Range(func(_, v interface{}) bool {
-		fn := v.(CoverFunc)
+		fn := v.(Handler)
 		profiles = append(profiles, fn()...)
 		return true
 	})
@@ -45,7 +45,7 @@ func JSON() string {
 	return string(b)
 }
 
-func Register(packageName string, coverFunc CoverFunc) {
+func Register(packageName string, coverFunc Handler) {
 	if _, ok := profileStats.Load(packageName); !ok {
 		profileStats.Store(packageName, coverFunc)
 	}
@@ -73,7 +73,8 @@ func File(fileName, mode string, counter []uint32, pos []uint32, numStmts []uint
 	}
 }
 
-type CoverFunc func() []Profile
+// Handler is a function which returns the package profiles.
+type Handler func() []Profile
 
 // Calc returns the code covearge for the given profiles. We just take the total
 // number of profile blocks with Count >0 divide by the total number of profile

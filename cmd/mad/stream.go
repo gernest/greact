@@ -84,57 +84,9 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 		// compiled to a single execution script while each integration test is
 		// compiled to a separate execution script.
 		go func(idx string) {
-			target, err := c.Target.CreateTarget(nctx,
-				target.NewCreateTargetArgs(idx),
-			)
+			err := executeInTab(ctx, cfg, idx, c, m, profiles)
 			if err != nil {
-				fmt.Printf("%s :%v\n", idx, err)
-				return
-			}
-			pageConn, err := m.Dial(nctx, target.TargetID)
-			if err != nil {
-				fmt.Printf("%s :%v\n", idx, err)
-				return
-			}
-			defer pageConn.Close()
-			pageClient := cdp.NewClient(pageConn)
-			if cfg.Verbose || cfg.Cover {
-				if err = pageClient.Console.Enable(nctx); err != nil {
-					fmt.Printf("%s :%v\n", idx, err)
-					return
-				}
-				csLog, err := pageClient.Console.MessageAdded(nctx)
-				if err != nil {
-					fmt.Printf("%s :%v\n", idx, err)
-					return
-				}
-				go func(cs console.MessageAddedClient) {
-					for {
-						msg, err := cs.Recv()
-						if err != nil {
-							return
-						}
-						if cfg.Cover {
-							txt := msg.Message.Text
-							if strings.HasPrefix(txt, cover.Key) {
-								txt := strings.TrimPrefix(txt, cover.Key)
-								prof := []cover.Profile{}
-								err := json.Unmarshal([]byte(txt), &prof)
-								if err != nil {
-									fmt.Println(err)
-								} else {
-									profiles <- prof
-								}
-							}
-						}
-					}
-				}(csLog)
-			}
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				}
+				fmt.Println(err)
 			}
 		}(v)
 	}
@@ -210,6 +162,57 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 				cancel()
 				return nil
 			}
+		}
+	}
+}
+
+func executeInTab(ctx context.Context, cfg *config.Config, idx string, c *cdp.Client, m *session.Manager, profiles chan []cover.Profile) error {
+	target, err := c.Target.CreateTarget(ctx,
+		target.NewCreateTargetArgs(idx),
+	)
+	if err != nil {
+		return fmt.Errorf("trouble creating target %s:%v\n", idx, err)
+	}
+	pageConn, err := m.Dial(ctx, target.TargetID)
+	if err != nil {
+		return fmt.Errorf("trouble dialing session manager  %s:%v\n", idx, err)
+	}
+	defer pageConn.Close()
+	pageClient := cdp.NewClient(pageConn)
+	if cfg.Verbose || cfg.Cover {
+		if err = pageClient.Console.Enable(ctx); err != nil {
+			return fmt.Errorf("trouble enabling  console   %s:%v\n", idx, err)
+		}
+		csLog, err := pageClient.Console.MessageAdded(ctx)
+		if err != nil {
+			return fmt.Errorf("trouble receiving console client  %s:%v\n", idx, err)
+		}
+		go func(cs console.MessageAddedClient) {
+			for {
+				msg, err := cs.Recv()
+				if err != nil {
+					return
+				}
+				if cfg.Cover {
+					txt := msg.Message.Text
+					if strings.HasPrefix(txt, cover.Key) {
+						txt := strings.TrimPrefix(txt, cover.Key)
+						prof := []cover.Profile{}
+						err := json.Unmarshal([]byte(txt), &prof)
+						if err != nil {
+							fmt.Println(err)
+						} else {
+							profiles <- prof
+						}
+					}
+				}
+			}
+		}(csLog)
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
 		}
 	}
 }

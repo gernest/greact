@@ -63,9 +63,14 @@ func main() {
 			Action: runTestsCommand,
 		},
 		{
-			Name:   "coverage",
-			Usage:  "calculate code coverage",
-			Flags:  config.FLags(),
+			Name:  "coverage",
+			Usage: "calculate code coverage",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "text",
+					Usage: "Formats output to be like what go test -cover does",
+				},
+			},
 			Action: runCoverage,
 		},
 	}

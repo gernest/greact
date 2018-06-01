@@ -10,27 +10,32 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/gernest/mad/config"
 	"github.com/gernest/mad/cover"
 	"github.com/urfave/cli"
 )
 
 func runCoverage(ctx *cli.Context) error {
-	cfg, err := config.Load(ctx)
-	if err != nil {
-		return err
+	f := ctx.Args().First()
+	if f != "" {
+		b, err := ioutil.ReadFile(f)
+		if err != nil {
+			return err
+		}
+		p := []cover.Profile{}
+		err = json.Unmarshal(b, &p)
+		if err != nil {
+			return err
+		}
+		txt := ctx.Bool("text")
+		mode := "set"
+		if len(p) > 1 {
+			mode = p[0].Mode
+		}
+		if txt {
+			return cover.FormatLine(os.Stdout, mode, p)
+		}
+		printCoverage(p)
 	}
-	f := filepath.Join(cfg.OutputPath, cfg.Coverfile)
-	b, err := ioutil.ReadFile(f)
-	if err != nil {
-		return err
-	}
-	p := []cover.Profile{}
-	err = json.Unmarshal(b, &p)
-	if err != nil {
-		return err
-	}
-	printCoverage(p)
 	return nil
 }
 

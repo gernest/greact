@@ -6,6 +6,8 @@ package cover
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"sort"
 	"sync"
 )
@@ -90,4 +92,25 @@ func Calc(profiles []Profile) float64 {
 		return 0
 	}
 	return float64(n) / float64(d)
+}
+
+// FormatLine will write the same output as go test -cover does to the out writer.
+func FormatLine(out io.Writer, mode string, profiles []Profile) error {
+	_, err := fmt.Fprintf(out, "mode: %s\n", mode)
+	if err != nil {
+		return err
+	}
+	for _, profile := range profiles {
+		for _, block := range profile.Blocks {
+			_, err = fmt.Fprintf(out, "%s:%d.%d,%d.%d %d %d\n", profile.FileName,
+				block.StartLine, block.StartCol,
+				block.EndLine, block.EndCol,
+				block.NumStmt,
+				block.Count)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

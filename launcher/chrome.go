@@ -150,7 +150,7 @@ func New(opts Options) (*Launcher, error) {
 func getPlatform() (string, error) {
 	v := runtime.GOOS
 	switch v {
-	case "darwin", "linux":
+	case "darwin", "linux", "windows":
 		return v, nil
 	default:
 		return "", fmt.Errorf("platform %s is not supported", v)
@@ -167,6 +167,8 @@ func resolveChromePath() ([]string, error) {
 		return resolveChromePathDarwin()
 	case "linux":
 		return resolveChromePathLinux()
+	case "windows":
+		return resolveChromePathWindows()
 	default:
 		return nil, fmt.Errorf("platform %s is not supported", platform)
 	}

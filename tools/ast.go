@@ -143,16 +143,6 @@ func applyLineNumber(set *token.FileSet, pre bool, match *testNameMap) func(*ast
 	}
 }
 
-func AddCoverage(set *token.FileSet, file *ast.File) *ast.File {
-	astutil.AddImport(set, file, "github.com/gernest/mad/cover")
-	astutil.AddImport(set, file, "go/token")
-	astutil.Apply(file,
-		applyCoverage(set, true),
-		applyCoverage(set, false),
-	)
-	return file
-}
-
 func mark(num int, start, end token.Position) *ast.ExprStmt {
 	return &ast.ExprStmt{
 		X: &ast.CallExpr{
@@ -293,81 +283,5 @@ func hitExr(pos token.Position) *ast.CallExpr {
 				},
 			},
 		},
-	}
-}
-
-func applyCoverage(set *token.FileSet, pre bool) func(*astutil.Cursor) bool {
-	return func(c *astutil.Cursor) bool {
-		node := c.Node()
-		if pre {
-			return true
-		}
-		switch e := node.(type) {
-		case *ast.FuncDecl:
-			markBlock(set, e.Body)
-		case *ast.RangeStmt:
-			markBlock(set, e.Body)
-		case *ast.IfStmt:
-			markBlock(set, e.Body)
-		case *ast.CaseClause:
-			markCaseClauseBlock(set, e)
-		}
-		return true
-	}
-}
-
-func markBlock(set *token.FileSet, block *ast.BlockStmt) {
-	size := len(block.List)
-	start := set.Position(block.Lbrace)
-	end := set.Position(block.Rbrace)
-	list := []ast.Stmt{mark(size, start, end)}
-	if size > 0 {
-		last := block.List[size-1]
-		switch last.(type) {
-		case *ast.ReturnStmt,
-			*ast.SwitchStmt,
-			*ast.TypeSwitchStmt,
-			*ast.BranchStmt:
-			if size == 1 {
-				list = append(list, hit(start))
-			} else {
-				list = append(list, block.List[:size-1]...)
-				list = append(list, hit(start))
-			}
-			list = append(list, last)
-		default:
-			list = append(list, block.List...)
-			list = append(list, hit(start))
-		}
-	} else {
-		list = append(list, hit(start))
-	}
-	block.List = list
-}
-
-func markCaseClauseBlock(set *token.FileSet, block *ast.CaseClause) {
-	size := len(block.Body)
-	start := set.Position(block.Colon)
-	if size > 0 {
-		last := block.Body[size-1]
-		end := set.Position(last.End())
-		list := []ast.Stmt{mark(size, start, end)}
-		switch last.(type) {
-		case *ast.ReturnStmt,
-			*ast.SwitchStmt,
-			*ast.TypeSwitchStmt,
-			*ast.BranchStmt:
-			if size == 1 {
-				list = append(list, hit(start))
-			} else {
-				list = append(list, block.Body[:size-1]...)
-				list = append(list, hit(start))
-			}
-			list = append(list, last)
-		default:
-			list = append(list, block.Body...)
-			list = append(list, hit(start))
-		}
-		block.Body = list
 	}
 }

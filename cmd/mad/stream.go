@@ -84,7 +84,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 		// compiled to a single execution script while each integration test is
 		// compiled to a separate execution script.
 		go func(idx string) {
-			err := executeInTab(ctx, cfg, idx, c, m, profiles)
+			err := executeInTab(nctx, cfg, idx, c, m, profiles)
 			if err != nil {
 				fmt.Println(err)
 			}

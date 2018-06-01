@@ -44,7 +44,7 @@ func resolveChromePathDarwin() ([]string, error) {
 			}
 		}
 	}
-	priorities := []*priority{
+	priorities := []priority{
 		{
 			regex:  regexp.MustCompile(fmt.Sprintf(`^%s/Applications/.*Chrome.app`, os.Getenv("HOME"))),
 			weight: 50,
@@ -71,7 +71,7 @@ func resolveChromePathDarwin() ([]string, error) {
 		},
 	}
 	if os.Getenv(chromePath) != "" {
-		priorities = append([]*priority{
+		priorities = append([]priority{
 			{regex: regexp.MustCompile(os.Getenv(chromePath)),
 				weight: 150},
 		}, priorities...)

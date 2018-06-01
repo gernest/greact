@@ -29,7 +29,7 @@ type installPriority struct {
 	weight int
 }
 
-func sortStuff(install []string, priorities []*priority) []string {
+func sortStuff(install []string, priorities []priority) []string {
 	defaultPolicy := 10
 	var m []*installPriority
 	for _, v := range install {
@@ -165,6 +165,8 @@ func resolveChromePath() ([]string, error) {
 	switch platform {
 	case "darwin":
 		return resolveChromePathDarwin()
+	case "linux":
+		return resolveChromePathLinux()
 	default:
 		return nil, fmt.Errorf("platform %s is not supported", platform)
 	}

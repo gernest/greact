@@ -14,6 +14,7 @@ const (
 	coverageID = "instrumentCodeID"
 )
 
+// TestNames is a collection of functions defining integration and unit tests.
 type TestNames struct {
 	Integration []string
 	Unit        []string
@@ -24,6 +25,8 @@ type testNameMap struct {
 	unit        map[string]int
 }
 
+// AddFileNumber this will add line number markers to the file's t.Error,
+// t.Errof, t.Fatal and t.Fatalf methods.
 func AddFileNumber(set *token.FileSet, file *ast.File) *TestNames {
 	match := &testNameMap{
 		integration: make(map[string]int),
@@ -140,148 +143,5 @@ func applyLineNumber(set *token.FileSet, pre bool, match *testNameMap) func(*ast
 			}
 		}
 		return true
-	}
-}
-
-func mark(num int, start, end token.Position) *ast.ExprStmt {
-	return &ast.ExprStmt{
-		X: &ast.CallExpr{
-			Fun: &ast.SelectorExpr{
-				X:   &ast.Ident{Name: "cover"},
-				Sel: &ast.Ident{Name: "Mark"},
-			},
-			Args: []ast.Expr{
-				&ast.BasicLit{
-					Kind:  token.INT,
-					Value: fmt.Sprint(num),
-				},
-				&ast.UnaryExpr{
-					Op: token.AND,
-					X:  addToken(start),
-				},
-				&ast.UnaryExpr{
-					Op: token.AND,
-					X:  addToken(end),
-				},
-			},
-		},
-	}
-}
-
-func addToken(pos token.Position) *ast.CompositeLit {
-	return &ast.CompositeLit{
-		Type: &ast.SelectorExpr{
-			X: &ast.Ident{
-				Name: "token",
-			},
-			Sel: &ast.Ident{
-				Name: "Position",
-			},
-		},
-		Elts: []ast.Expr{
-			&ast.KeyValueExpr{
-				Key: &ast.Ident{
-					Name: "Filename",
-				},
-				Value: &ast.BasicLit{
-					Kind:  token.STRING,
-					Value: fmt.Sprintf(`"%s"`, pos.Filename),
-				},
-			},
-			&ast.KeyValueExpr{
-				Key: &ast.Ident{
-					Name: "Offset",
-				},
-				Value: &ast.BasicLit{
-					Kind:  token.INT,
-					Value: fmt.Sprint(pos.Offset),
-				},
-			},
-			&ast.KeyValueExpr{
-				Key: &ast.Ident{
-					Name: "Column",
-				},
-				Value: &ast.BasicLit{
-					Kind:  token.INT,
-					Value: fmt.Sprint(pos.Line),
-				},
-			},
-			&ast.KeyValueExpr{
-				Key: &ast.Ident{
-					Name: "Line",
-				},
-				Value: &ast.BasicLit{
-					Kind:  token.INT,
-					Value: fmt.Sprint(pos.Line),
-				},
-			},
-		},
-	}
-}
-func hit(pos token.Position) *ast.ExprStmt {
-	return &ast.ExprStmt{
-		X: hitExr(pos),
-	}
-}
-
-func hitExr(pos token.Position) *ast.CallExpr {
-	return &ast.CallExpr{
-		Fun: &ast.SelectorExpr{
-			X:   &ast.Ident{Name: "cover"},
-			Sel: &ast.Ident{Name: "Hit"},
-		},
-		Args: []ast.Expr{
-			&ast.UnaryExpr{
-				Op: token.AND,
-				X: &ast.CompositeLit{
-					Type: &ast.SelectorExpr{
-						X: &ast.Ident{
-							Name: "token",
-						},
-						Sel: &ast.Ident{
-							Name: "Position",
-						},
-					},
-					Elts: []ast.Expr{
-						&ast.KeyValueExpr{
-							Key: &ast.Ident{
-								Name: "Filename",
-							},
-							Value: &ast.BasicLit{
-								Kind:  token.STRING,
-								Value: fmt.Sprintf(`"%s"`, pos.Filename),
-							},
-						},
-						&ast.KeyValueExpr{
-							Key: &ast.Ident{
-								Name: "Offset",
-							},
-							Value: &ast.BasicLit{
-								Kind:  token.INT,
-								Value: fmt.Sprint(pos.Offset),
-							},
-						},
-						&ast.KeyValueExpr{
-							Key: &ast.Ident{
-								Name: "Column",
-							},
-							Value: &ast.BasicLit{
-								Kind:  token.INT,
-								Value: fmt.Sprint(pos.Line),
-							},
-						},
-						&ast.KeyValueExpr{
-							Key: &ast.Ident{
-								Name: "Line",
-							},
-							Value: &ast.BasicLit{
-								Kind:  token.INT,
-								Value: fmt.Sprint(pos.Line),
-							},
-						},
-					},
-				},
-			},
-		},
 	}
 }

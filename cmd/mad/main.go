@@ -192,7 +192,10 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 			return err
 		}
 	}
-	cfg.TestNames[out] = funcs
+	hasTests := len(funcs.Unit) > 0 || len(funcs.Integration) > 0
+	if hasTests {
+		cfg.TestNames[out] = funcs
+	}
 	return nil
 }
 
@@ -455,8 +458,8 @@ func writeIndex(cfg *config.Config) error {
 var mainUnitTpl = `package main
 
 import(
-	{{range .config.TestInfo}}
-	"{{.ImportPath}}"
+	{{range $k,$v:=.config.TestNames}}
+	"{{$k.ImportPath}}"
 	{{end}}
 	"{{.wsImport}}"
 	"{{.madImport}}"

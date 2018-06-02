@@ -119,7 +119,23 @@ func generateTestPackage(cfg *config.Config) error {
 			return err
 		}
 	}
-	return nil
+	wsImport := cfg.ImportMap[websocketImportPath]
+	if wsImport == "" {
+		wsImport = websocketImportPath
+	}
+	madImport := cfg.ImportMap[madImportPath]
+	if madImport == "" {
+		madImport = madImportPath
+	}
+	err := writeMain(cfg.OutputPath, map[string]interface{}{
+		"config":    cfg,
+		"wsImport":  wsImport,
+		"madImport": madImport,
+	})
+	if err != nil {
+		return err
+	}
+	return writeIndex(cfg)
 }
 
 // This loads files found in path, process them and generate processed package
@@ -131,10 +147,9 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 	// we need to keep track of the defined unit and integration test functions.
 	// This collects functions from all files.
 	funcs := &tools.TestNames{}
-	importMap := make(map[string]string)
 	if cfg.Cover {
 		for _, v := range out.Package.Imports {
-			err := instrumentImport(cfg, importMap, v)
+			err := instrumentImport(cfg, cfg.ImportMap, v)
 			if err != nil {
 				return err
 			}
@@ -145,13 +160,12 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 				integrationImportPath,
 			}
 			for _, v := range imports {
-				err := instrumentImport(cfg, importMap, v)
+				err := instrumentImport(cfg, cfg.ImportMap, v)
 				if err != nil {
 					return err
 				}
 			}
 		}
-
 	}
 	for _, v := range out.Package.GoFiles {
 		f, err := parser.ParseFile(set, filepath.Join(out.Package.Dir, v), nil, 0)
@@ -163,16 +177,10 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 			funcs.Integration = append(funcs.Integration, fn.Integration...)
 			funcs.Unit = append(funcs.Unit, fn.Unit...)
 		}
-		for old, newImport := range importMap {
+		for old, newImport := range cfg.ImportMap {
 			astutil.RewriteImport(set, f, old, newImport)
 		}
 		files = append(files, f)
-	}
-	if funcs.Unit != nil {
-		cfg.UnitFuncs = append(cfg.UnitFuncs, funcs.Unit...)
-	}
-	if funcs.Integration != nil {
-		cfg.IntegrationFuncs = append(cfg.IntegrationFuncs, funcs.Integration...)
 	}
 	for _, v := range files {
 		err := writeFile(out.OutputPath, set, v)
@@ -180,27 +188,8 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 			return err
 		}
 	}
-	madImport := importMap[madImportPath]
-	if madImport == "" {
-		madImport = madImportPath
-	}
-	wsImport := importMap[websocketImportPath]
-	if wsImport == "" {
-		wsImport = websocketImportPath
-	}
-	ctx := map[string]interface{}{
-		"config":    cfg,
-		"funcs":     funcs,
-		"madImport": madImport,
-		"wsImport":  wsImport,
-	}
-	if err := writeMain(cfg.OutputPath, ctx); err != nil {
-		return err
-	}
-	if err := writeIntegrationMain(cfg, importMap); err != nil {
-		return err
-	}
-	return writeIndex(cfg, out)
+	cfg.TestNames[out] = funcs
+	return nil
 }
 
 const coverTpl = `
@@ -324,71 +313,71 @@ func instrumentImport(cfg *config.Config, importMap map[string]string, pkg strin
 	return nil
 }
 
-func writeIntegrationMain(cfg *config.Config, importMap map[string]string) error {
-	if len(cfg.IntegrationFuncs) > 0 {
-		data := make(map[string]interface{})
-		data["config"] = cfg
-		madImport := importMap[madImportPath]
-		if madImport == "" {
-			madImport = madImportPath
-		}
-		interImport := importMap[integrationImportPath]
-		if interImport == "" {
-			interImport = integrationImportPath
-		}
-		data["madImport"] = madImport
-		data["interImport"] = interImport
-		var buf bytes.Buffer
-		for _, v := range cfg.IntegrationFuncs {
-			name := strings.ToLower(v)
-			data["PkgName"] = name
-			pkg := cfg.GeneratedTestPkg + "/" + name
-			data["IntegrationPkg"] = pkg
-			e := filepath.Join(cfg.GeneratedTestPath, name)
-			os.MkdirAll(e, 0755)
-			data["FuncName"] = v
-			buf.Reset()
-			err := integrationTpl.Execute(&buf, data)
-			if err != nil {
-				return err
-			}
-			err = ioutil.WriteFile(filepath.Join(e, "main.go"), buf.Bytes(), 0600)
-			if err != nil {
-				return err
-			}
-			q := make(url.Values)
-			q.Set("src", filepath.Join(cfg.TestDirName, name, "main.js"))
-			mainFIle := fmt.Sprintf("%s:%d%s?%s",
-				localhost, cfg.Port, resourcePath, q.Encode())
-			ctx := map[string]interface{}{
-				"mainFile": mainFIle,
-				"config":   cfg,
-			}
-			var buf bytes.Buffer
-			err = indexHTMLTpl.Execute(&buf, ctx)
-			m := filepath.Join(e, "index.html")
-			err = ioutil.WriteFile(m, buf.Bytes(), 0600)
-			if err != nil {
-				return err
-			}
-			query := make(url.Values)
-			query.Set("src", filepath.Join(cfg.TestDirName, name, "index.html"))
-			cfg.IntegrationIndexPages = append(cfg.IntegrationIndexPages,
-				fmt.Sprintf("%s:%d%s?%s",
-					localhost, cfg.Port, resourcePath, query.Encode()))
-			if cfg.Build {
-				o := filepath.Join(e, "main.js")
-				cmd := exec.Command("gopherjs", "build", "-o", o, pkg)
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stdout
-				if err := cmd.Run(); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
-}
+// func writeIntegrationMain(cfg *config.Config, importMap map[string]string) error {
+// 	if len(cfg.IntegrationFuncs) > 0 {
+// 		data := make(map[string]interface{})
+// 		data["config"] = cfg
+// 		madImport := importMap[madImportPath]
+// 		if madImport == "" {
+// 			madImport = madImportPath
+// 		}
+// 		interImport := importMap[integrationImportPath]
+// 		if interImport == "" {
+// 			interImport = integrationImportPath
+// 		}
+// 		data["madImport"] = madImport
+// 		data["interImport"] = interImport
+// 		var buf bytes.Buffer
+// 		for _, v := range cfg.IntegrationFuncs {
+// 			name := strings.ToLower(v)
+// 			data["PkgName"] = name
+// 			pkg := cfg.GeneratedTestPkg + "/" + name
+// 			data["IntegrationPkg"] = pkg
+// 			e := filepath.Join(cfg.GeneratedTestPath, name)
+// 			os.MkdirAll(e, 0755)
+// 			data["FuncName"] = v
+// 			buf.Reset()
+// 			err := integrationTpl.Execute(&buf, data)
+// 			if err != nil {
+// 				return err
+// 			}
+// 			err = ioutil.WriteFile(filepath.Join(e, "main.go"), buf.Bytes(), 0600)
+// 			if err != nil {
+// 				return err
+// 			}
+// 			q := make(url.Values)
+// 			q.Set("src", filepath.Join(cfg.TestDirName, name, "main.js"))
+// 			mainFIle := fmt.Sprintf("%s:%d%s?%s",
+// 				localhost, cfg.Port, resourcePath, q.Encode())
+// 			ctx := map[string]interface{}{
+// 				"mainFile": mainFIle,
+// 				"config":   cfg,
+// 			}
+// 			var buf bytes.Buffer
+// 			err = indexHTMLTpl.Execute(&buf, ctx)
+// 			m := filepath.Join(e, "index.html")
+// 			err = ioutil.WriteFile(m, buf.Bytes(), 0600)
+// 			if err != nil {
+// 				return err
+// 			}
+// 			query := make(url.Values)
+// 			query.Set("src", filepath.Join(cfg.TestDirName, name, "index.html"))
+// 			cfg.IntegrationIndexPages = append(cfg.IntegrationIndexPages,
+// 				fmt.Sprintf("%s:%d%s?%s",
+// 					localhost, cfg.Port, resourcePath, query.Encode()))
+// 			if cfg.Build {
+// 				o := filepath.Join(e, "main.js")
+// 				cmd := exec.Command("gopherjs", "build", "-o", o, pkg)
+// 				cmd.Stdout = os.Stdout
+// 				cmd.Stderr = os.Stdout
+// 				if err := cmd.Run(); err != nil {
+// 					return err
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return nil
+// }
 
 // writeFile prints the ast for f using the printer package. The file name is
 // obtained from the fset.
@@ -427,19 +416,16 @@ func writeMain(dst string, ctx interface{}) error {
 }
 
 //creates index.html file which loads the generated test suite js file.
-func writeIndex(cfg *config.Config, info *config.Info) error {
+func writeIndex(cfg *config.Config) error {
 	q := make(url.Values)
-	q.Set("src", filepath.Join(info.RelativePath, "main.js"))
+	q.Set("src", "main.js")
 	mainFIle := fmt.Sprintf("%s:%d%s?%s",
 		localhost, cfg.Port, resourcePath, q.Encode())
 	ctx := map[string]interface{}{
 		"mainFile": mainFIle,
 		"config":   cfg,
 	}
-	o := info.OutputPath
-	if info.OutputPath == cfg.GeneratedTestPath {
-		o = cfg.OutputPath
-	}
+	o := cfg.OutputPath
 	var buf bytes.Buffer
 	err := indexHTMLTpl.Execute(&buf, ctx)
 	m := filepath.Join(o, "index.html")
@@ -462,7 +448,9 @@ func writeIndex(cfg *config.Config, info *config.Info) error {
 var mainUnitTpl = `package main
 
 import(
-	"{{.config.GeneratedTestPkg}}"
+	{{range .config.TestInfo}}
+	"{{.ImportPath}}"
+	{{end}}
 	"{{.wsImport}}"
 	"{{.madImport}}"
 	"github.com/gernest/mad/cover"
@@ -504,8 +492,10 @@ func start()mad.Test  {
 }
 func allTests()[]mad.Test  {
 	return []mad.Test{
-		{{range .funcs.Unit -}}
-		mad.Describe("{{.}}",{{$n}}.{{.}}()),
+		{{range $k, $v:=.config.TestNames}}
+		{{range $v.Unit}}
+		mad.Describe("{{$k.Desc .}}",{{$k.FormatName .}}()),
+		{{end}}
 		{{end -}}
 	}
 }

@@ -1,9 +1,13 @@
 package config
 
 import (
+	"fmt"
 	"go/build"
+	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/gernest/mad/tools"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/urfave/cli"
@@ -52,11 +56,7 @@ type Config struct {
 	// internally to collect test results through websocket.
 	UUID string
 
-	// This is a list of all the unit test functions registered on a test run.
-	UnitFuncs []string
-
-	// This is a list of all integration tests registered on the test run
-	IntegrationFuncs []string
+	TestNames map[*Info]*tools.TestNames
 
 	// Port is the port on which to run the websocket server.
 	Port int
@@ -92,6 +92,8 @@ type Config struct {
 	Dry bool
 
 	TestInfo []*Info
+
+	ImportMap map[string]string
 }
 
 // FLags returns configuration flags.
@@ -185,6 +187,8 @@ func Load(ctx *cli.Context) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.TestNames = make(map[*Info]*tools.TestNames)
+	c.ImportMap = make(map[string]string)
 	c.Info = pkg
 	c.TestPath = filepath.Join(c.Info.Dir, c.TestDirName)
 	c.OutputPath = filepath.Join(c.Info.Dir, c.OutputDirName)
@@ -192,7 +196,23 @@ func Load(ctx *cli.Context) (*Config, error) {
 	c.GeneratedTestPkg = filepath.Join(c.Info.ImportPath, c.OutputDirName, c.TestDirName)
 	c.OutputMainPkg = filepath.Join(c.Info.ImportPath, c.OutputDirName)
 	c.UUID = uuid.NewV4().String()
-	testDirs := []string{c.TestPath}
+	i, err := os.Stat(c.TestPath)
+	if err != nil {
+		return nil, err
+	}
+	if !i.IsDir() {
+		return nil, fmt.Errorf("%s is not a  directory %v", c.TestPath, err)
+	}
+	var testDirs []string
+	filepath.Walk(c.TestPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			testDirs = append(testDirs, path)
+		}
+		return nil
+	})
 	for _, v := range testDirs {
 		i, err := OutputInfo(c, v)
 		if err != nil {
@@ -227,6 +247,16 @@ type Info struct {
 	RelativePath string
 
 	Package *build.Package
+
+	ImportPath string
+}
+
+func (i *Info) Desc(n string) string {
+	return fmt.Sprintf("%s.%s", i.Package.Name, n)
+}
+
+func (i *Info) FormatName(n string) string {
+	return i.Desc(n)
 }
 
 func OutputInfo(cfg *Config, testPath string) (*Info, error) {
@@ -245,15 +275,17 @@ func OutputInfo(cfg *Config, testPath string) (*Info, error) {
 func getOutputInfo(cfg *Config, testPath string, packagename string) (*Info, error) {
 	if cfg.TestPath == testPath {
 		path := filepath.Join(cfg.OutputPath, packagename)
-		return &Info{OutputPath: path}, nil
+		return &Info{OutputPath: path, ImportPath: cfg.GeneratedTestPkg}, nil
 	}
 	rel, err := filepath.Rel(cfg.TestPath, testPath)
 	if err != nil {
 		return nil, err
 	}
 	path := filepath.Join(cfg.OutputPath, cfg.TestDirName, rel)
+	relPath := filepath.Join(filepath.Base(cfg.TestPath), rel)
 	return &Info{
 		OutputPath:   path,
-		RelativePath: filepath.Join(filepath.Base(cfg.TestPath), rel),
+		RelativePath: relPath,
+		ImportPath:   cfg.GeneratedTestPkg + "/" + rel,
 	}, nil
 }

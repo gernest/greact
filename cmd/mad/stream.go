@@ -51,11 +51,22 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 	// So, by checking if there is no more keys stored in the map we will be sure
 	// that the execution of all tests was complete.
 	tabs := &sync.Map{}
-	for _, v := range cfg.UnitFuncs {
-		tabs.Store(v, true)
+	totalProfiles := 0
+	hasUnitTest := false
+	for k, v := range cfg.TestNames {
+		for _, fn := range v.Unit {
+			if !hasUnitTest {
+				hasUnitTest = true
+			}
+			tabs.Store(k.FormatName(fn), true)
+		}
+		// for _, fn := range v.Integration {
+		// 	totalProfiles++
+		// 	tabs.Store(fmt.Sprintf("%s.%s", k.Package.Name, fn), true)
+		// }
 	}
-	for _, v := range cfg.IntegrationFuncs {
-		tabs.Store(v, true)
+	if hasUnitTest {
+		totalProfiles++
 	}
 	devt := devtool.New(fmt.Sprintf("%s:%d", cfg.DevtoolURL, cfg.DevtoolPort))
 	pt, err := devt.Get(ctx, devtool.Page)
@@ -115,13 +126,6 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 					h.Done()
 				}
 				if cfg.Cover {
-					totalProfiles := len(cfg.IntegrationFuncs)
-					if len(cfg.UnitFuncs) > 0 {
-
-						// All unit functions are executed in a single package. Which means they
-						// will only give one profile.
-						totalProfiles++
-					}
 					count := 1
 					var collect []cover.Profile
 					for p := range profiles {

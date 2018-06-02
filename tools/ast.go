@@ -113,35 +113,60 @@ func applyLineNumber(set *token.FileSet, pre bool, match *testNameMap) func(*ast
 			}
 		case *ast.CallExpr:
 			if s, ok := e.Fun.(*ast.SelectorExpr); ok {
-				file := set.File(e.Pos())
-				line := file.Line(e.Pos())
-				k := fmt.Sprintf("%s:%v ", file.Name(), line)
-				switch s.Sel.Name {
-				case "Error":
-					e.Args = append([]ast.Expr{
-						&ast.BasicLit{
-							Value: fmt.Sprintf(`"%s"`, k),
-						},
-					}, e.Args...)
-					return false
-				case "Errorf":
-					b := e.Args[0].(*ast.BasicLit)
-					b.Value = addStrLit(k, b.Value)
-					return false
-				case "Fatal":
-					e.Args = append([]ast.Expr{
-						&ast.BasicLit{
-							Value: fmt.Sprintf(`"%s"`, k),
-						},
-					}, e.Args...)
-					return false
-				case "Fatalf":
-					b := e.Args[0].(*ast.BasicLit)
-					b.Value = addStrLit(k, b.Value)
-					return false
+				if id, ok := s.X.(*ast.Ident); ok {
+					if id.Name == "mad" && s.Sel.Name == "It" {
+						if len(e.Args) == 2 {
+							a := e.Args[1].(*ast.FuncLit)
+							selector := a.Type.Params.List[0].Names[0].Name
+							insert(set, selector, a.Body)
+							return false
+						}
+					}
 				}
 			}
 		}
 		return true
 	}
+}
+
+func insert(set *token.FileSet, sel string, node *ast.BlockStmt) {
+	astutil.Apply(node, nil, func(c *astutil.Cursor) bool {
+		n := c.Node()
+		if e, ok := n.(*ast.CallExpr); ok {
+			if s, ok := e.Fun.(*ast.SelectorExpr); ok {
+				if id, ok := s.X.(*ast.Ident); ok {
+					if id.Name == sel {
+						file := set.File(e.Pos())
+						line := file.Line(e.Pos())
+						k := fmt.Sprintf("%s:%v ", file.Name(), line)
+						switch s.Sel.Name {
+						case "Error":
+							e.Args = append([]ast.Expr{
+								&ast.BasicLit{
+									Value: fmt.Sprintf(`"%s"`, k),
+								},
+							}, e.Args...)
+							return false
+						case "Errorf":
+							b := e.Args[0].(*ast.BasicLit)
+							b.Value = addStrLit(k, b.Value)
+							return false
+						case "Fatal":
+							e.Args = append([]ast.Expr{
+								&ast.BasicLit{
+									Value: fmt.Sprintf(`"%s"`, k),
+								},
+							}, e.Args...)
+							return false
+						case "Fatalf":
+							b := e.Args[0].(*ast.BasicLit)
+							b.Value = addStrLit(k, b.Value)
+							return false
+						}
+					}
+				}
+			}
+		}
+		return true
+	})
 }

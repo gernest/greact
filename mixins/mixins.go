@@ -2,8 +2,7 @@ package mixins
 
 import (
 	"github.com/gernest/gs"
-	"github.com/gernest/vected/style/themes"
-	"github.com/gernest/vected/style/unit"
+	"github.com/gernest/vected/themes"
 )
 
 const (
@@ -116,14 +115,5 @@ func IconFontFont(content string) gs.CSSRule {
 		gs.P("-webkit-font-smoothing", "antialiased"),
 		gs.P("-moz-osx-font-smoothing", "grayscale"),
 		gs.P("content", content),
-	)
-}
-
-func IconFontSize12(size, rotate string) gs.CSSRule {
-	scale := unit.Unit(size + "/12px")
-	return gs.CSS(
-		gs.P("display", "inline-block"),
-		gs.P("font-size", "12px"),
-		gs.P("transform", "scale("+scale+") rotate("+rotate+")"),
 	)
 }

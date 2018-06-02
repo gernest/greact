@@ -12,6 +12,7 @@ type SheetObject interface {
 	Detach()
 }
 
+// SimpleRegistry implements Registry interface.
 type SimpleRegistry struct {
 	idx             int64
 	sheets          map[int64]*registryNode

@@ -119,7 +119,7 @@ func generateTestPackage(cfg *config.Config) error {
 	os.MkdirAll(out, 0755)
 	set := token.NewFileSet()
 
-	// we need to kee track of the defined unit and integration test functions.
+	// we need to keep track of the defined unit and integration test functions.
 	// This collects functions from all files.
 	funcs := &tools.TestNames{}
 	importMap := make(map[string]string)

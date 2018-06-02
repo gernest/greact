@@ -110,15 +110,34 @@ type respHandler interface {
 // Position information is injected in all calls to Error,Errorf,Fatal,FatalF.
 // Tis is the simpleset way to provide informative error messages on test failure.
 func generateTestPackage(cfg *config.Config) error {
-	tsPkg, err := build.ImportDir(cfg.TestPath, 0)
+	return createTestPackage(cfg, cfg.TestPath)
+}
+
+func outputPath(cfg *config.Config, testPath string, packageName string) (string, error) {
+	if cfg.TestPath == testPath {
+		return filepath.Join(cfg.OutputPath, packageName), nil
+	}
+	rel, err := filepath.Rel(cfg.TestPath, testPath)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(cfg.OutputPath, cfg.TestDirName, rel), nil
+}
+
+// This loads files found in path, process them and generate processed package
+// into the directory specified by cfg.OutputPath.
+func createTestPackage(cfg *config.Config, path string) error {
+	tsPkg, err := build.ImportDir(path, 0)
 	if err != nil {
 		return err
 	}
 	var files []*ast.File
-	out := filepath.Join(cfg.OutputPath, tsPkg.Name)
+	out, err := outputPath(cfg, path, tsPkg.Name)
+	if err != nil {
+		return err
+	}
 	os.MkdirAll(out, 0755)
 	set := token.NewFileSet()
-
 	// we need to keep track of the defined unit and integration test functions.
 	// This collects functions from all files.
 	funcs := &tools.TestNames{}

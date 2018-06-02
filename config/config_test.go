@@ -1,13 +1,11 @@
-package main
+package config
 
 import (
 	"testing"
-
-	"github.com/gernest/mad/config"
 )
 
 func TestGetOutputPath(t *testing.T) {
-	cfg := &config.Config{
+	cfg := &Config{
 		OutputPath:  "/output/",
 		TestPath:    "/tests/",
 		TestDirName: "tests",

@@ -3,79 +3,85 @@ package color
 import (
 	"reflect"
 	"strings"
-	"testing"
+
+	"github.com/gernest/mad"
+
+	"github.com/gernest/vected/color"
 )
 
-func TestNew(t *testing.T) {
-	defer func() {
-		if err := recover(); err != nil {
-			t.Error(err)
+func TestNew() mad.Test {
+	return mad.It("initialize new color ", func(t mad.T) {
+		defer func() {
+			if err := recover(); err != nil {
+				t.Error(err)
+			}
+		}()
+		s := []struct {
+			src    interface{}
+			expect color.Color
+			err    string
+		}{
+			{
+				src:    []uint8{255, 255, 0},
+				expect: color.Color{RGB: []uint8{255, 255, 0}},
+			},
+			{
+				src: 255,
+				err: "unsupported type",
+			},
+			{
+				src:    "#fff",
+				expect: color.Color{RGB: []uint8{255, 255, 255}},
+			},
 		}
-	}()
 
-	s := []struct {
-		src    interface{}
-		expect Color
-		err    string
-	}{
-		{
-			src:    []uint8{255, 255, 0},
-			expect: Color{RGB: []uint8{255, 255, 0}},
-		},
-		{
-			src: 255,
-			err: "unsupported type",
-		},
-		{
-			src:    "#fff",
-			expect: Color{RGB: []uint8{255, 255, 255}},
-		},
-	}
-
-	for _, v := range s {
-		if v.err != "" {
-			checkError(t, v.err, func() {
-				New(v.src)
-			})
-		} else {
-			g := New(v.src)
-			compareColors(t, g, &v.expect)
+		for _, v := range s {
+			if v.err != "" {
+				checkError(t, v.err, func() {
+					color.New(v.src)
+				})
+			} else {
+				g := color.New(v.src)
+				compareColors(t, g, &v.expect)
+			}
 		}
-	}
+	})
+
 }
 
-func checkError(ts *testing.T, msg string, fn func()) {
+func checkError(t mad.T, msg string, fn func()) {
 	defer func() {
 		if err := recover(); err != nil {
 			e := err.(error)
 			if !strings.Contains(e.Error(), msg) {
-				ts.Errorf("expected %v to contain %v", e, msg)
+				t.Errorf("expected %v to contain %v", e, msg)
 			}
 		} else {
-			ts.Error("expected an error")
+			t.Error("expected an error")
 		}
 	}()
 	fn()
 }
 
-func compareColors(ts *testing.T, a, b *Color) {
+func compareColors(t mad.T, a, b *color.Color) {
 	if !reflect.DeepEqual(a.RGB, b.RGB) {
-		ts.Errorf("rgb: expected %v to equal %v", a.RGB, b.RGB)
+		t.Errorf("rgb: expected %v to equal %v", a.RGB, b.RGB)
 	}
 }
 
-func TestColor_Hex(t *testing.T) {
-	for k, v := range commonColors {
-		n := New(v)
-		g := n.Hex()
-		if g != v {
-			t.Errorf("%s: expected %s got %s", k, v, g)
+func TestColor_Hex() mad.Test {
+	return mad.It("must generate correct hex color", func(t mad.T) {
+		for k, v := range color.CommonColors {
+			n := color.New(v)
+			g := n.Hex()
+			if g != v {
+				t.Errorf("%s: expected %s got %s", k, v, g)
+			}
 		}
-	}
+	})
 }
 
-func TestPrintColors(t *testing.T) {
-
+func TestPrintColors() mad.Test {
 	sample := []struct {
 		name, src, hex, rgb, hsl, hsv string
 	}{
@@ -229,98 +235,101 @@ func TestPrintColors(t *testing.T) {
 		{name: "yellow", src: "#ffff00", hex: "#ffff00", rgb: "rgb(255,255,0)", hsl: "hsl(60,100%,50%)", hsv: "hsv(60,100%,100%)"},
 		{name: "yellowgreen", src: "#9acd32", hex: "#9acd32", rgb: "rgb(154,205,50)", hsl: "hsl(79,61%,50%)", hsv: "hsv(79,76%,80%)"},
 	}
-
-	// hex
-	for _, v := range sample {
-		c := New(v.src)
-		hex := PrintColor(c, "hex")
-		if hex != v.hex {
-			t.Errorf("%s: hex expected %s got %s", v.name, v.hex, hex)
-		}
-		rgb := PrintColor(c, "rgb")
-		if rgb != v.rgb {
-			t.Errorf("%s: rgb expected %s got %s", v.name, v.rgb, rgb)
-		}
-		hsl := PrintColor(c, "hsl")
-		if hsl != v.hsl {
-			t.Errorf("%s: hsl expected %s got %s", v.name, v.hsl, hsl)
-		}
-		hsv := PrintColor(c, "hsv")
-		if hsv != v.hsv {
-			t.Errorf("%s: hsv expected %s got %s", v.name, v.hsv, hsv)
-		}
-	}
-	// rgb source
-	for _, v := range sample {
-		c := New(v.rgb)
-		hex := PrintColor(c, "hex")
-		if hex != v.hex {
-			t.Errorf("%s: hex expected %s got %s", v.name, v.hex, hex)
-		}
-		rgb := PrintColor(c, "rgb")
-		if rgb != v.rgb {
-			t.Errorf("%s: rgb expected %s got %s", v.name, v.rgb, rgb)
-		}
-		hsl := PrintColor(c, "hsl")
-		if hsl != v.hsl {
-			t.Errorf("%s: hsl expected %s got %s", v.name, v.hsl, hsl)
-		}
-		hsv := PrintColor(c, "hsv")
-		if hsv != v.hsv {
-			t.Errorf("%s: hsv expected %s got %s", v.name, v.hsv, hsv)
-		}
-	}
-
-	t.Run("HSLA", func(ts *testing.T) {
-		for _, v := range sample {
-			c := HSLA(New(v.rgb).HSLA())
-			hex := PrintColor(c, "hex")
-			if hex != v.hex {
-				ts.Errorf("%s: hex expected %s got %s", v.name, v.hex, hex)
+	return mad.Describe("PrintColor",
+		mad.It("prints hex", func(t mad.T) {
+			for _, v := range sample {
+				c := color.New(v.src)
+				hex := color.PrintColor(c, "hex")
+				if hex != v.hex {
+					t.Errorf("%s: hex expected %s got %s", v.name, v.hex, hex)
+				}
+				rgb := color.PrintColor(c, "rgb")
+				if rgb != v.rgb {
+					t.Errorf("%s: rgb expected %s got %s", v.name, v.rgb, rgb)
+				}
+				hsl := color.PrintColor(c, "hsl")
+				if hsl != v.hsl {
+					t.Errorf("%s: hsl expected %s got %s", v.name, v.hsl, hsl)
+				}
+				hsv := color.PrintColor(c, "hsv")
+				if hsv != v.hsv {
+					t.Errorf("%s: hsv expected %s got %s", v.name, v.hsv, hsv)
+				}
 			}
-			rgb := PrintColor(c, "rgb")
-			if rgb != v.rgb {
-				ts.Errorf("%s: rgb expected %s got %s", v.name, v.rgb, rgb)
+		}),
+		mad.It("prints rgb", func(t mad.T) {
+			for _, v := range sample {
+				c := color.New(v.rgb)
+				hex := color.PrintColor(c, "hex")
+				if hex != v.hex {
+					t.Errorf("%s: hex expected %s got %s", v.name, v.hex, hex)
+				}
+				rgb := color.PrintColor(c, "rgb")
+				if rgb != v.rgb {
+					t.Errorf("%s: rgb expected %s got %s", v.name, v.rgb, rgb)
+				}
+				hsl := color.PrintColor(c, "hsl")
+				if hsl != v.hsl {
+					t.Errorf("%s: hsl expected %s got %s", v.name, v.hsl, hsl)
+				}
+				hsv := color.PrintColor(c, "hsv")
+				if hsv != v.hsv {
+					t.Errorf("%s: hsv expected %s got %s", v.name, v.hsv, hsv)
+				}
 			}
-			hsl := PrintColor(c, "hsl")
-			if hsl != v.hsl {
-				ts.Errorf("%s: hsl expected %s got %s", v.name, v.hsl, hsl)
+		}),
+		mad.It("prints HSLA", func(t mad.T) {
+			for _, v := range sample {
+				c := color.HSLA(color.New(v.rgb).HSLA())
+				hex := color.PrintColor(c, "hex")
+				if hex != v.hex {
+					t.Errorf("%s: hex expected %s got %s", v.name, v.hex, hex)
+				}
+				rgb := color.PrintColor(c, "rgb")
+				if rgb != v.rgb {
+					t.Errorf("%s: rgb expected %s got %s", v.name, v.rgb, rgb)
+				}
+				hsl := color.PrintColor(c, "hsl")
+				if hsl != v.hsl {
+					t.Errorf("%s: hsl expected %s got %s", v.name, v.hsl, hsl)
+				}
+				hsv := color.PrintColor(c, "hsv")
+				if hsv != v.hsv {
+					t.Errorf("%s: hsv expected %s got %s", v.name, v.hsv, hsv)
+				}
 			}
-			hsv := PrintColor(c, "hsv")
-			if hsv != v.hsv {
-				ts.Errorf("%s: hsv expected %s got %s", v.name, v.hsv, hsv)
+		}),
+		mad.It("prints HSVA", func(t mad.T) {
+			for _, v := range sample {
+				c := color.HSVA(color.New(v.rgb).HSVA())
+				hex := color.PrintColor(c, "hex")
+				if hex != v.hex {
+					t.Errorf("%s: hex expected %s got %s", v.name, v.hex, hex)
+				}
+				rgb := color.PrintColor(c, "rgb")
+				if rgb != v.rgb {
+					t.Errorf("%s: rgb expected %s got %s", v.name, v.rgb, rgb)
+				}
+				hsl := color.PrintColor(c, "hsl")
+				if hsl != v.hsl {
+					t.Errorf("%s: hsl expected %s got %s", v.name, v.hsl, hsl)
+				}
+				hsv := color.PrintColor(c, "hsv")
+				if hsv != v.hsv {
+					t.Errorf("%s: hsv expected %s got %s", v.name, v.hsv, hsv)
+				}
 			}
-		}
-	})
-	t.Run("HSVA", func(ts *testing.T) {
-		// ts.Skip()
-		for _, v := range sample {
-			c := HSVA(New(v.rgb).HSVA())
-			hex := PrintColor(c, "hex")
-			if hex != v.hex {
-				ts.Errorf("%s: hex expected %s got %s", v.name, v.hex, hex)
-			}
-			rgb := PrintColor(c, "rgb")
-			if rgb != v.rgb {
-				ts.Errorf("%s: rgb expected %s got %s", v.name, v.rgb, rgb)
-			}
-			hsl := PrintColor(c, "hsl")
-			if hsl != v.hsl {
-				ts.Errorf("%s: hsl expected %s got %s", v.name, v.hsl, hsl)
-			}
-			hsv := PrintColor(c, "hsv")
-			if hsv != v.hsv {
-				ts.Errorf("%s: hsv expected %s got %s", v.name, v.hsv, hsv)
-			}
-		}
-	})
-
+		}),
+	)
 }
 
-func TestHSLA(t *testing.T) {
-	e := New("#c71585")
-	n := HSLA(e.HSLA())
-	if n.Hex() != e.Hex() {
-		t.Errorf("expected %s got %s", e.Hex(), n.Hex())
-	}
+func TestHSLA() mad.Test {
+	return mad.It("can covert between hsla and hex", func(t mad.T) {
+		e := color.New("#c71585")
+		n := color.HSLA(e.HSLA())
+		if n.Hex() != e.Hex() {
+			t.Errorf("expected %s got %s", e.Hex(), n.Hex())
+		}
+	})
+
 }

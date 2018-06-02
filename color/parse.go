@@ -31,7 +31,7 @@ var (
 )
 
 func matchColor(c string) *matchedColor {
-	if n, ok := commonColors[c]; ok {
+	if n, ok := CommonColors[c]; ok {
 		return matchColor(n)
 	}
 	return execMatchers(c,

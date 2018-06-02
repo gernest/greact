@@ -1,11 +1,11 @@
 package color
 
 import (
-	"bytes"
-	"html/template"
-	"io/ioutil"
 	"math"
-	"testing"
+
+	"github.com/gernest/mad"
+
+	"github.com/gernest/vected/color"
 )
 
 type hsvSample struct {
@@ -18,28 +18,7 @@ type hsvSample struct {
 	r, g, b uint8
 }
 
-func TestPalette(t *testing.T) {
-	tpl, err := template.New("t").Funcs(
-		template.FuncMap{
-			"hsv": func(v *Color) template.HTML {
-				return template.HTML(PrintColor(v, "hsv"))
-			},
-		},
-	).ParseFiles("index.html")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var o bytes.Buffer
-	err = tpl.ExecuteTemplate(&o, "index.html", NewPalette())
-	if err != nil {
-		t.Fatal(err)
-	}
-	ioutil.WriteFile("colors.html", o.Bytes(), 0600)
-
-}
-
-func TestPalette2(t *testing.T) {
+func TestPalette2() mad.Test {
 	s := []struct {
 		base    string
 		h       float64
@@ -82,9 +61,10 @@ func TestPalette2(t *testing.T) {
 			}},
 	}
 
+	var cases []mad.Test
 	for _, v := range s {
-		t.Run(v.base, func(ts *testing.T) {
-			o := New(v.base)
+		cases = append(cases, mad.It(v.base, func(t mad.T) {
+			o := color.New(v.base)
 			h, s, ve, _ := o.HSVA()
 			h = math.Round(h)
 			s = math.Round(s * 100)
@@ -109,25 +89,29 @@ func TestPalette2(t *testing.T) {
 				t.Errorf("B: expected %v got %v", v.b, o.RGB[2])
 			}
 			for _, hx := range v.hues {
-				nc := GenerateColor(o, hx.index)
+				nc := color.GenerateColor(o, hx.index)
 				if nc.Hex() != hx.hex {
 					t.Errorf("%v:%v expected %s got %s", hx.index, hx.isLight, hx.hex, nc.Hex())
 				}
 			}
-		})
+		}))
 	}
+	return mad.Describe("Generates correct color pellete", cases...)
 }
 
-func TestGenerate(t *testing.T) {
-	base := New("#f5222d")
-	c := GenerateColor(base, 9)
-	expect := New("#820014")
-	if c.Hex() != expect.Hex() {
-		t.Errorf("expected %v got %v", expect.Hex(), c.Hex())
-	}
-	h := c.ToHSV()
-	e := expect.ToHSV()
-	if h != e {
-		t.Errorf("expected %s got %s", e, h)
-	}
+func TestGenerate() mad.Test {
+	return mad.It("generates colors", func(t mad.T) {
+		base := color.New("#f5222d")
+		c := color.GenerateColor(base, 9)
+		expect := color.New("#820014")
+		if c.Hex() != expect.Hex() {
+			t.Errorf("expected %v got %v", expect.Hex(), c.Hex())
+		}
+		h := c.ToHSV()
+		e := expect.ToHSV()
+		if h != e {
+			t.Errorf("expected %s got %s", e, h)
+		}
+	})
+
 }

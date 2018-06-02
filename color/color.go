@@ -8,7 +8,8 @@ import (
 	"strings"
 )
 
-var commonColors = map[string]string{
+// CommonColors is a map of common named colors to their respective hex values.
+var CommonColors = map[string]string{
 	"aliceblue":            "#f0f8ff",
 	"antiquewhite":         "#faebd7",
 	"aqua":                 "#00ffff",

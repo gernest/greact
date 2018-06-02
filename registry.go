@@ -2,8 +2,11 @@ package gs
 
 import (
 	"strconv"
+
+	"github.com/gopherjs/gopherjs/js"
 )
 
+// SheetObject is an interface for managing stylesheets.
 type SheetObject interface {
 	InsertRule(rule string)
 	Detach()
@@ -92,3 +95,34 @@ func (m *SimpleRegistry) Detach(s *Sheet) {
 }
 
 func (*SimpleRegistry) isRegistry() {}
+
+// DomRegistry returns a function that returns SheetObject that operate on real
+// dome stylesheets.
+func DomRegistry() func() SheetObject {
+	doc := js.Global.Get("document")
+	s := doc.Call("createElement", "style")
+	s.Call("appendChild", doc.Call("createTextNode", ""))
+	doc.Get("head").Call("appendChild", s)
+	sheet := s.Get("sheet")
+	return func() SheetObject {
+		return &sheetObject{Object: sheet}
+	}
+}
+
+//implements gs.SheetObject but uses real dom node
+type sheetObject struct {
+	*js.Object
+	indexes []int64
+}
+
+func (s *sheetObject) InsertRule(rule string) {
+	n := s.Get("cssRules").Get("length").Int64()
+	g := s.Call("insertRule", rule, n).Int64()
+	s.indexes = append(s.indexes, g)
+}
+
+func (s *sheetObject) Detach() {
+	for _, v := range s.indexes {
+		s.Call("deleteRule", v)
+	}
+}

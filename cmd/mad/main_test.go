@@ -6,7 +6,7 @@ import (
 	"github.com/gernest/mad/config"
 )
 
-func TestOutputPath(t *testing.T) {
+func TestGetOutputPath(t *testing.T) {
 	cfg := &config.Config{
 		OutputPath:  "/output/",
 		TestPath:    "/tests/",
@@ -19,7 +19,7 @@ func TestOutputPath(t *testing.T) {
 		{"/tests/web", "web", "tests/web", "/output/tests/web"},
 	}
 	for _, v := range sample {
-		g, err := outputInfo(cfg, v.dir, v.pkg)
+		g, err := getOutputInfo(cfg, v.dir, v.pkg)
 		if err != nil {
 			t.Error(err)
 			continue

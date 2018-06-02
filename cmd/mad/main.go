@@ -116,9 +116,22 @@ func generateTestPackage(cfg *config.Config) error {
 	return createTestPackage(cfg, cfg.TestPath)
 }
 
-func outputInfo(cfg *config.Config, testPath string, packageName string) (*Info, error) {
+func outputInfo(cfg *config.Config, testPath string) (*Info, error) {
+	tsPkg, err := build.ImportDir(testPath, 0)
+	if err != nil {
+		return nil, err
+	}
+	i, err := getOutputInfo(cfg, testPath, tsPkg.Name)
+	if err != nil {
+		return nil, err
+	}
+	i.Package = tsPkg
+	return i, nil
+}
+
+func getOutputInfo(cfg *config.Config, testPath string, packagename string) (*Info, error) {
 	if cfg.TestPath == testPath {
-		path := filepath.Join(cfg.OutputPath, packageName)
+		path := filepath.Join(cfg.OutputPath, packagename)
 		return &Info{OutputPath: path}, nil
 	}
 	rel, err := filepath.Rel(cfg.TestPath, testPath)
@@ -126,7 +139,6 @@ func outputInfo(cfg *config.Config, testPath string, packageName string) (*Info,
 		return nil, err
 	}
 	path := filepath.Join(cfg.OutputPath, cfg.TestDirName, rel)
-
 	return &Info{
 		OutputPath:   path,
 		RelativePath: filepath.Join(filepath.Base(cfg.TestPath), rel),
@@ -144,20 +156,18 @@ type Info struct {
 	// /madness/tests/pkg
 	// then RelativePath value will be tests/pkg.
 	RelativePath string
+
+	Package *build.Package
 }
 
 // This loads files found in path, process them and generate processed package
 // into the directory specified by cfg.OutputPath.
 func createTestPackage(cfg *config.Config, path string) error {
-	tsPkg, err := build.ImportDir(path, 0)
+	out, err := outputInfo(cfg, path)
 	if err != nil {
 		return err
 	}
 	var files []*ast.File
-	out, err := outputInfo(cfg, path, tsPkg.Name)
-	if err != nil {
-		return err
-	}
 	os.MkdirAll(out.OutputPath, 0755)
 	set := token.NewFileSet()
 	// we need to keep track of the defined unit and integration test functions.
@@ -165,7 +175,7 @@ func createTestPackage(cfg *config.Config, path string) error {
 	funcs := &tools.TestNames{}
 	importMap := make(map[string]string)
 	if cfg.Cover {
-		for _, v := range tsPkg.Imports {
+		for _, v := range out.Package.Imports {
 			err := instrumentImport(cfg, importMap, v)
 			if err != nil {
 				return err
@@ -185,8 +195,8 @@ func createTestPackage(cfg *config.Config, path string) error {
 		}
 
 	}
-	for _, v := range tsPkg.GoFiles {
-		f, err := parser.ParseFile(set, filepath.Join(tsPkg.Dir, v), nil, 0)
+	for _, v := range out.Package.GoFiles {
+		f, err := parser.ParseFile(set, filepath.Join(out.Package.Dir, v), nil, 0)
 		if err != nil {
 			return err
 		}

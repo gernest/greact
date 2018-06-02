@@ -135,6 +135,10 @@ func generateTestPackage(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
+	err = writeIntegrationMain(cfg)
+	if err != nil {
+		return err
+	}
 	return writeIndex(cfg)
 }
 
@@ -313,71 +317,74 @@ func instrumentImport(cfg *config.Config, importMap map[string]string, pkg strin
 	return nil
 }
 
-// func writeIntegrationMain(cfg *config.Config, importMap map[string]string) error {
-// 	if len(cfg.IntegrationFuncs) > 0 {
-// 		data := make(map[string]interface{})
-// 		data["config"] = cfg
-// 		madImport := importMap[madImportPath]
-// 		if madImport == "" {
-// 			madImport = madImportPath
-// 		}
-// 		interImport := importMap[integrationImportPath]
-// 		if interImport == "" {
-// 			interImport = integrationImportPath
-// 		}
-// 		data["madImport"] = madImport
-// 		data["interImport"] = interImport
-// 		var buf bytes.Buffer
-// 		for _, v := range cfg.IntegrationFuncs {
-// 			name := strings.ToLower(v)
-// 			data["PkgName"] = name
-// 			pkg := cfg.GeneratedTestPkg + "/" + name
-// 			data["IntegrationPkg"] = pkg
-// 			e := filepath.Join(cfg.GeneratedTestPath, name)
-// 			os.MkdirAll(e, 0755)
-// 			data["FuncName"] = v
-// 			buf.Reset()
-// 			err := integrationTpl.Execute(&buf, data)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			err = ioutil.WriteFile(filepath.Join(e, "main.go"), buf.Bytes(), 0600)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			q := make(url.Values)
-// 			q.Set("src", filepath.Join(cfg.TestDirName, name, "main.js"))
-// 			mainFIle := fmt.Sprintf("%s:%d%s?%s",
-// 				localhost, cfg.Port, resourcePath, q.Encode())
-// 			ctx := map[string]interface{}{
-// 				"mainFile": mainFIle,
-// 				"config":   cfg,
-// 			}
-// 			var buf bytes.Buffer
-// 			err = indexHTMLTpl.Execute(&buf, ctx)
-// 			m := filepath.Join(e, "index.html")
-// 			err = ioutil.WriteFile(m, buf.Bytes(), 0600)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			query := make(url.Values)
-// 			query.Set("src", filepath.Join(cfg.TestDirName, name, "index.html"))
-// 			cfg.IntegrationIndexPages = append(cfg.IntegrationIndexPages,
-// 				fmt.Sprintf("%s:%d%s?%s",
-// 					localhost, cfg.Port, resourcePath, query.Encode()))
-// 			if cfg.Build {
-// 				o := filepath.Join(e, "main.js")
-// 				cmd := exec.Command("gopherjs", "build", "-o", o, pkg)
-// 				cmd.Stdout = os.Stdout
-// 				cmd.Stderr = os.Stdout
-// 				if err := cmd.Run(); err != nil {
-// 					return err
-// 				}
-// 			}
-// 		}
-// 	}
-// 	return nil
-// }
+func writeIntegrationMain(cfg *config.Config) error {
+	for info, funcs := range cfg.TestNames {
+		if len(funcs.Integration) > 0 {
+			data := make(map[string]interface{})
+			data["config"] = cfg
+			data["info"] = info
+			madImport := cfg.ImportMap[madImportPath]
+			if madImport == "" {
+				madImport = madImportPath
+			}
+			interImport := cfg.ImportMap[integrationImportPath]
+			if interImport == "" {
+				interImport = integrationImportPath
+			}
+			data["madImport"] = madImport
+			data["interImport"] = interImport
+			var buf bytes.Buffer
+			for _, v := range funcs.Integration {
+				name := strings.ToLower(v)
+				data["PkgName"] = name
+				pkg := info.ImportPath + "/" + name
+				data["IntegrationPkg"] = pkg
+				e := filepath.Join(info.OutputPath, name)
+				os.MkdirAll(e, 0755)
+				data["FuncName"] = v
+				buf.Reset()
+				err := integrationTpl.Execute(&buf, data)
+				if err != nil {
+					return err
+				}
+				err = ioutil.WriteFile(filepath.Join(e, "main.go"), buf.Bytes(), 0600)
+				if err != nil {
+					return err
+				}
+				q := make(url.Values)
+				q.Set("src", filepath.Join(info.RelativePath, name, "main.js"))
+				mainFIle := fmt.Sprintf("%s:%d%s?%s",
+					localhost, cfg.Port, resourcePath, q.Encode())
+				ctx := map[string]interface{}{
+					"mainFile": mainFIle,
+					"config":   cfg,
+				}
+				var buf bytes.Buffer
+				err = indexHTMLTpl.Execute(&buf, ctx)
+				m := filepath.Join(e, "index.html")
+				err = ioutil.WriteFile(m, buf.Bytes(), 0600)
+				if err != nil {
+					return err
+				}
+				query := make(url.Values)
+				query.Set("src", filepath.Join(info.RelativePath, name, "index.html"))
+				cfg.IntegrationIndexPages = append(cfg.IntegrationIndexPages,
+					fmt.Sprintf("%s:%d%s?%s",
+						localhost, cfg.Port, resourcePath, query.Encode()))
+				if cfg.Build {
+					o := filepath.Join(e, "main.js")
+					cmd := exec.Command("gopherjs", "build", "-o", o, pkg)
+					cmd.Stdout = os.Stdout
+					cmd.Stderr = os.Stdout
+					if err := cmd.Run(); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
 
 // writeFile prints the ast for f using the printer package. The file name is
 // obtained from the fset.
@@ -503,7 +510,7 @@ func allTests()[]mad.Test  {
 
 var mainIntegrationTpl = `package main
 import (
-	"{{.config.GeneratedTestPkg}}"
+	"{{.info.ImportPath}}"
 	"{{.interImport}}"
 	"{{.madImport}}"
 	"github.com/gopherjs/vecty"
@@ -522,7 +529,7 @@ func main()  {
 	)
 }
 func testFunc() mad.Integration {
-	return mad.SetupIntegration("{{.FuncName}}",{{$n}}.{{.FuncName}}() )
+	return mad.SetupIntegration("{{.info.Desc .FuncName}}",{{.info.FormatName .FuncName}}() )
 }
 `
 

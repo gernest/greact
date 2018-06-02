@@ -60,10 +60,12 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 			}
 			tabs.Store(k.FormatName(fn), true)
 		}
-		// for _, fn := range v.Integration {
-		// 	totalProfiles++
-		// 	tabs.Store(fmt.Sprintf("%s.%s", k.Package.Name, fn), true)
-		// }
+		for _, fn := range v.Integration {
+			if !hasUnitTest {
+				hasUnitTest = true
+			}
+			tabs.Store(k.FormatName(fn), true)
+		}
 	}
 	if hasUnitTest {
 		totalProfiles++

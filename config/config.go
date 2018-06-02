@@ -275,7 +275,10 @@ func OutputInfo(cfg *Config, testPath string) (*Info, error) {
 func getOutputInfo(cfg *Config, testPath string, packagename string) (*Info, error) {
 	if cfg.TestPath == testPath {
 		path := filepath.Join(cfg.OutputPath, packagename)
-		return &Info{OutputPath: path, ImportPath: cfg.GeneratedTestPkg}, nil
+		return &Info{OutputPath: path,
+			ImportPath:   cfg.GeneratedTestPkg,
+			RelativePath: cfg.TestDirName,
+		}, nil
 	}
 	rel, err := filepath.Rel(cfg.TestPath, testPath)
 	if err != nil {

@@ -2,14 +2,12 @@ package grid
 
 import (
 	"github.com/gernest/gs"
-	"github.com/gernest/vected/style/grid"
 	"github.com/gernest/vected/ui"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 )
 
-// Number an alias for int64 used to represent a grid cell/spans.
-type Number = grid.Number
+type Number int64
 
 // helper keys for the 24 grid cells.You can use the keys for column
 // span,offset,pull or push.
@@ -41,9 +39,6 @@ const (
 	G23                 //span 123
 	G24                 //span 124
 )
-
-// ColOptions options for styling a grid Column
-type ColOptions = grid.ColOptions
 
 // Column implements vecty.Component. This uses ant design language to style the
 // grid column offering 24 cells grid column.
@@ -132,45 +127,45 @@ func (c *Column) getChildren() vecty.MarkupOrChild {
 }
 
 func (c *Column) style() gs.CSSRule {
-	var media []grid.MediaOption
+	var media []MediaOption
 	if c.XS != nil {
-		media = append(media, grid.MediaOption{
-			Type: grid.XS,
+		media = append(media, MediaOption{
+			Type: XS,
 			Opts: c.XS,
 		})
 	}
 	if c.SM != nil {
-		media = append(media, grid.MediaOption{
-			Type: grid.SM,
+		media = append(media, MediaOption{
+			Type: SM,
 			Opts: c.SM,
 		})
 	}
 	if c.MD != nil {
-		media = append(media, grid.MediaOption{
-			Type: grid.MD,
+		media = append(media, MediaOption{
+			Type: MD,
 			Opts: c.MD,
 		})
 	}
 	if c.LG != nil {
-		media = append(media, grid.MediaOption{
-			Type: grid.LG,
+		media = append(media, MediaOption{
+			Type: LG,
 			Opts: c.LG,
 		})
 	}
 
 	if c.XL != nil {
-		media = append(media, grid.MediaOption{
-			Type: grid.XL,
+		media = append(media, MediaOption{
+			Type: XL,
 			Opts: c.XL,
 		})
 	}
 	if c.XXL != nil {
-		media = append(media, grid.MediaOption{
-			Type: grid.XXL,
+		media = append(media, MediaOption{
+			Type: XXL,
 			Opts: c.XXL,
 		})
 	}
-	return grid.Column(c.options(), media...)
+	return ColumnStyle(c.options(), media...)
 }
 
 func (c *Column) options() *ColOptions {

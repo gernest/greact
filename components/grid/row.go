@@ -4,14 +4,12 @@ import (
 	"strconv"
 
 	"github.com/gernest/gs"
-	"github.com/gernest/vected/style/grid"
 	"github.com/gernest/vected/ui"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 )
 
 // FlexStyle is flexbox layout justification
-type FlexStyle = grid.FlexStyle
 
 const (
 	// Start sets justify-content:flex-start
@@ -31,7 +29,6 @@ const (
 )
 
 // FlexAlign is flexbox layout  alignment
-type FlexAlign = grid.FlexAlign
 
 const (
 	// Top sets align-items: lex-start
@@ -134,7 +131,7 @@ func format(v int64) string {
 }
 
 func (r *Row) style() gs.CSSRule {
-	return grid.Row(r.Gutter, r.Flex, r.Justify, r.Align)
+	return RowStyle(r.Gutter, r.Flex, r.Justify, r.Align)
 }
 
 // Mount attaches component's stylesheets.

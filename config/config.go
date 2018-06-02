@@ -87,6 +87,8 @@ type Config struct {
 
 	Covermode string
 
+	// If true this will only generate the packages and print out whet the test
+	// runner will do without building or executing the tests.
 	Dry bool
 }
 

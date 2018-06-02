@@ -86,6 +86,8 @@ type Config struct {
 	DevtoolPort int
 
 	Covermode string
+
+	Dry bool
 }
 
 // FLags returns configuration flags.
@@ -144,6 +146,9 @@ func FLags() []cli.Flag {
 			Name:  "devtool-url",
 			Value: "http://127.0.0.1",
 		},
+		cli.BoolFlag{
+			Name: "dry",
+		},
 	}
 }
 
@@ -163,6 +168,7 @@ func Load(ctx *cli.Context) (*Config, error) {
 		Timeout:       ctx.Duration("timeout"),
 		DevtoolPort:   ctx.Int("devtool-port"),
 		DevtoolURL:    ctx.String("devtool-url"),
+		Dry:           ctx.Bool("dry"),
 	}
 	if !filepath.IsAbs(c.Root) {
 		p, err := filepath.Abs(c.Root)

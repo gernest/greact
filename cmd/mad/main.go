@@ -90,6 +90,9 @@ func runTestsCommand(ctx *cli.Context) error {
 	if err = generateTestPackage(cfg); err != nil {
 		return err
 	}
+	if cfg.Dry {
+		return nil
+	}
 	if cfg.Build {
 		if err = buildGeneratedTestPackage(cfg); err != nil {
 			return err
@@ -113,15 +116,34 @@ func generateTestPackage(cfg *config.Config) error {
 	return createTestPackage(cfg, cfg.TestPath)
 }
 
-func outputPath(cfg *config.Config, testPath string, packageName string) (string, error) {
+func outputInfo(cfg *config.Config, testPath string, packageName string) (*Info, error) {
 	if cfg.TestPath == testPath {
-		return filepath.Join(cfg.OutputPath, packageName), nil
+		path := filepath.Join(cfg.OutputPath, packageName)
+		return &Info{OutputPath: path}, nil
 	}
 	rel, err := filepath.Rel(cfg.TestPath, testPath)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return filepath.Join(cfg.OutputPath, cfg.TestDirName, rel), nil
+	path := filepath.Join(cfg.OutputPath, cfg.TestDirName, rel)
+
+	return &Info{
+		OutputPath:   path,
+		RelativePath: filepath.Join(filepath.Base(cfg.TestPath), rel),
+	}, nil
+}
+
+// Info contains information about a generated test package.
+type Info struct {
+
+	// This is the absolute path to the generated package.
+	OutputPath string
+
+	// Relative path to the root of generated directory. So for instance if the
+	// generation directory is /madness, and the package was generated to
+	// /madness/tests/pkg
+	// then RelativePath value will be tests/pkg.
+	RelativePath string
 }
 
 // This loads files found in path, process them and generate processed package
@@ -132,11 +154,11 @@ func createTestPackage(cfg *config.Config, path string) error {
 		return err
 	}
 	var files []*ast.File
-	out, err := outputPath(cfg, path, tsPkg.Name)
+	out, err := outputInfo(cfg, path, tsPkg.Name)
 	if err != nil {
 		return err
 	}
-	os.MkdirAll(out, 0755)
+	os.MkdirAll(out.OutputPath, 0755)
 	set := token.NewFileSet()
 	// we need to keep track of the defined unit and integration test functions.
 	// This collects functions from all files.
@@ -185,7 +207,7 @@ func createTestPackage(cfg *config.Config, path string) error {
 		cfg.IntegrationFuncs = append(cfg.IntegrationFuncs, funcs.Integration...)
 	}
 	for _, v := range files {
-		err := writeFile(out, set, v)
+		err := writeFile(out.OutputPath, set, v)
 		if err != nil {
 			return err
 		}
@@ -210,7 +232,7 @@ func createTestPackage(cfg *config.Config, path string) error {
 	if err = writeIntegrationMain(cfg, importMap); err != nil {
 		return err
 	}
-	return writeIndex(cfg)
+	return writeIndex(cfg, out)
 }
 
 const coverTpl = `
@@ -437,18 +459,22 @@ func writeMain(dst string, ctx interface{}) error {
 }
 
 //creates index.html file which loads the generated test suite js file.
-func writeIndex(cfg *config.Config) error {
+func writeIndex(cfg *config.Config, info *Info) error {
 	q := make(url.Values)
-	q.Set("src", "main.js")
+	q.Set("src", filepath.Join(info.RelativePath, "main.js"))
 	mainFIle := fmt.Sprintf("%s:%d%s?%s",
 		localhost, cfg.Port, resourcePath, q.Encode())
 	ctx := map[string]interface{}{
 		"mainFile": mainFIle,
 		"config":   cfg,
 	}
+	o := info.OutputPath
+	if info.OutputPath == cfg.GeneratedTestPath {
+		o = cfg.OutputPath
+	}
 	var buf bytes.Buffer
 	err := indexHTMLTpl.Execute(&buf, ctx)
-	m := filepath.Join(cfg.OutputPath, "index.html")
+	m := filepath.Join(o, "index.html")
 	err = ioutil.WriteFile(m, buf.Bytes(), 0600)
 	if err != nil {
 		return err

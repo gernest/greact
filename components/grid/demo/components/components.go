@@ -2,7 +2,7 @@ package components
 
 import (
 	"github.com/gernest/gs"
-	"github.com/gernest/vected/grid"
+	"github.com/gernest/vected/components/grid"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 )

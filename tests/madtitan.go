@@ -9,9 +9,9 @@ import (
 
 func TestBefore() mad.Test {
 	return mad.Describe("Before",
-		mad.It("be called before the testcase", func(t mad.T) {
+		mad.It("should be called before the testcase", func(t mad.T) {
 			before := 500
-			ts := mad.Describe("TestT_Before",
+			ts := mad.Describe("TestTBefore",
 				mad.Before(func() {
 					before = 200
 				}),
@@ -48,13 +48,13 @@ func TestAfter() mad.Test {
 
 func TestRenderBody() mad.Integration {
 	txt := "hello,world"
-	return mad.RenderBody("mad.RenderBody",
+	return mad.RenderBody("RenderBody",
 		func() interface{} {
 			return elem.Body(
 				vecty.Text(txt),
 			)
 		},
-		mad.It("must have text node", func(t mad.T) {
+		mad.It("must render the node in the html body", func(t mad.T) {
 			defer func() {
 				if err := recover(); err != nil {
 					t.Error(err)

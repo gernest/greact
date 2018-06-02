@@ -120,15 +120,15 @@ func (b *Broswer) IsSelected(name string) bool {
 	return false
 }
 
-type selectedOptions struct {
-	add    map[string][]string
-	remove map[string][]string
+type SelectedOptions struct {
+	Add    map[string][]string
+	Remove map[string][]string
 }
 
 type Prefixes struct {
-	browsers *Broswer
-	data     map[string]data.Data
-	opts     *PrefixesOptions
+	Browsers *Broswer
+	Data     map[string]data.Data
+	Opts     *PrefixesOptions
 }
 
 type PrefixesOptions struct {
@@ -140,10 +140,10 @@ type addOpts struct {
 	note    string
 }
 
-func (p *Prefixes) Select(list map[string]data.Data) *selectedOptions {
-	selected := &selectedOptions{
-		add:    make(map[string][]string),
-		remove: make(map[string][]string),
+func (p *Prefixes) Select(list map[string]data.Data) *SelectedOptions {
+	selected := &SelectedOptions{
+		Add:    make(map[string][]string),
+		Remove: make(map[string][]string),
 	}
 	for name := range list {
 		data := list[name]
@@ -162,18 +162,18 @@ func (p *Prefixes) Select(list map[string]data.Data) *selectedOptions {
 		for _, v := range add {
 			if v.note != "" {
 				notes = append(notes,
-					fmt.Sprintf("%s %s", p.browsers.Prefix(v.browser), v.note),
+					fmt.Sprintf("%s %s", p.Browsers.Prefix(v.browser), v.note),
 				)
 			}
 		}
 		notes = uniq(notes)
 		var addList []string
 		fadd := filterAddOptions(add, func(v addOpts) bool {
-			sl := p.browsers.IsSelected(v.browser)
+			sl := p.Browsers.IsSelected(v.browser)
 			return sl
 		})
 		for _, v := range fadd {
-			prefx := p.browsers.Prefix(v.browser)
+			prefx := p.Browsers.Prefix(v.browser)
 			if v.note != "" {
 				addList = append(addList,
 					fmt.Sprintf("%s %s", prefx, v.note),
@@ -184,13 +184,13 @@ func (p *Prefixes) Select(list map[string]data.Data) *selectedOptions {
 		}
 		addList = uniq(addList)
 		sort.Strings(addList)
-		if p.opts != nil && p.opts.FlexBox == "no-2009" {
+		if p.Opts != nil && p.Opts.FlexBox == "no-2009" {
 			addList = filter(addList, func(v string) bool {
 				return !strings.Contains(v, "2009")
 			})
 		}
 		all := mapSlice(data.Browsers, func(v string) string {
-			return p.browsers.Prefix(v)
+			return p.Browsers.Prefix(v)
 		})
 		if data.Mistakes != nil {
 			all = append(all, data.Mistakes...)
@@ -200,15 +200,15 @@ func (p *Prefixes) Select(list map[string]data.Data) *selectedOptions {
 		}
 		all = uniq(all)
 		if len(addList) > 0 {
-			selected.add[name] = addList
+			selected.Add[name] = addList
 			if len(addList) < len(all) {
 				rm := filter(all, func(v string) bool {
 					return !sliceContains(addList, v)
 				})
-				selected.remove[name] = rm
+				selected.Remove[name] = rm
 			}
 		} else {
-			selected.remove[name] = all
+			selected.Remove[name] = all
 		}
 	}
 	return selected

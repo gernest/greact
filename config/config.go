@@ -203,3 +203,47 @@ func (c *Config) GetOutDir() string {
 func (c *Config) GetTestDirName() string {
 	return filepath.Join(c.Info.Dir, c.TestDirName)
 }
+
+// Info contains information about a generated test package.
+type Info struct {
+
+	// This is the absolute path to the generated package.
+	OutputPath string
+
+	// Relative path to the root of generated directory. So for instance if the
+	// generation directory is /madness, and the package was generated to
+	// /madness/tests/pkg
+	// then RelativePath value will be tests/pkg.
+	RelativePath string
+
+	Package *build.Package
+}
+
+func OutputInfo(cfg *Config, testPath string) (*Info, error) {
+	tsPkg, err := build.ImportDir(testPath, 0)
+	if err != nil {
+		return nil, err
+	}
+	i, err := getOutputInfo(cfg, testPath, tsPkg.Name)
+	if err != nil {
+		return nil, err
+	}
+	i.Package = tsPkg
+	return i, nil
+}
+
+func getOutputInfo(cfg *Config, testPath string, packagename string) (*Info, error) {
+	if cfg.TestPath == testPath {
+		path := filepath.Join(cfg.OutputPath, packagename)
+		return &Info{OutputPath: path}, nil
+	}
+	rel, err := filepath.Rel(cfg.TestPath, testPath)
+	if err != nil {
+		return nil, err
+	}
+	path := filepath.Join(cfg.OutputPath, cfg.TestDirName, rel)
+	return &Info{
+		OutputPath:   path,
+		RelativePath: filepath.Join(filepath.Base(cfg.TestPath), rel),
+	}, nil
+}

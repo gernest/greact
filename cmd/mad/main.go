@@ -116,54 +116,10 @@ func generateTestPackage(cfg *config.Config) error {
 	return createTestPackage(cfg, cfg.TestPath)
 }
 
-func outputInfo(cfg *config.Config, testPath string) (*Info, error) {
-	tsPkg, err := build.ImportDir(testPath, 0)
-	if err != nil {
-		return nil, err
-	}
-	i, err := getOutputInfo(cfg, testPath, tsPkg.Name)
-	if err != nil {
-		return nil, err
-	}
-	i.Package = tsPkg
-	return i, nil
-}
-
-func getOutputInfo(cfg *config.Config, testPath string, packagename string) (*Info, error) {
-	if cfg.TestPath == testPath {
-		path := filepath.Join(cfg.OutputPath, packagename)
-		return &Info{OutputPath: path}, nil
-	}
-	rel, err := filepath.Rel(cfg.TestPath, testPath)
-	if err != nil {
-		return nil, err
-	}
-	path := filepath.Join(cfg.OutputPath, cfg.TestDirName, rel)
-	return &Info{
-		OutputPath:   path,
-		RelativePath: filepath.Join(filepath.Base(cfg.TestPath), rel),
-	}, nil
-}
-
-// Info contains information about a generated test package.
-type Info struct {
-
-	// This is the absolute path to the generated package.
-	OutputPath string
-
-	// Relative path to the root of generated directory. So for instance if the
-	// generation directory is /madness, and the package was generated to
-	// /madness/tests/pkg
-	// then RelativePath value will be tests/pkg.
-	RelativePath string
-
-	Package *build.Package
-}
-
 // This loads files found in path, process them and generate processed package
 // into the directory specified by cfg.OutputPath.
 func createTestPackage(cfg *config.Config, path string) error {
-	out, err := outputInfo(cfg, path)
+	out, err := config.OutputInfo(cfg, path)
 	if err != nil {
 		return err
 	}
@@ -469,7 +425,7 @@ func writeMain(dst string, ctx interface{}) error {
 }
 
 //creates index.html file which loads the generated test suite js file.
-func writeIndex(cfg *config.Config, info *Info) error {
+func writeIndex(cfg *config.Config, info *config.Info) error {
 	q := make(url.Values)
 	q.Set("src", filepath.Join(info.RelativePath, "main.js"))
 	mainFIle := fmt.Sprintf("%s:%d%s?%s",

@@ -113,16 +113,18 @@ type respHandler interface {
 // Position information is injected in all calls to Error,Errorf,Fatal,FatalF.
 // Tis is the simpleset way to provide informative error messages on test failure.
 func generateTestPackage(cfg *config.Config) error {
-	return createTestPackage(cfg, cfg.TestPath)
+	for _, v := range cfg.TestInfo {
+		err := createTestPackage(cfg, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // This loads files found in path, process them and generate processed package
 // into the directory specified by cfg.OutputPath.
-func createTestPackage(cfg *config.Config, path string) error {
-	out, err := config.OutputInfo(cfg, path)
-	if err != nil {
-		return err
-	}
+func createTestPackage(cfg *config.Config, out *config.Info) error {
 	var files []*ast.File
 	os.MkdirAll(out.OutputPath, 0755)
 	set := token.NewFileSet()
@@ -192,10 +194,10 @@ func createTestPackage(cfg *config.Config, path string) error {
 		"madImport": madImport,
 		"wsImport":  wsImport,
 	}
-	if err = writeMain(cfg.OutputPath, ctx); err != nil {
+	if err := writeMain(cfg.OutputPath, ctx); err != nil {
 		return err
 	}
-	if err = writeIntegrationMain(cfg, importMap); err != nil {
+	if err := writeIntegrationMain(cfg, importMap); err != nil {
 		return err
 	}
 	return writeIndex(cfg, out)

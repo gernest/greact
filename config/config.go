@@ -90,6 +90,8 @@ type Config struct {
 	// If true this will only generate the packages and print out whet the test
 	// runner will do without building or executing the tests.
 	Dry bool
+
+	TestInfo []*Info
 }
 
 // FLags returns configuration flags.
@@ -190,6 +192,14 @@ func Load(ctx *cli.Context) (*Config, error) {
 	c.GeneratedTestPkg = filepath.Join(c.Info.ImportPath, c.OutputDirName, c.TestDirName)
 	c.OutputMainPkg = filepath.Join(c.Info.ImportPath, c.OutputDirName)
 	c.UUID = uuid.NewV4().String()
+	testDirs := []string{c.TestPath}
+	for _, v := range testDirs {
+		i, err := OutputInfo(c, v)
+		if err != nil {
+			return nil, err
+		}
+		c.TestInfo = append(c.TestInfo, i)
+	}
 	return c, nil
 }
 

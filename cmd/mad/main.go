@@ -277,8 +277,8 @@ func instrumentPackage(cfg *config.Config, pkg string) error {
 		}
 		base = rel
 	}
-	out := filepath.Join(cfg.GeneratedTestPath, base)
-	outPkg := filepath.Join(cfg.Info.ImportPath, cfg.OutputDirName, cfg.TestDirName, base)
+	out := filepath.Join(cfg.OutputPath, base)
+	outPkg := filepath.Join(cfg.Info.ImportPath, cfg.OutputDirName, base)
 	os.MkdirAll(out, 0755)
 	var buf bytes.Buffer
 	coverVarNames := make(map[string]string)

@@ -99,15 +99,24 @@ func runTestsCommand(ctx *cli.Context) error {
 			return err
 		}
 	}
-	chrome, err := chrome.New(chrome.Options{
-		Port:        cfg.DevtoolPort,
-		ChromeFlags: []string{"--headless"},
-	})
-	if err != nil {
-		return err
+	for _, v := range cfg.Browsers {
+		switch v.Name {
+		case "chrome":
+			chrome, err := chrome.New(chrome.Options{
+				Port:        v.Port,
+				ChromeFlags: v.Flags,
+			})
+			if err != nil {
+				return err
+			}
+			err = streamResponse(context.Background(),
+				cfg, chrome, &console.ResponseHandler{Verbose: cfg.Verbose})
+			if err != nil {
+				return err
+			}
+		}
 	}
-	return streamResponse(context.Background(),
-		cfg, chrome, &console.ResponseHandler{Verbose: cfg.Verbose})
+	return nil
 }
 
 type respHandler interface {

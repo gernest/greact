@@ -154,7 +154,7 @@ func generateTestPackage(ctx context.Context, cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	err = writeIntegrationMain(ctx, cfg)
+	err = generateIntegrationPackages(ctx, cfg)
 	if err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 	funcs := &tools.TestNames{}
 	if cfg.Cover {
 		for _, v := range out.Package.Imports {
-			err := instrumentImport(cfg, cfg.ImportMap, v)
+			err := instrumentImport(cfg, v)
 			if err != nil {
 				return err
 			}
@@ -183,7 +183,7 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 				integrationImportPath,
 			}
 			for _, v := range imports {
-				err := instrumentImport(cfg, cfg.ImportMap, v)
+				err := instrumentImport(cfg, v)
 				if err != nil {
 					return err
 				}
@@ -241,15 +241,15 @@ func init()  {
 `
 
 // instrumentImport processes pkg and adds instrumentation for coverage analysis.
-func instrumentImport(cfg *config.Config, importMap map[string]string, pkg string) error {
+func instrumentImport(cfg *config.Config, pkg string) error {
 	if !strings.HasPrefix(pkg, cfg.Info.ImportPath) {
 		return nil
 	}
-	if _, ok := importMap[pkg]; ok {
+	if _, ok := cfg.ImportMap[pkg]; ok {
 		return nil
 	}
 	if pkg == coverImportPath {
-		importMap[pkg] = pkg
+		cfg.ImportMap[pkg] = pkg
 		return nil
 	}
 	info := cfg.Info
@@ -263,7 +263,7 @@ func instrumentImport(cfg *config.Config, importMap map[string]string, pkg strin
 		info = newPkg
 	}
 	for _, v := range info.Imports {
-		err := instrumentImport(cfg, importMap, v)
+		err := instrumentImport(cfg, v)
 		if err != nil {
 			return err
 		}
@@ -301,7 +301,7 @@ func instrumentImport(cfg *config.Config, importMap map[string]string, pkg strin
 		}
 		varDef := buf.String()
 		buf.Reset()
-		for old, newImport := range importMap {
+		for old, newImport := range cfg.ImportMap {
 			astutil.RewriteImport(set, f, old, newImport)
 		}
 		filename := filepath.Join(out, v)
@@ -335,11 +335,13 @@ func instrumentImport(cfg *config.Config, importMap map[string]string, pkg strin
 	if err != nil {
 		return err
 	}
-	importMap[pkg] = outPkg
+	cfg.ImportMap[pkg] = outPkg
 	return nil
 }
 
-func writeIntegrationMain(ctx context.Context, cfg *config.Config) error {
+// This genegrates and compiles packages with integration tests. Each
+// integration test lives in it's own separate package.
+func generateIntegrationPackages(ctx context.Context, cfg *config.Config) error {
 	for info, funcs := range cfg.TestNames {
 		if len(funcs.Integration) > 0 {
 			data := make(map[string]interface{})

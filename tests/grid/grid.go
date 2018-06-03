@@ -1,6 +1,7 @@
 package grid
 
 import (
+	"github.com/gernest/gs"
 	"github.com/gernest/mad"
 	"github.com/gernest/vected/components/grid"
 )
@@ -27,4 +28,50 @@ func TestMediaType() mad.Test {
 			}
 		}),
 	)
+}
+
+func TestRowStyle() mad.Test {
+	fixture := []string{
+		`.Row {
+  position:relative;
+  margin-left:-8px;
+  margin-right:-8px;
+  box-sizing:border-box;
+  display:block;
+  height:auto;
+  zoom:1;
+}
+
+.Row:before {
+  content:;
+  display:table;
+}
+
+.Row:after {
+  content:;
+  display:table;
+  clear:both;
+  visibility:hidden;
+  font-size:0;
+  height:0;
+}`,
+	}
+	return mad.It("creates row styles", func(t mad.T) {
+		sample := []struct {
+			gutter  int64
+			flex    bool
+			justify grid.FlexStyle
+			align   grid.FlexAlign
+		}{
+			{16, false, grid.Start, grid.Top},
+		}
+		for k, v := range sample {
+			css := grid.RowStyle(v.gutter, v.flex, v.justify, v.align)
+			got := gs.ToString(css)
+			expect := fixture[k]
+			if got != expect {
+				t.Errorf("expected %s got %s", expect, got)
+			}
+		}
+	})
 }

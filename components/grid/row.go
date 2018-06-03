@@ -9,7 +9,9 @@ import (
 	"github.com/gopherjs/vecty/elem"
 )
 
-// FlexStyle is flexbox layout justification
+// FlexStyle horizontal arrangement of the flex layout: start end center
+// space-around space-between
+type FlexStyle int64
 
 const (
 	// Start sets justify-content:flex-start
@@ -28,7 +30,8 @@ const (
 	SpaceBetween
 )
 
-// FlexAlign is flexbox layout  alignment
+// FlexAlign the vertical alignment of the flex layout: top middle bottom
+type FlexAlign int64
 
 const (
 	// Top sets align-items: lex-start

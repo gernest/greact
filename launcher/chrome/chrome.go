@@ -142,45 +142,13 @@ func New(opts Options) (*Launcher, error) {
 	if opts.WaitTimeout == 0 {
 		opts.WaitTimeout = 2 * time.Second
 	}
-	l := &Launcher{Opts: opts}
-	ctx, cancel := context.WithCancel(context.Background())
+	return &Launcher{Opts: opts}, nil
+}
+
+func (l *Launcher) Run(bctx context.Context) error {
+	ctx, cancel := context.WithCancel(bctx)
 	l.Cmd = exec.CommandContext(ctx, l.Opts.ChromePath, l.Opts.Flags()...)
 	l.cancel = cancel
-	return l, nil
-}
-
-func (l *Launcher) Start(_ context.Context) error {
-	return l.Cmd.Run()
-}
-
-func getPlatform() (string, error) {
-	v := runtime.GOOS
-	switch v {
-	case "darwin", "linux", "windows":
-		return v, nil
-	default:
-		return "", fmt.Errorf("platform %s is not supported", v)
-	}
-}
-
-func resolveChromePath() ([]string, error) {
-	platform, err := getPlatform()
-	if err != nil {
-		return nil, err
-	}
-	switch platform {
-	case "darwin":
-		return resolveChromePathDarwin()
-	case "linux":
-		return resolveChromePathLinux()
-	case "windows":
-		return resolveChromePathWindows()
-	default:
-		return nil, fmt.Errorf("platform %s is not supported", platform)
-	}
-}
-
-func (l *Launcher) Run(_ context.Context) error {
 	return l.Cmd.Run()
 }
 
@@ -241,4 +209,31 @@ func randomPort() (string, error) {
 	}
 	p := strings.Split(a, ":")
 	return p[len(p)-1], nil
+}
+
+func getPlatform() (string, error) {
+	v := runtime.GOOS
+	switch v {
+	case "darwin", "linux", "windows":
+		return v, nil
+	default:
+		return "", fmt.Errorf("platform %s is not supported", v)
+	}
+}
+
+func resolveChromePath() ([]string, error) {
+	platform, err := getPlatform()
+	if err != nil {
+		return nil, err
+	}
+	switch platform {
+	case "darwin":
+		return resolveChromePathDarwin()
+	case "linux":
+		return resolveChromePathLinux()
+	case "windows":
+		return resolveChromePathWindows()
+	default:
+		return nil, fmt.Errorf("platform %s is not supported", platform)
+	}
 }

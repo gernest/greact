@@ -130,43 +130,46 @@ func applyLineNumber(set *token.FileSet, pre bool, match *testNameMap) func(*ast
 }
 
 func insert(set *token.FileSet, sel string, node *ast.BlockStmt) {
-	astutil.Apply(node, nil, func(c *astutil.Cursor) bool {
-		n := c.Node()
-		if e, ok := n.(*ast.CallExpr); ok {
-			if s, ok := e.Fun.(*ast.SelectorExpr); ok {
-				if id, ok := s.X.(*ast.Ident); ok {
-					if id.Name == sel {
-						file := set.File(e.Pos())
-						line := file.Line(e.Pos())
-						k := fmt.Sprintf("%s:%v ", file.Name(), line)
-						switch s.Sel.Name {
-						case "Error":
-							e.Args = append([]ast.Expr{
-								&ast.BasicLit{
-									Value: fmt.Sprintf(`"%s"`, k),
-								},
-							}, e.Args...)
-							return false
-						case "Errorf":
-							b := e.Args[0].(*ast.BasicLit)
-							b.Value = addStrLit(k, b.Value)
-							return false
-						case "Fatal":
-							e.Args = append([]ast.Expr{
-								&ast.BasicLit{
-									Value: fmt.Sprintf(`"%s"`, k),
-								},
-							}, e.Args...)
-							return false
-						case "Fatalf":
-							b := e.Args[0].(*ast.BasicLit)
-							b.Value = addStrLit(k, b.Value)
-							return false
+	for _, v := range node.List {
+		astutil.Apply(v, nil, func(c *astutil.Cursor) bool {
+			n := c.Node()
+			if e, ok := n.(*ast.CallExpr); ok {
+				if s, ok := e.Fun.(*ast.SelectorExpr); ok {
+					if id, ok := s.X.(*ast.Ident); ok {
+						if id.Name == sel {
+							file := set.File(e.Pos())
+							line := file.Line(e.Pos())
+							k := fmt.Sprintf("%s:%v ", file.Name(), line)
+							switch s.Sel.Name {
+							case "Error":
+								e.Args = append([]ast.Expr{
+									&ast.BasicLit{
+										Value: fmt.Sprintf(`"%s"`, k),
+									},
+								}, e.Args...)
+								return false
+							case "Errorf":
+								b := e.Args[0].(*ast.BasicLit)
+								b.Value = addStrLit(k, b.Value)
+								return false
+							case "Fatal":
+								e.Args = append([]ast.Expr{
+									&ast.BasicLit{
+										Value: fmt.Sprintf(`"%s"`, k),
+									},
+								}, e.Args...)
+								return false
+							case "Fatalf":
+								b := e.Args[0].(*ast.BasicLit)
+								b.Value = addStrLit(k, b.Value)
+								return false
+							}
 						}
 					}
 				}
 			}
-		}
-		return true
-	})
+			return true
+		})
+	}
+
 }

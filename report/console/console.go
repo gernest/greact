@@ -2,6 +2,7 @@ package console
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gernest/mad"
 )
@@ -50,13 +51,19 @@ func calcStats(ts *mad.SpecResult) (int, int) {
 // ResponseHandler implements mad.respHandler interface. This handles pretty
 // printing spec results to stdout.
 type ResponseHandler struct {
-	passed  int
-	failed  int
-	Verbose bool
+	passed   int
+	failed   int
+	Verbose  bool
+	duration time.Duration
+}
+
+func New(verbose bool) *ResponseHandler {
+	return &ResponseHandler{Verbose: verbose}
 }
 
 // Handle tracks the stats about the spec result and pretty prints the results to stdout.
 func (r *ResponseHandler) Handle(ts *mad.SpecResult) {
+	r.duration += ts.Duration
 	pass, fail := calcStats(ts)
 	r.passed += pass
 	r.failed += fail
@@ -73,5 +80,5 @@ func (r *ResponseHandler) Handle(ts *mad.SpecResult) {
 
 // Done prints the stats to stdout.
 func (r *ResponseHandler) Done() {
-	fmt.Printf(" Passed :%d Failed:%d\n", r.passed, r.failed)
+	fmt.Printf(" Passed :%d Failed:%d in %s\n", r.passed, r.failed, r.duration)
 }

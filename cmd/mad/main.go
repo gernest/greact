@@ -115,7 +115,7 @@ func runTestsCommand(ctx *cli.Context) error {
 				return err
 			}
 			err = streamResponse(executionContext,
-				cfg, chrome, &console.ResponseHandler{Verbose: cfg.Verbose})
+				cfg, chrome, console.New(cfg.Verbose))
 			if err != nil {
 				return err
 			}

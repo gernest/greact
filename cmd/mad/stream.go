@@ -61,7 +61,6 @@ func streamResponse(ctx context.Context, cfg *config.Config, browser launcher.Br
 	if hasUnitTest {
 		totalProfiles++
 	}
-	println(totalProfiles)
 	devt := devtool.New(fmt.Sprintf("%s:%d", cfg.DevtoolURL, cfg.DevtoolPort))
 	pt, err := devt.Get(ctx, devtool.Page)
 	if err != nil {

@@ -86,6 +86,8 @@ func runTestsCommand(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	executionContext, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+	defer cancel()
 	os.RemoveAll(cfg.OutputPath)
 	os.MkdirAll(cfg.OutputPath, 0755)
 	if err = generateTestPackage(cfg); err != nil {
@@ -95,7 +97,9 @@ func runTestsCommand(ctx *cli.Context) error {
 		return nil
 	}
 	if cfg.Build {
-		if err = buildGeneratedTestPackage(cfg); err != nil {
+		o := filepath.Join(cfg.OutputPath, "main.js")
+		err = buildGeneratedTestPackage(executionContext, o, cfg.OutputMainPkg)
+		if err != nil {
 			return err
 		}
 	}
@@ -110,7 +114,7 @@ func runTestsCommand(ctx *cli.Context) error {
 			if err != nil {
 				return err
 			}
-			err = streamResponse(context.Background(),
+			err = streamResponse(executionContext,
 				cfg, chrome, &console.ResponseHandler{Verbose: cfg.Verbose})
 			if err != nil {
 				return err
@@ -574,12 +578,8 @@ const idxTpl = `<!DOCTYPE html>
 
 // test package is compiked to javascript using the gopherjs command. This
 // requites gopherjs to be installed and in PATH.
-func buildGeneratedTestPackage(cfg *config.Config) error {
-	// Just to be safe that gopherjs wont take forever to build.
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout/2)
-	defer cancel()
-	o := filepath.Join(cfg.OutputPath, "main.js")
-	cmd := exec.CommandContext(ctx, "gopherjs", "build", "-o", o, cfg.OutputMainPkg)
+func buildGeneratedTestPackage(ctx context.Context, out, pkg string) error {
+	cmd := exec.CommandContext(ctx, "gopherjs", "build", "-o", out, pkg)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
 	return cmd.Run()

@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/mafredri/cdp/protocol/console"
 	"github.com/mafredri/cdp/protocol/target"
@@ -95,14 +94,8 @@ func streamResponse(ctx context.Context, cfg *config.Config, browser launcher.Br
 		}(v)
 	}
 
-	// Time is spent more on running the tests that building the test packages. It
-	// makes more sense to manage timout here.
-	timeout := time.NewTimer(cfg.Timeout)
-	defer timeout.Stop()
 	for {
 		select {
-		case <-timeout.C:
-			cancel()
 		case <-nctx.Done():
 			return ctx.Err()
 		case ts := <-server:

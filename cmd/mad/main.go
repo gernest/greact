@@ -126,9 +126,6 @@ type respHandler interface {
 
 // generateTestPackage process the test directory and generate processed files
 // in the promtest directory.
-//
-// Position information is injected in all calls to Error,Errorf,Fatal,FatalF.
-// Tis is the simpleset way to provide informative error messages on test failure.
 func generateTestPackage(cfg *config.Config) error {
 	for _, v := range cfg.TestInfo {
 		err := createTestPackage(cfg, v)

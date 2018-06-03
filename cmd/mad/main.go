@@ -103,6 +103,7 @@ func runTestsCommand(ctx *cli.Context) error {
 		switch v {
 		case "chrome":
 			chrome, err := chrome.New(chrome.Options{
+				Verbose:     cfg.Verbose,
 				Port:        cfg.DevtoolPort,
 				ChromeFlags: []string{"--headless"},
 			})

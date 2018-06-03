@@ -172,7 +172,7 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 	funcs := &tools.TestNames{}
 	if cfg.Cover {
 		for _, v := range out.Package.Imports {
-			err := instrumentImport(cfg, v)
+			err := instrumentPackage(cfg, v)
 			if err != nil {
 				return err
 			}
@@ -183,7 +183,7 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 				integrationImportPath,
 			}
 			for _, v := range imports {
-				err := instrumentImport(cfg, v)
+				err := instrumentPackage(cfg, v)
 				if err != nil {
 					return err
 				}
@@ -240,8 +240,8 @@ func init()  {
 
 `
 
-// instrumentImport processes pkg and adds instrumentation for coverage analysis.
-func instrumentImport(cfg *config.Config, pkg string) error {
+// instrumentPackage processes pkg and adds instrumentation for coverage analysis.
+func instrumentPackage(cfg *config.Config, pkg string) error {
 	if !strings.HasPrefix(pkg, cfg.Info.ImportPath) {
 		return nil
 	}
@@ -263,7 +263,7 @@ func instrumentImport(cfg *config.Config, pkg string) error {
 		info = newPkg
 	}
 	for _, v := range info.Imports {
-		err := instrumentImport(cfg, v)
+		err := instrumentPackage(cfg, v)
 		if err != nil {
 			return err
 		}

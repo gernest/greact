@@ -94,6 +94,9 @@ func streamResponse(ctx context.Context, cfg *config.Config, browser launcher.Br
 			}
 		}(v)
 	}
+
+	// Time is spent more on running the tests that building the test packages. It
+	// makes more sense to manage timout here.
 	timeout := time.NewTimer(cfg.Timeout)
 	defer timeout.Stop()
 	for {

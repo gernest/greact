@@ -575,8 +575,11 @@ const idxTpl = `<!DOCTYPE html>
 // test package is compiked to javascript using the gopherjs command. This
 // requites gopherjs to be installed and in PATH.
 func buildGeneratedTestPackage(cfg *config.Config) error {
+	// Just to be safe that gopherjs wont take forever to build.
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout/2)
+	defer cancel()
 	o := filepath.Join(cfg.OutputPath, "main.js")
-	cmd := exec.Command("gopherjs", "build", "-o", o, cfg.OutputMainPkg)
+	cmd := exec.CommandContext(ctx, "gopherjs", "build", "-o", o, cfg.OutputMainPkg)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
 	return cmd.Run()

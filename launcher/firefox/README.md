@@ -1,0 +1,1 @@
+port of [karma-firefox-launcher](https://github.com/karma-runner/karma-firefox-launcher)

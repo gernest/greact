@@ -14,6 +14,7 @@ type Integration struct {
 	vecty.Core
 	UUID      string
 	Pkg       string
+	Cover     bool
 	Component *mad.Component
 }
 
@@ -30,7 +31,9 @@ func (c *Integration) Mount() {
 		if err != nil {
 			println(err)
 		}
-		println(cover.Key + cover.JSON())
+		if c.Cover {
+			println(cover.Key + cover.JSON())
+		}
 	}()
 }
 

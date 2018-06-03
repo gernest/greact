@@ -548,6 +548,7 @@ func main()  {
 		&integration.Integration{
 			UUID: testID,
 			Pkg: testPkg,
+			Cover: {{.config.Cover}},
 			Component: testFunc().(*mad.Component),
 		},
 	)

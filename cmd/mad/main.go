@@ -23,6 +23,7 @@ import (
 
 	"github.com/gernest/mad/annotate"
 	"github.com/gernest/mad/config"
+	"github.com/gernest/mad/launcher/chrome"
 	"github.com/gernest/mad/report/console"
 	"github.com/gernest/mad/tools"
 	"github.com/urfave/cli"
@@ -98,8 +99,15 @@ func runTestsCommand(ctx *cli.Context) error {
 			return err
 		}
 	}
+	chrome, err := chrome.New(chrome.Options{
+		Port:        cfg.DevtoolPort,
+		ChromeFlags: []string{"--headless"},
+	})
+	if err != nil {
+		return err
+	}
 	return streamResponse(context.Background(),
-		cfg, &console.ResponseHandler{Verbose: cfg.Verbose})
+		cfg, chrome, &console.ResponseHandler{Verbose: cfg.Verbose})
 }
 
 type respHandler interface {

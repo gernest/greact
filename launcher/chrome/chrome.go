@@ -1,4 +1,4 @@
-package launcher
+package chrome
 
 import (
 	"context"
@@ -79,6 +79,8 @@ type Options struct {
 
 	//The time taken to wait for chrome to be ready.
 	WaitTimeout time.Duration
+
+	Verbose bool
 }
 
 func (o Options) Flags() []string {
@@ -147,6 +149,10 @@ func New(opts Options) (*Launcher, error) {
 	return l, nil
 }
 
+func (l *Launcher) Start(_ context.Context) error {
+	return l.Cmd.Run()
+}
+
 func getPlatform() (string, error) {
 	v := runtime.GOOS
 	switch v {
@@ -174,16 +180,19 @@ func resolveChromePath() ([]string, error) {
 	}
 }
 
-func (l *Launcher) Run() error {
+func (l *Launcher) Run(_ context.Context) error {
 	return l.Cmd.Run()
 }
 
-func (l *Launcher) Stop() {
+func (l *Launcher) Stop() error {
 	l.cancel()
+	return nil
 }
 
-func (l *Launcher) Wait(verbose bool) error {
-	if verbose {
+// Ready should block until we chrome is up. This will return nil if all is well
+// and an error otherwise.
+func (l *Launcher) Ready() error {
+	if l.Opts.Verbose {
 		fmt.Print("Waiting for chrome ...")
 	}
 	status := "."
@@ -194,21 +203,21 @@ func (l *Launcher) Wait(verbose bool) error {
 	for {
 		select {
 		case <-o.C:
-			if verbose {
+			if l.Opts.Verbose {
 				fmt.Println(".")
 			}
 			return errors.New("timeout waiting for chrome to be ready")
 		case <-tick.C:
 			conn, err := net.Dial("tcp", fmt.Sprintf(":%d", l.Opts.Port))
 			if err != nil {
-				if verbose {
+				if l.Opts.Verbose {
 					fmt.Print(status)
 				}
 				status += "."
 				continue
 			}
 			conn.Close()
-			if verbose {
+			if l.Opts.Verbose {
 				fmt.Println("done")
 			}
 			return nil

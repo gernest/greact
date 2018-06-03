@@ -25,20 +25,13 @@ import (
 
 // streamResponse runs the compiled tests in a web browser and displays the
 // results to stdout.
-func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) error {
+func streamResponse(ctx context.Context, cfg *config.Config, browser launcher.Browser, h respHandler) error {
 	nctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	server := newServer(nctx, cfg)
-	chrome, err := launcher.New(launcher.Options{
-		Port:        cfg.DevtoolPort,
-		ChromeFlags: []string{"--headless"},
-	})
-	if err != nil {
-		return err
-	}
-	go chrome.Run()
-	defer chrome.Stop()
-	err = chrome.Wait(cfg.Verbose)
+	go browser.Run(nctx)
+	defer browser.Stop()
+	err := browser.Ready()
 	if err != nil {
 		return err
 	}
@@ -164,7 +157,7 @@ func streamResponse(ctx context.Context, cfg *config.Config, h respHandler) erro
 					}
 					printCoverage(collect)
 				}
-				chrome.Stop()
+				browser.Stop()
 				cancel()
 				return nil
 			}

@@ -90,7 +90,7 @@ func runTestsCommand(ctx *cli.Context) error {
 	defer cancel()
 	os.RemoveAll(cfg.OutputPath)
 	os.MkdirAll(cfg.OutputPath, 0755)
-	if err = generateTestPackage(cfg); err != nil {
+	if err = generateTestPackage(executionContext, cfg); err != nil {
 		return err
 	}
 	if cfg.Dry {
@@ -131,7 +131,7 @@ type respHandler interface {
 
 // generateTestPackage process the test directory and generate processed files
 // in the promtest directory.
-func generateTestPackage(cfg *config.Config) error {
+func generateTestPackage(ctx context.Context, cfg *config.Config) error {
 	for _, v := range cfg.TestInfo {
 		err := createTestPackage(cfg, v)
 		if err != nil {
@@ -154,7 +154,7 @@ func generateTestPackage(cfg *config.Config) error {
 	if err != nil {
 		return err
 	}
-	err = writeIntegrationMain(cfg)
+	err = writeIntegrationMain(ctx, cfg)
 	if err != nil {
 		return err
 	}
@@ -339,7 +339,7 @@ func instrumentImport(cfg *config.Config, importMap map[string]string, pkg strin
 	return nil
 }
 
-func writeIntegrationMain(cfg *config.Config) error {
+func writeIntegrationMain(ctx context.Context, cfg *config.Config) error {
 	for info, funcs := range cfg.TestNames {
 		if len(funcs.Integration) > 0 {
 			data := make(map[string]interface{})
@@ -377,12 +377,11 @@ func writeIntegrationMain(cfg *config.Config) error {
 				q.Set("src", filepath.Join(info.RelativePath, name, "main.js"))
 				mainFIle := fmt.Sprintf("%s:%d%s?%s",
 					localhost, cfg.Port, resourcePath, q.Encode())
-				ctx := map[string]interface{}{
+				var buf bytes.Buffer
+				err = indexHTMLTpl.Execute(&buf, map[string]interface{}{
 					"mainFile": mainFIle,
 					"config":   cfg,
-				}
-				var buf bytes.Buffer
-				err = indexHTMLTpl.Execute(&buf, ctx)
+				})
 				m := filepath.Join(e, "index.html")
 				err = ioutil.WriteFile(m, buf.Bytes(), 0600)
 				if err != nil {
@@ -394,11 +393,8 @@ func writeIntegrationMain(cfg *config.Config) error {
 					fmt.Sprintf("%s:%d%s?%s",
 						localhost, cfg.Port, resourcePath, query.Encode()))
 				if cfg.Build {
-					o := filepath.Join(e, "main.js")
-					cmd := exec.Command("gopherjs", "build", "-o", o, pkg)
-					cmd.Stdout = os.Stdout
-					cmd.Stderr = os.Stdout
-					if err := cmd.Run(); err != nil {
+					err = buildPackage(ctx, filepath.Join(e, "main.js"), pkg)
+					if err != nil {
 						return err
 					}
 				}

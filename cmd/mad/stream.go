@@ -54,15 +54,14 @@ func streamResponse(ctx context.Context, cfg *config.Config, browser launcher.Br
 			tabs.Store(k.FormatName(fn), true)
 		}
 		for _, fn := range v.Integration {
-			if !hasUnitTest {
-				hasUnitTest = true
-			}
 			tabs.Store(k.FormatName(fn), true)
+			totalProfiles++
 		}
 	}
 	if hasUnitTest {
 		totalProfiles++
 	}
+	println(totalProfiles)
 	devt := devtool.New(fmt.Sprintf("%s:%d", cfg.DevtoolURL, cfg.DevtoolPort))
 	pt, err := devt.Get(ctx, devtool.Page)
 	if err != nil {

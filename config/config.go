@@ -95,13 +95,7 @@ type Config struct {
 
 	ImportMap map[string]string
 
-	Browsers []Browser
-}
-
-type Browser struct {
-	Name  string
-	Port  int
-	Flags []string
+	Browsers []string
 }
 
 // FLags returns configuration flags.
@@ -228,13 +222,7 @@ func Load(ctx *cli.Context) (*Config, error) {
 		}
 		c.TestInfo = append(c.TestInfo, i)
 	}
-	c.Browsers = []Browser{
-		{
-			Name:  "chrome",
-			Flags: []string{"--headless"},
-			Port:  c.DevtoolPort,
-		},
-	}
+	c.Browsers = []string{"chrome"}
 	return c, nil
 }
 

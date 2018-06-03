@@ -100,11 +100,11 @@ func runTestsCommand(ctx *cli.Context) error {
 		}
 	}
 	for _, v := range cfg.Browsers {
-		switch v.Name {
+		switch v {
 		case "chrome":
 			chrome, err := chrome.New(chrome.Options{
-				Port:        v.Port,
-				ChromeFlags: v.Flags,
+				Port:        cfg.DevtoolPort,
+				ChromeFlags: []string{"--headless"},
 			})
 			if err != nil {
 				return err

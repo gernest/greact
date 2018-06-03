@@ -98,7 +98,7 @@ func runTestsCommand(ctx *cli.Context) error {
 	}
 	if cfg.Build {
 		o := filepath.Join(cfg.OutputPath, "main.js")
-		err = buildGeneratedTestPackage(executionContext, o, cfg.OutputMainPkg)
+		err = buildPackage(executionContext, o, cfg.OutputMainPkg)
 		if err != nil {
 			return err
 		}
@@ -576,9 +576,7 @@ const idxTpl = `<!DOCTYPE html>
 
 </html>`
 
-// test package is compiked to javascript using the gopherjs command. This
-// requites gopherjs to be installed and in PATH.
-func buildGeneratedTestPackage(ctx context.Context, out, pkg string) error {
+func buildPackage(ctx context.Context, out, pkg string) error {
 	cmd := exec.CommandContext(ctx, "gopherjs", "build", "-o", out, pkg)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout

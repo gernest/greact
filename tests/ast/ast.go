@@ -1,4 +1,4 @@
-package tools
+package ast
 
 import (
 	"bytes"
@@ -39,7 +39,6 @@ func TestAddLine() mad.Test {
 		if err != nil {
 			t.Fatal(err)
 		}
-
 		names := tools.AddFileNumber(set, f)
 		if len(names.Unit) != 2 {
 			t.Fatalf("expected 2 valid names got %d", len(names.Unit))

@@ -65,67 +65,19 @@ of the form `TestXxxx` and must return either `mad.Test` or `mad.Integration`.
 
 ## Show me the code 
 
-
 ```go
-// Unit tests
-func TestBrowser() mad.Test {
-	return mad.List{
-		mad.Describe("Prefixes",
-			mad.It("must contain all browser vendor prefixes", func(t mad.T) {
-				b := prefix.NewBrowser()
-				expect := []string{"-moz-", "-ms-", "-o-", "-webkit-"}
-				g := b.Prefixcache
-				for k, v := range expect {
-					if g[k] != v {
-						t.Fatalf("expected %v got %v", expect, g)
-					}
-				}
-			}),
-		),
-		mad.Describe("WithPrefix",
-			mad.It("must return true when the prefix exist", func(t mad.T) {
-				s := "1 -o-calc(1)"
-				b := prefix.NewBrowser()
-				if !b.WithPrefix(s) {
-					t.Error("expected to be true")
-				}
-			}),
-			mad.It("must return false when the prefix does not exist", func(t mad.T) {
-				s := "1 calc(1)"
-				b := prefix.NewBrowser()
-				if b.WithPrefix(s) {
-					t.Error("expected to be false")
-				}
-			}),
-		),
-	}
-}
-
-// Integration test
-func TestRenderBody() mad.Integration {
-	txt := "hello,world"
-	return mad.RenderBody("mad.RenderBody",
-		func() interface{} {
-			return elem.Body(
-				vecty.Text(txt),
-			)
-		},
-		mad.It("must have text node", func(t mad.T) {
-			defer func() {
-				if err := recover(); err != nil {
-					t.Error(err)
-				}
-			}()
-			o := js.Global.Get("document").Get("body").Get("textContent").String()
-			if o != txt {
-				t.Errorf("expected %s got %s", txt, o)
+ func TestRainfall() mad.Test {
+	return mad.Describe("Raining",
+		mad.It("must be cloudy", func(t mad.T) {
+			ctx := Rainfall()
+			if !ctx.Cloudy {
+				t.Error("expected to be cloudy")
 			}
 		}),
 	)
 }
 ```
 
-check [this  project tests for inspiration](https://github.com/gernest/gs)
 
 ## Running the tests
 

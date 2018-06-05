@@ -218,9 +218,12 @@ func Load(ctx *cli.Context) (*Config, error) {
 	for _, v := range testDirs {
 		i, err := OutputInfo(c, v)
 		if err != nil {
-			return nil, err
+			continue
 		}
 		c.TestInfo = append(c.TestInfo, i)
+	}
+	if len(c.TestInfo) == 0 {
+		return nil, fmt.Errorf("couldn't find test packages in any on the directories :%s", testDirs)
 	}
 	c.Browsers = []string{"chrome"}
 	return c, nil

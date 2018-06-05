@@ -2,7 +2,7 @@ package avatar
 
 import (
 	"github.com/gernest/gs"
-	"github.com/gernest/vected/style/themes"
+	"github.com/gernest/vected/themes"
 )
 
 const avatarClass = "vected-avatar"

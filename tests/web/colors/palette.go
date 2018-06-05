@@ -4,8 +4,7 @@ import (
 	"math"
 
 	"github.com/gernest/mad"
-
-	"github.com/gernest/vected/color"
+	"github.com/gernest/vected/web/color"
 )
 
 type hsvSample struct {

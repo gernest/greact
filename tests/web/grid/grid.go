@@ -3,7 +3,7 @@ package grid
 import (
 	"github.com/gernest/gs"
 	"github.com/gernest/mad"
-	"github.com/gernest/vected/components/grid"
+	"github.com/gernest/vected/web/components/grid"
 )
 
 func TestMediaType() mad.Test {

@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gernest/gs"
-	"github.com/gernest/vected/themes"
+	"github.com/gernest/vected/web/themes"
 )
 
 func (n Number) String() string {

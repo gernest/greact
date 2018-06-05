@@ -1,7 +1,9 @@
 package console
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	"github.com/gernest/mad"
@@ -51,34 +53,52 @@ func calcStats(ts *mad.SpecResult) (int, int) {
 // ResponseHandler implements mad.respHandler interface. This handles pretty
 // printing spec results to stdout.
 type ResponseHandler struct {
-	passed   int
-	failed   int
-	Verbose  bool
-	duration time.Duration
+	Passed      int               `json:"passed"`
+	Failedailed int               `json:"failed"`
+	Verbose     bool              `json:"-"`
+	Duration    time.Duration     `json:"duration"`
+	JSONFile    string            `json:"-"`
+	Results     []*mad.SpecResult `json:"results"`
 }
 
 func New(verbose bool) *ResponseHandler {
 	return &ResponseHandler{Verbose: verbose}
 }
 
+func NewJSON(file string) *ResponseHandler {
+	return &ResponseHandler{JSONFile: file}
+}
+
 // Handle tracks the stats about the spec result and pretty prints the results to stdout.
 func (r *ResponseHandler) Handle(ts *mad.SpecResult) {
-	r.duration += ts.Duration
+	r.Duration += ts.Duration
 	pass, fail := calcStats(ts)
-	r.passed += pass
-	r.failed += fail
-	if r.Verbose {
-		Report(ts)
+	r.Passed += pass
+	r.Failedailed += fail
+	if r.JSONFile != "" {
+		r.Results = append(r.Results, ts)
 	} else {
-		if fail > 0 {
+		if r.Verbose {
 			Report(ts)
 		} else {
-			fmt.Printf("%s✔ %s \n", ident(0), ts.Desc)
+			if fail > 0 {
+				Report(ts)
+			} else {
+				fmt.Printf("%s✔ %s \n", ident(0), ts.Desc)
+			}
 		}
 	}
 }
 
 // Done prints the stats to stdout.
-func (r *ResponseHandler) Done() {
-	fmt.Printf(" Passed :%d Failed:%d in %s\n", r.passed, r.failed, r.duration)
+func (r *ResponseHandler) Done() error {
+	if r.JSONFile != "" {
+		b, err := json.Marshal(r)
+		if err != nil {
+			return err
+		}
+		return ioutil.WriteFile(r.JSONFile, b, 0600)
+	}
+	fmt.Printf(" Passed :%d Failed:%d in %s\n", r.Passed, r.Failedailed, r.Duration)
+	return nil
 }

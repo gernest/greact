@@ -96,6 +96,8 @@ type Config struct {
 	ImportMap map[string]string
 
 	Browsers []string
+
+	JSON string
 }
 
 // FLags returns configuration flags.
@@ -157,6 +159,10 @@ func FLags() []cli.Flag {
 		cli.BoolFlag{
 			Name: "dry",
 		},
+		cli.StringFlag{
+			Name:  "json",
+			Usage: "writes test runner report as json in this file",
+		},
 	}
 }
 
@@ -177,6 +183,7 @@ func Load(ctx *cli.Context) (*Config, error) {
 		DevtoolPort:   ctx.Int("devtool-port"),
 		DevtoolURL:    ctx.String("devtool-url"),
 		Dry:           ctx.Bool("dry"),
+		JSON:          ctx.String("json"),
 	}
 	if !filepath.IsAbs(c.Root) {
 		p, err := filepath.Abs(c.Root)

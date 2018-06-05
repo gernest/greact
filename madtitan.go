@@ -90,9 +90,9 @@ type SpecResult struct {
 	Desc               string          `json:"description"`
 	FullName           string          `json:"fullname"`
 	Duration           time.Duration   `json:"duration"`
-	FailedExpectations []*ExpectResult `json:"failed_expectations"`
-	PassedExpectations []*ExpectResult `json:"passed_expectations"`
-	Children           []*SpecResult   `json:"children"`
+	FailedExpectations []*ExpectResult `json:"failed_expectations,omitempty"`
+	PassedExpectations []*ExpectResult `json:"passed_expectations,omitempty"`
+	Children           []*SpecResult   `json:"children,omitempty"`
 }
 
 // ExpectResult contains reults of executing expectation.

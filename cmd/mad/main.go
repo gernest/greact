@@ -114,8 +114,14 @@ func runTestsCommand(ctx *cli.Context) error {
 			if err != nil {
 				return err
 			}
+			var h respHandler
+			if cfg.JSON != "" {
+				h = console.NewJSON(cfg.JSON)
+			} else {
+				h = console.New(cfg.Verbose)
+			}
 			err = streamResponse(executionContext,
-				cfg, chrome, console.New(cfg.Verbose))
+				cfg, chrome, h)
 			if err != nil {
 				return err
 			}
@@ -126,7 +132,7 @@ func runTestsCommand(ctx *cli.Context) error {
 
 type respHandler interface {
 	Handle(*mad.SpecResult)
-	Done()
+	Done() error
 }
 
 // generateTestPackage process the test directory and generate processed files

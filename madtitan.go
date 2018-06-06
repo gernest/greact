@@ -255,15 +255,7 @@ func (e *Expectation) Exec() {
 	start := time.Now()
 	defer func() {
 		if ev := recover(); ev != nil {
-			if err, ok := ev.(*Error); ok {
-				if !err.Pending {
-					e.Passed = false
-					e.FailMessages = append(e.FailMessages, err.Message.Error())
-				}
-			} else {
-				//bubble the error
-				panic(ev)
-			}
+			e.FailMessages = append(e.FailMessages, fmt.Sprint(ev))
 		}
 	}()
 	defer func() {

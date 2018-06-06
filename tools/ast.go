@@ -5,7 +5,6 @@ import (
 	"go/ast"
 	"go/token"
 	"regexp"
-	"sort"
 
 	"golang.org/x/tools/go/ast/astutil"
 )
@@ -20,44 +19,12 @@ type TestNames struct {
 	Unit        []string
 }
 
-type testNameMap struct {
-	integration map[string]int
-	unit        map[string]int
-}
-
 // AddFileNumber this will add line number markers to the file's t.Error,
 // t.Errof, t.Fatal and t.Fatalf methods.
-func AddFileNumber(set *token.FileSet, file *ast.File) *TestNames {
-	match := &testNameMap{
-		integration: make(map[string]int),
-		unit:        make(map[string]int),
-	}
-	astutil.Apply(file,
-		applyLineNumber(set, true, match),
-		applyLineNumber(set, false, match),
-	)
-	o := &TestNames{}
-	for k := range match.integration {
-		o.Integration = append(o.Integration, k)
-	}
-	for k := range match.unit {
-		o.Unit = append(o.Unit, k)
-	}
-	if o.Integration != nil {
-		sort.Slice(o.Integration, func(i, j int) bool {
-			a := o.Integration[i]
-			b := o.Integration[j]
-			return match.integration[a] < match.integration[b]
-		})
-	}
-	if o.Unit != nil {
-		sort.Slice(o.Unit, func(i, j int) bool {
-			a := o.Unit[i]
-			b := o.Unit[j]
-			return match.unit[a] < match.unit[b]
-		})
-	}
-	return o
+func AddFileNumber(set *token.FileSet, file *ast.File) TestNames {
+	v := New(set)
+	ast.Walk(v, file)
+	return v.Names
 }
 
 func addStrLit(str, lit string) string {
@@ -89,44 +56,6 @@ func checkSignature(typ *ast.FuncType) (isUnit, ok bool) {
 		return false, id.Name == "mad" && n == "Integration"
 	}
 	return
-}
-
-func applyLineNumber(set *token.FileSet, pre bool, match *testNameMap) func(*astutil.Cursor) bool {
-	units := 0
-	integrations := 0
-	return func(c *astutil.Cursor) bool {
-		node := c.Node()
-		switch e := node.(type) {
-		case *ast.FuncDecl:
-			if pre {
-				if checkName(e.Name.Name) {
-					if u, ok := checkSignature(e.Type); ok {
-						if u {
-							match.unit[e.Name.Name] = units
-							units++
-						} else {
-							match.integration[e.Name.Name] = integrations
-							integrations++
-						}
-					}
-				}
-			}
-		case *ast.CallExpr:
-			if s, ok := e.Fun.(*ast.SelectorExpr); ok {
-				if id, ok := s.X.(*ast.Ident); ok {
-					if id.Name == "mad" && s.Sel.Name == "It" {
-						if len(e.Args) == 2 {
-							a := e.Args[1].(*ast.FuncLit)
-							selector := a.Type.Params.List[0].Names[0].Name
-							insert(set, selector, a.Body)
-							return false
-						}
-					}
-				}
-			}
-		}
-		return true
-	}
 }
 
 func insert(set *token.FileSet, sel string, node *ast.BlockStmt) {
@@ -172,4 +101,69 @@ func insert(set *token.FileSet, sel string, node *ast.BlockStmt) {
 		})
 	}
 
+}
+
+func New(set *token.FileSet) *Visitor {
+	return &Visitor{
+		Set:    set,
+		number: &numbers{set: set}}
+}
+
+type Visitor struct {
+	Names  TestNames
+	Set    *token.FileSet
+	number *numbers
+}
+
+func (v *Visitor) Visit(node ast.Node) ast.Visitor {
+	switch e := node.(type) {
+	case *ast.FuncDecl:
+		if checkName(e.Name.Name) {
+			if u, ok := checkSignature(e.Type); ok {
+				if u {
+					v.Names.Unit = append(v.Names.Unit, e.Name.Name)
+				} else {
+					v.Names.Integration = append(v.Names.Integration, e.Name.Name)
+				}
+			}
+		}
+		for _, field := range e.Type.Params.List {
+			if sel, ok := field.Type.(*ast.SelectorExpr); ok {
+				if sel.Sel.Name == "T" {
+					if id, ok := sel.X.(*ast.Ident); ok {
+						if id.Name == "mad" {
+							selector := field.Names[0].Name
+							insert(v.Set, selector, e.Body)
+							return nil
+						}
+					}
+				}
+			}
+		}
+		return v.number
+	}
+	return v
+}
+
+type numbers struct {
+	set *token.FileSet
+}
+
+func (n *numbers) Visit(node ast.Node) ast.Visitor {
+	switch e := node.(type) {
+	case *ast.FuncLit:
+		for _, field := range e.Type.Params.List {
+			if sel, ok := field.Type.(*ast.SelectorExpr); ok {
+				if sel.Sel.Name == "T" {
+					if id, ok := sel.X.(*ast.Ident); ok {
+						if id.Name == "mad" {
+							selector := field.Names[0].Name
+							insert(n.set, selector, e.Body)
+						}
+					}
+				}
+			}
+		}
+	}
+	return n
 }

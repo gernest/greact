@@ -65,3 +65,69 @@ func TestAddLine() mad.Test {
 		}
 	})
 }
+
+const sample2 = `
+package sample
+
+import "github.com/gernest/mad"
+
+
+func TestAddLine() mad.Test {
+	return mad.List{
+		mad.It("adds line numbers", func(ts mad.T) {
+			ts.Error("here ")
+			ts.Errorf("here %d", 2)
+			wrap(ts)
+		}),
+		wrap2(),
+	}
+}
+
+func wrap(t mad.T)  {
+	t.Fatal("here 3")
+	t.Fatalf("here %s", 4)
+}
+
+func wrap2() mad.Test {
+	return mad.It("wrap2", func(t mad.T) {
+		t.Fatal("here 5")
+		t.Fatalf("here %s", 6)
+	})
+}
+
+func wrap3() mad.Test {
+	h := func(t mad.T) {
+		t.Fatal("here 5")
+		t.Fatalf("here %s", 6)
+	}
+	return mad.It("wrap2", h)
+}
+
+
+`
+
+func TestWrap() mad.Test {
+	return mad.It("wraps ", func(t mad.T) {
+		set := token.NewFileSet()
+		name := "tests.go"
+		f, err := parser.ParseFile(set, name, sample2, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		tools.AddFileNumber(set, f)
+		var buf bytes.Buffer
+		printer.Fprint(&buf, set, f)
+		expectedLines := []string{
+			"tests.go:10", "tests.go:11",
+			"tests.go:19", "tests.go:20",
+			"tests.go:25", "tests.go:26",
+			"tests.go:32", "tests.go:33",
+		}
+		txt := buf.String()
+		for _, v := range expectedLines {
+			if !strings.Contains(txt, v) {
+				t.Errorf("expected %s to be added", v)
+			}
+		}
+	})
+}

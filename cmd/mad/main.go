@@ -202,10 +202,8 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 			return err
 		}
 		fn := tools.AddFileNumber(set, f)
-		if fn != nil {
-			funcs.Integration = append(funcs.Integration, fn.Integration...)
-			funcs.Unit = append(funcs.Unit, fn.Unit...)
-		}
+		funcs.Integration = append(funcs.Integration, fn.Integration...)
+		funcs.Unit = append(funcs.Unit, fn.Unit...)
 		for old, newImport := range cfg.ImportMap {
 			astutil.RewriteImport(set, f, old, newImport)
 		}

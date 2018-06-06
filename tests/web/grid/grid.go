@@ -30,48 +30,73 @@ func TestMediaType() mad.Test {
 	)
 }
 
-func TestRowStyle() mad.Test {
-	fixture := []string{
-		`.Row {
-  position:relative;
-  margin-left:-8px;
-  margin-right:-8px;
-  box-sizing:border-box;
-  display:block;
-  height:auto;
-  zoom:1;
+func TestRow() mad.Test {
+	return mad.List{
+		mad.Describe("MakeRow", makeRow()),
+	}
 }
 
-.Row:before {
-  content:;
+func makeRow() mad.Test {
+	return mad.List{
+		mad.It("must use default gutter width", func(t mad.T) {
+			expect := `position:relative;
+
+margin-left:0px;
+
+margin-right:0px;
+
+height:auto;
+
+zoom:1;
+
+&:before {
+  content: ;
   display:table;
 }
 
-.Row:after {
-  content:;
+&:after {
+  content: ;
   display:table;
   clear:both;
   visibility:hidden;
   font-size:0;
   height:0;
-}`,
-	}
-	return mad.It("creates row styles", func(t mad.T) {
-		sample := []struct {
-			gutter  int64
-			flex    bool
-			justify grid.FlexStyle
-			align   grid.FlexAlign
-		}{
-			{16, false, grid.Start, grid.Top},
-		}
-		for k, v := range sample {
-			css := grid.RowStyle(v.gutter, v.flex, v.justify, v.align)
-			got := gs.ToString(css)
-			expect := fixture[k]
-			if got != expect {
-				t.Errorf("expected %s got %s", expect, got)
+}`
+			css := grid.MakeRow(0)
+			str := gs.ToString(css)
+			if str != expect {
+				t.Errorf("expected %s got %s", expect, str)
 			}
-		}
-	})
+		}),
+		mad.It("must calculate the gutter", func(t mad.T) {
+			expect := `position:relative;
+
+margin-left:-8px;
+
+margin-right:-8px;
+
+height:auto;
+
+zoom:1;
+
+&:before {
+  content: ;
+  display:table;
+}
+
+&:after {
+  content: ;
+  display:table;
+  clear:both;
+  visibility:hidden;
+  font-size:0;
+  height:0;
+}`
+			css := grid.MakeRow(16)
+			str := gs.ToString(css)
+			if str != expect {
+				t.Errorf("expected %s got %s", expect, str)
+			}
+		}),
+	}
 }

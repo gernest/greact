@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gernest/gs"
+	"github.com/gernest/vected/web/mixins"
 	"github.com/gernest/vected/web/themes"
 )
 
@@ -280,4 +281,19 @@ func Media(cond MediaType, opts ...*ColOptions) gs.CSSRule {
 		rules = append(rules, ColumnStyle(v))
 	}
 	return gs.Cond(cond.Screen(), rules...)
+}
+
+// New Direction
+
+func MakeRow(gutter int64) gs.CSSRule {
+	if gutter == 0 {
+		gutter = themes.Default.GridGutterWidth
+	}
+	return gs.CSS(
+		gs.P("position", "relative"),
+		gs.P("margin-left", format(gutter/-2)+"px"),
+		gs.P("margin-right", format(gutter/-2)+"px"),
+		gs.P("height", "auto"),
+		mixins.ClearFix(),
+	)
 }

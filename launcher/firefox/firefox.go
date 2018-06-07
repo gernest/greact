@@ -1,7 +1,9 @@
 package firefox
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"sort"
@@ -54,10 +56,10 @@ func getAllPrefixes() []string {
 	return o
 }
 
-// GefFirefoxExe Return location of firefox.exe file for a given Firefox
+// GetFirefoxExe Return location of firefox.exe file for a given Firefox
 // directory
 // (available: "Mozilla Firefox", "Aurora", "Nightly").
-func GefFirefoxExe(firefoxDirName string) string {
+func GetFirefoxExe(firefoxDirName string) string {
 	if runtime.GOOS != "windows" {
 		return ""
 	}
@@ -71,4 +73,103 @@ func GefFirefoxExe(firefoxDirName string) string {
 		return prefix + suffix
 	}
 	return `C:\\Program Files` + suffix
+}
+
+func GetFirefoxWithFallbackOnOSX(firefoxDirNames ...string) string {
+	if runtime.GOOS != "darwin" {
+		return ""
+	}
+	prefix := "/Applications/"
+	suffix := ".app/Contents/MacOS/firefox-bin"
+	home := os.Getenv("HOME")
+	for _, v := range firefoxDirNames {
+		bin := prefix + v + suffix
+		if home != "" {
+			hb := filepath.Join(home, bin)
+			_, err := os.Stat(hb)
+			if err == nil {
+				return hb
+			}
+		}
+		_, err := os.Stat(bin)
+		if err == nil {
+			return bin
+		}
+		fmt.Println(err)
+	}
+	return ""
+}
+
+func firefox() string {
+	switch runtime.GOOS {
+	case "linux":
+		return "firefox"
+	case "darwin":
+		return GetFirefoxWithFallbackOnOSX("Firefox")
+	case "windows":
+		return GetFirefoxExe("Mozilla Firefox")
+	default:
+		return ""
+	}
+}
+func firefoxDeveloper() string {
+	switch runtime.GOOS {
+	case "linux":
+		return "firefox"
+	case "darwin":
+		return GetFirefoxWithFallbackOnOSX("FirefoxDeveloperEdition", "FirefoxAurora")
+	case "windows":
+		return GetFirefoxExe("Firefox Developer Edition")
+	default:
+		return ""
+	}
+}
+
+func firefoxAurora() string {
+	switch runtime.GOOS {
+	case "linux":
+		return "firefox"
+	case "darwin":
+		return GetFirefoxWithFallbackOnOSX("FirefoxAurora")
+	case "windows":
+		return GetFirefoxExe("Aurora")
+	default:
+		return ""
+	}
+}
+func firefoxNightly() string {
+	switch runtime.GOOS {
+	case "linux":
+		return "firefox"
+	case "darwin":
+		return GetFirefoxWithFallbackOnOSX("FirefoxNightly")
+	case "windows":
+		return GetFirefoxExe("Nightly")
+	default:
+		return ""
+	}
+}
+
+type Type uint
+
+const (
+	Firefox = iota
+	Developer
+	Aurora
+	Nightly
+)
+
+func Find(typ Type) string {
+	switch typ {
+	case Firefox:
+		return firefox()
+	case Developer:
+		return firefoxDeveloper()
+	case Aurora:
+		return firefoxAurora()
+	case Nightly:
+		return firefoxNightly()
+	default:
+		return ""
+	}
 }

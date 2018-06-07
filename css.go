@@ -146,7 +146,7 @@ type CSSRule interface {
 
 type Transformer func(CSSRule) CSSRule
 
-func fLattern(rule CSSRule) CSSRule {
+func Flattern(rule CSSRule) CSSRule {
 	switch e := rule.(type) {
 	case RuleList:
 		return flatternRuleList(e)
@@ -220,7 +220,7 @@ type Options struct {
 // Process this applies any transformation to the rule. It automatically
 // flatterns the rule tree.
 func Process(rule CSSRule, ts ...Transformer) CSSRule {
-	ts = append(ts, fLattern)
+	ts = append(ts, Flattern)
 	for _, v := range ts {
 		rule = v(rule)
 	}

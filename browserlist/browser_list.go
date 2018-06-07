@@ -85,6 +85,22 @@ func query(str string) filter {
 				}
 			}
 			return noop
+		case "cover":
+			if s.Scan() {
+				txt := s.Text()
+				if strings.HasSuffix(txt, "%") {
+					n := txt[:len(txt)-1]
+					v, err := strconv.ParseFloat(n, 64)
+					if err != nil {
+						panic(err)
+					}
+					nv := v * 0.01
+					return func(name string, ver version, usage float64) bool {
+						return usage >= nv
+					}
+				}
+			}
+			return noop
 		}
 	}
 

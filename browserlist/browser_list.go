@@ -21,6 +21,9 @@ func query(str string) filter {
 			}
 			return noop
 		}
+		return func(name string, v version) bool {
+			return v.lt(ver)
+		}
 	case '>':
 		parts := strings.Split(str, " ")
 		ver := strings.TrimSpace(parts[1])
@@ -31,6 +34,9 @@ func query(str string) filter {
 				}
 			}
 			return noop
+		}
+		return func(name string, v version) bool {
+			return v.gt(ver)
 		}
 	}
 	parts := strings.Split(str, " ")

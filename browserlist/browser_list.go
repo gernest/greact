@@ -1,6 +1,7 @@
 package browserlist
 
 import (
+	"bufio"
 	"strconv"
 	"strings"
 
@@ -11,46 +12,82 @@ type filter func(name string, version version, usage float64) bool
 
 func query(str string) filter {
 	str = strings.TrimSpace(str)
-	switch str[0] {
-	case '<':
-		parts := strings.Split(str, " ")
-		ver := strings.TrimSpace(parts[1])
-		if len(parts[0]) == 2 {
-			if parts[0][1] == '=' {
-				return func(name string, v version, _ float64) bool {
-					return v.le(ver)
+	if str == "" {
+		return noop
+	}
+	s := bufio.NewScanner(strings.NewReader(str))
+	s.Split(bufio.ScanWords)
+	if s.Scan() {
+		x := s.Text()
+		switch x {
+		case ">":
+			if s.Scan() {
+				txt := s.Text()
+				if strings.HasSuffix(txt, "%") {
+					n := txt[:len(txt)-1]
+					v, err := strconv.ParseFloat(n, 64)
+					if err != nil {
+						panic(err)
+					}
+					nv := v * 0.01
+					return func(name string, ver version, usage float64) bool {
+						return usage > nv
+					}
+				}
+			}
+			return noop
+		case ">=":
+			if s.Scan() {
+				txt := s.Text()
+				if strings.HasSuffix(txt, "%") {
+					n := txt[:len(txt)-1]
+					v, err := strconv.ParseFloat(n, 64)
+					if err != nil {
+						panic(err)
+					}
+					nv := v * 0.01
+
+					return func(name string, ver version, usage float64) bool {
+						return usage >= nv
+					}
+				}
+			}
+			return noop
+		case "<":
+			if s.Scan() {
+				txt := s.Text()
+				if strings.HasSuffix(txt, "%") {
+					n := txt[:len(txt)-1]
+					v, err := strconv.ParseFloat(n, 64)
+					if err != nil {
+						panic(err)
+					}
+					nv := v * 0.01
+					return func(name string, ver version, usage float64) bool {
+						return usage < nv
+					}
+				}
+			}
+			return noop
+		case "<=":
+			if s.Scan() {
+				txt := s.Text()
+				if strings.HasSuffix(txt, "%") {
+					n := txt[:len(txt)-1]
+					v, err := strconv.ParseFloat(n, 64)
+					if err != nil {
+						panic(err)
+					}
+					nv := v * 0.01
+					return func(name string, ver version, usage float64) bool {
+						return usage <= nv
+					}
 				}
 			}
 			return noop
 		}
-		return func(name string, v version, _ float64) bool {
-			return v.lt(ver)
-		}
-	case '>':
-		parts := strings.Split(str, " ")
-		ver := strings.TrimSpace(parts[1])
-		if len(parts[0]) == 2 {
-			if parts[0][1] == '=' {
-				return func(name string, v version, _ float64) bool {
-					return v.ge(ver)
-				}
-			}
-			return noop
-		}
-		return func(name string, v version, _ float64) bool {
-			return v.gt(ver)
-		}
 	}
-	parts := strings.Split(str, " ")
-	switch parts[0] {
-	case "cover":
-	default:
-		if n, ok := aliasReverse[parts[0]]; ok {
-			return func(name string, v version, _ float64) bool {
-				return name == n
-			}
-		}
-	}
+
 	return noop
 }
 

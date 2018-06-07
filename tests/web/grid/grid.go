@@ -33,6 +33,7 @@ func TestMediaType() mad.Test {
 func TestRow() mad.Test {
 	return mad.List{
 		mad.Describe("MakeRow", makeRow()),
+		mad.Describe("RowStyle", rowStyle()),
 	}
 }
 
@@ -99,4 +100,35 @@ zoom:1;
 			}
 		}),
 	}
+}
+
+func rowStyle() mad.Test {
+	return mad.It("creates base row style", func(t mad.T) {
+		css := grid.RowStyle(15)
+		txt := gs.ToString(css)
+		expect := `.vected-row {
+  position:relative;
+  margin-left:-7px;
+  margin-right:-7px;
+  height:auto;
+  zoom:1;
+  .vected-row:before {
+    content: ;
+    display:table;
+  }
+  .vected-row:after {
+    content: ;
+    display:table;
+    clear:both;
+    visibility:hidden;
+    font-size:0;
+    height:0;
+  }
+  display:block;
+  box-sizing:border-box;
+}`
+		if txt != expect {
+			t.Errorf("expected %s got %s", expect, txt)
+		}
+	})
 }

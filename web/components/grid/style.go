@@ -75,14 +75,15 @@ var (
 	XXL = MediaType(themes.Default.ScreenXXL)
 )
 
+// main class keys for vected grid.
 const (
-	RowClass     = ".Row"
-	RowFLexClass = ".RowFlex"
-	ColClass     = ".Col"
-	PushClass    = ".Push"
-	PullClass    = ".Pull"
-	OffsetClass  = ".Offset"
-	OrderClass   = ".Order"
+	RowClass     = ".vected-row"
+	RowFLexClass = ".vected-row-flex"
+	ColClass     = ".vected-col"
+	PushClass    = ".vected-col-push"
+	PullClass    = ".vected-col-pull"
+	OffsetClass  = ".vected-col-offset"
+	OrderClass   = ".vected-col-order"
 )
 
 func (m MediaType) Screen() string {
@@ -98,189 +99,13 @@ func formatFloat(v float64) string {
 	return strconv.FormatFloat(v, 'f', -1, 64)
 }
 
-// RowStyle returns and styles for a grid row.
-func RowStyle(gutter int64, flex bool, justify FlexStyle, align FlexAlign) gs.CSSRule {
-	if flex {
-		var s gs.CSSRule
-		switch justify {
-		case End:
-			s = gs.P("justify-content", "flex-end")
-		case Center:
-			s = gs.P("justify-content", "center")
-		case SpaceAround:
-			s = gs.P("justify-content", "space-around")
-		case SpaceBetween:
-			s = gs.P("justify-content", "space-between")
-		case Start:
-			s = gs.P("justify-content", "flex-start")
-		default:
-			s = gs.P("justify-content", "flex-start")
-		}
-		var a gs.CSSRule
-		switch align {
-		case Top:
-			a = gs.P("align-items", "flex-start")
-		case Middle:
-			a = gs.P("align-items", "center")
-		case Bottom:
-			a = gs.P("align-items", "flex-end")
-		default:
-			a = gs.P("align-items", "flex-start")
-		}
-		return gs.CSS(
-			gs.S(RowFLexClass,
-				gs.P("display", "flex"),
-				gs.P("flex-flow", "row wrap"),
-				gs.S("&:before", gs.P("display", "flex")),
-				gs.S("&:after", gs.P("display", "flex")),
-				gs.S("&:after", gs.P("display", "flex")),
-				s, a,
-			),
-		)
-	}
-	return gs.CSS(
-		gs.S(RowClass,
-			gs.P("position", "relative"),
-			gs.P("margin-left", format(gutter/-2)+"px"),
-			gs.P("margin-right", format(gutter/-2)+"px"),
-			gs.P("box-sizing", "border-box"),
-			gs.P("display", "block"),
-			gs.P("height", "auto"),
-			gs.P("zoom", "1"),
-			gs.S("&:before",
-				gs.P("content", ""),
-				gs.P("display", "table"),
-			),
-			gs.S("&:after",
-				gs.P("content", ""),
-				gs.P("display", "table"),
-				gs.P("clear", "both"),
-				gs.P("visibility", "hidden"),
-				gs.P("font-size", "0"),
-				gs.P("height", "0"),
-			)),
-	)
-}
-
-func clearFix() gs.CSSRule {
-	return gs.CSS(
-		gs.P("zoom", "1"),
-		gs.S("&:before",
-			gs.P("content", ""),
-			gs.P("display", "table"),
-		),
-		gs.S("&:after",
-			gs.P("content", ""),
-			gs.P("display", "table"),
-			gs.P("clear", "both"),
-			gs.P("visibility", "hidden"),
-			gs.P("font-size", "0"),
-			gs.P("height", "0"),
-		),
-	)
-
-}
-
-func MakeColumn(index, gutter, numCols int64) gs.CSSRule {
-	display := gs.P("display", "block")
-	if index == 0 {
-		display = gs.P("display", "none")
-	}
-	return gs.CSS(
-		gs.S(ColClass,
-			gs.P("position", "relative"),
-			display,
-			gs.P("min-height", "1px"),
-			gs.P("box-sizing", "border-box"),
-			gs.P("float", "left"),
-			gs.P("flex", "0 0 auto"),
-			gs.P("width", precent(float64(index)/float64(numCols))),
-		),
-	)
-}
-
-func Push(index int64, numCols int64) gs.CSSRule {
-	if index == 0 {
-		return gs.S(PushClass,
-			gs.P("left", "auto"),
-		)
-	}
-	return gs.S(PushClass,
-		gs.P("left", precent(float64(index)/float64(numCols))),
-	)
-}
-
-func Pull(index int64, numCols int64) gs.CSSRule {
-	if index == 0 {
-		return gs.S(PushClass,
-			gs.P("right", "auto"),
-		)
-	}
-	return gs.S(PullClass,
-		gs.P("right", precent(float64(index)/float64(numCols))),
-	)
-}
-
-func Offset(index int64, numCols int64) gs.CSSRule {
-	if index == 0 {
-		return gs.S(PushClass,
-			gs.P("margin-left", "0"),
-		)
-	}
-	return gs.S(OffsetClass,
-		gs.P("margin-left", precent(float64(index)/float64(numCols))),
-	)
-}
-
-func Order(index int64) gs.CSSRule {
-	if index == 0 {
-		return gs.S(PushClass,
-			gs.P("order", "0"),
-		)
-	}
-	return gs.S(OrderClass,
-		gs.P("order", format(index)),
-	)
-}
-
 func precent(v float64) string {
 	return formatFloat(v*100) + "%"
-}
-
-func ColumnStyle(opts *ColOptions, mediaQuery ...MediaOption) gs.CSSRule {
-	var rules gs.RuleList
-	index := int64(opts.Span)
-	cols := themes.Default.GridColumns
-	rules = append(rules, MakeColumn(index, opts.Gutter, cols))
-	if opts.Pull != 0 {
-		rules = append(rules, Pull(int64(opts.Pull), cols))
-	}
-	if opts.Push != 0 {
-		rules = append(rules, Push(int64(opts.Push), cols))
-	}
-	if opts.Offset != 0 {
-		rules = append(rules, Offset(int64(opts.Offset), cols))
-	}
-	if opts.Order != 0 {
-		rules = append(rules, Order(int64(opts.Order)))
-	}
-	for _, v := range mediaQuery {
-		rules = append(rules, Media(v.Type, v.Opts))
-	}
-	return rules
 }
 
 type MediaOption struct {
 	Type MediaType
 	Opts *ColOptions
-}
-
-func Media(cond MediaType, opts ...*ColOptions) gs.CSSRule {
-	var rules gs.RuleList
-	for _, v := range opts {
-		rules = append(rules, ColumnStyle(v))
-	}
-	return gs.Cond(cond.Screen(), rules...)
 }
 
 // New Direction
@@ -296,4 +121,16 @@ func MakeRow(gutter int64) gs.CSSRule {
 		gs.P("height", "auto"),
 		mixins.ClearFix(),
 	)
+}
+
+func RowStyle(gutter int64) gs.CSSRule {
+	return gs.S(RowClass,
+		MakeRow(gutter),
+		gs.P("display", "block"),
+		gs.P("box-sizing", "border-box"),
+	)
+}
+
+func format(v int64) string {
+	return strconv.FormatInt(v, 10)
 }

@@ -2,9 +2,7 @@ package grid
 
 import (
 	"github.com/gernest/gs"
-	"github.com/gernest/vected/ui"
 	"github.com/gopherjs/vecty"
-	"github.com/gopherjs/vecty/elem"
 )
 
 type Number int64
@@ -100,72 +98,7 @@ func (c *Column) Mount() {
 // style rules provided in the CSS field. The stylesheet is not attached to the
 // dom until the component is mounted.
 func (c *Column) Render() vecty.ComponentOrHTML {
-	if c.sheet == nil {
-		c.sheet = ui.NewSheet()
-		c.sheet.AddRule(c.style())
-		if c.CSS != nil {
-			c.sheet.AddRule(c.CSS)
-		}
-	}
-	ch := c.getChildren()
-	style := c.Style
-	if c.Gutter > 0 {
-		style = vecty.Markup(
-			vecty.Style("padding-left", format(c.Gutter/2)+"px"),
-			vecty.Style("padding-right", format(c.Gutter/2)+"px"),
-		)
-	}
-	classes := vecty.ClassMap(c.sheet.CLasses.Classes())
-	return elem.Div(vecty.Markup(classes, style), ch)
-}
-
-func (c *Column) getChildren() vecty.MarkupOrChild {
-	if c.Children != nil {
-		return c.Children()
-	}
 	return nil
-}
-
-func (c *Column) style() gs.CSSRule {
-	var media []MediaOption
-	if c.XS != nil {
-		media = append(media, MediaOption{
-			Type: XS,
-			Opts: c.XS,
-		})
-	}
-	if c.SM != nil {
-		media = append(media, MediaOption{
-			Type: SM,
-			Opts: c.SM,
-		})
-	}
-	if c.MD != nil {
-		media = append(media, MediaOption{
-			Type: MD,
-			Opts: c.MD,
-		})
-	}
-	if c.LG != nil {
-		media = append(media, MediaOption{
-			Type: LG,
-			Opts: c.LG,
-		})
-	}
-
-	if c.XL != nil {
-		media = append(media, MediaOption{
-			Type: XL,
-			Opts: c.XL,
-		})
-	}
-	if c.XXL != nil {
-		media = append(media, MediaOption{
-			Type: XXL,
-			Opts: c.XXL,
-		})
-	}
-	return ColumnStyle(c.options(), media...)
 }
 
 func (c *Column) options() *ColOptions {
@@ -177,17 +110,4 @@ func (c *Column) options() *ColOptions {
 		Pull:   c.Pull,
 		Gutter: c.Gutter,
 	}
-}
-
-func join(s ...string) string {
-	o := ""
-	for _, v := range s {
-		o += v
-	}
-	return o
-}
-
-// Unmount cleanups by detaching the loaded styles for the component.
-func (c *Column) Unmount() {
-	c.sheet.Detach()
 }

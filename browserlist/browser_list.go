@@ -3,6 +3,8 @@ package browserlist
 import (
 	"strconv"
 	"strings"
+
+	"github.com/gernest/gs/agents"
 )
 
 type filter func(name string, version version, usage float64) bool
@@ -147,4 +149,43 @@ func (v version) filter(v2 string, fn func(a, b int) bool) bool {
 		}
 	}
 	return false
+}
+
+// Query returns a list of browsers that matches the given queries.
+func Query(q ...string) []string {
+	o := []string{}
+	all := agents.All()
+	for _, a := range all {
+		o = append(o, apply(a, allFilterQuery(q...))...)
+	}
+	return o
+}
+
+func allFilterQuery(q ...string) filter {
+	var f []filter
+	for _, v := range q {
+		f = append(f, query(v))
+	}
+	return allFilter(f...)
+}
+
+func allFilter(f ...filter) filter {
+	return func(name string, v version, usage float64) bool {
+		for _, fn := range f {
+			if !fn(name, v, usage) {
+				return false
+			}
+		}
+		return true
+	}
+}
+
+func apply(a agents.Agent, fn filter) []string {
+	o := []string{}
+	for _, v := range a.Versions {
+		if fn(a.Name, version(v), a.UsageGlobal[v]) {
+			o = append(o, a.Name+" "+v)
+		}
+	}
+	return o
 }

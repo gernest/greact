@@ -76,3 +76,9 @@ func init() {
 		aliasReverse[strings.ToLower(v)] = k
 	}
 }
+
+func not(f filter) filter {
+	return func(name, version string) bool {
+		return !f(name, version)
+	}
+}

@@ -32,73 +32,7 @@ func TestMediaType() mad.Test {
 
 func TestRow() mad.Test {
 	return mad.List{
-		mad.Describe("MakeRow", makeRow()),
 		mad.Describe("RowStyle", rowStyle()),
-	}
-}
-
-func makeRow() mad.Test {
-	return mad.List{
-		mad.It("must use default gutter width", func(t mad.T) {
-			expect := `position:relative;
-
-margin-left:0px;
-
-margin-right:0px;
-
-height:auto;
-
-zoom:1;
-
-&:before {
-  content: ;
-  display:table;
-}
-
-&:after {
-  content: ;
-  display:table;
-  clear:both;
-  visibility:hidden;
-  font-size:0;
-  height:0;
-}`
-			css := grid.MakeRow(0)
-			str := gs.ToString(css)
-			if str != expect {
-				t.Errorf("expected %s got %s", expect, str)
-			}
-		}),
-		mad.It("must calculate the gutter", func(t mad.T) {
-			expect := `position:relative;
-
-margin-left:-8px;
-
-margin-right:-8px;
-
-height:auto;
-
-zoom:1;
-
-&:before {
-  content: ;
-  display:table;
-}
-
-&:after {
-  content: ;
-  display:table;
-  clear:both;
-  visibility:hidden;
-  font-size:0;
-  height:0;
-}`
-			css := grid.MakeRow(16)
-			str := gs.ToString(css)
-			if str != expect {
-				t.Errorf("expected %s got %s", expect, str)
-			}
-		}),
 	}
 }
 

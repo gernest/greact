@@ -147,57 +147,36 @@ type CSSRule interface {
 type Transformer func(CSSRule) CSSRule
 
 func Flattern(rule CSSRule) CSSRule {
+	return flattern("", rule)
+}
+func flattern(parent string, rule CSSRule) RuleList {
+	var o RuleList
 	switch e := rule.(type) {
 	case RuleList:
-		return flatternRuleList(e)
+		for _, v := range e {
+			o = append(o, flattern(parent, v)...)
+		}
 	case StyleRule:
-		return flatternStyle(e)
+		sel := e.Selector
+		if parent != "" {
+			sel = replaceParent(parent, sel)
+		}
+		o = append(o, StyleRule{
+			Selector: sel,
+			Rules:    flattern(sel, e.Rules),
+		})
 	case Conditional:
-		return Conditional{Key: e.Key, Rules: flatternRuleList(e.Rules)}
+		key := e.Key
+		if parent != "" {
+			key = replaceParent(parent, key)
+		}
+		o = append(o, Conditional{
+			Key:   key,
+			Rules: flattern(key, e.Rules),
+		})
 	default:
-		return e
+		o = append(o, e)
 	}
-}
-
-func flatternRuleList(list RuleList) RuleList {
-	var o RuleList
-	for _, v := range list {
-		switch e := v.(type) {
-		case RuleList:
-			o = append(o, flatternRuleList(e)...)
-		case StyleRule:
-			o = append(o, flatternStyle(e)...)
-		case Conditional:
-			o = append(o, Conditional{
-				Key:   e.Key,
-				Rules: flatternRuleList(e.Rules),
-			})
-		default:
-			o = append(o, e)
-		}
-	}
-	return o
-}
-
-func flatternStyle(s StyleRule) RuleList {
-	var o RuleList
-	baseStyle := StyleRule{Selector: s.Selector}
-	for _, v := range s.Rules {
-		switch e := v.(type) {
-		case StyleRule:
-			ls := flatternStyle(
-				StyleRule{
-					Selector: replaceParent(baseStyle.Selector, e.Selector),
-					Rules:    e.Rules,
-				})
-			for _, value := range ls {
-				o = append(o, value)
-			}
-		default:
-			baseStyle.Rules = append(baseStyle.Rules, e)
-		}
-	}
-	o = append(RuleList{baseStyle}, o...)
 	return o
 }
 

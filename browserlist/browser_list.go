@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type filter func(name string, version version) bool
+type filter func(name string, version version, usage float64) bool
 
 func query(str string) filter {
 	str = strings.TrimSpace(str)
@@ -15,13 +15,13 @@ func query(str string) filter {
 		ver := strings.TrimSpace(parts[1])
 		if len(parts[0]) == 2 {
 			if parts[0][1] == '=' {
-				return func(name string, v version) bool {
+				return func(name string, v version, _ float64) bool {
 					return v.le(ver)
 				}
 			}
 			return noop
 		}
-		return func(name string, v version) bool {
+		return func(name string, v version, _ float64) bool {
 			return v.lt(ver)
 		}
 	case '>':
@@ -29,13 +29,13 @@ func query(str string) filter {
 		ver := strings.TrimSpace(parts[1])
 		if len(parts[0]) == 2 {
 			if parts[0][1] == '=' {
-				return func(name string, v version) bool {
+				return func(name string, v version, _ float64) bool {
 					return v.ge(ver)
 				}
 			}
 			return noop
 		}
-		return func(name string, v version) bool {
+		return func(name string, v version, _ float64) bool {
 			return v.gt(ver)
 		}
 	}
@@ -44,7 +44,7 @@ func query(str string) filter {
 	case "cover":
 	default:
 		if n, ok := aliasReverse[parts[0]]; ok {
-			return func(name string, v version) bool {
+			return func(name string, v version, _ float64) bool {
 				return name == n
 			}
 		}
@@ -52,7 +52,7 @@ func query(str string) filter {
 	return noop
 }
 
-func noop(_ string, _ version) bool {
+func noop(_ string, _ version, _ float64) bool {
 	return false
 }
 
@@ -87,8 +87,8 @@ func init() {
 }
 
 func not(f filter) filter {
-	return func(name string, version version) bool {
-		return !f(name, version)
+	return func(name string, version version, usage float64) bool {
+		return !f(name, version, usage)
 	}
 }
 

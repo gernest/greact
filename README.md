@@ -30,7 +30,6 @@ work. Unfortunate I'm only interested in chrome so if you want to take a stab
 at testing with another browser you are welcome.
 
 - [x] chrome
-- [W.I.P] firefox
 - [ ] Add a browser
 
 

@@ -2,6 +2,8 @@ package browserlist
 
 import (
 	"testing"
+
+	"github.com/kr/pretty"
 )
 
 type stats struct {
@@ -325,4 +327,10 @@ func TestQueryNormal(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestRegexp(t *testing.T) {
+	d := getData()
+	pretty.Println(d)
+	t.Error("yay")
 }

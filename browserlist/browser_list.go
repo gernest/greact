@@ -3,8 +3,11 @@ package browserlist
 import (
 	"bufio"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/gernest/gs/ciu/agents"
 )
 
 type filter func(name string, version version, usage float64) bool
@@ -188,4 +191,43 @@ func defaultQuery() []string {
 		"Firefox ESR",
 		"not dead",
 	}
+}
+
+type handler struct {
+	match  *regexp.Regexp
+	filter func([]string) []string
+}
+
+var lastRegexp = regexp.MustCompile(`^last\s+(\d+)\s+major versions?$`)
+
+type data struct {
+	name     string
+	versions []string
+	released []string
+}
+
+func getData() map[string]data {
+	m := make(map[string]data)
+	for k, v := range agents.New() {
+		ve := normalize(v.Versions...)
+		d := data{
+			name:     k,
+			versions: ve,
+		}
+		if len(ve) > 2 {
+			d.released = ve[len(ve)-2:]
+		}
+		m[k] = d
+	}
+	return m
+}
+
+func normalize(s ...string) []string {
+	var o []string
+	for _, v := range s {
+		if v != "" {
+			o = append(o, v)
+		}
+	}
+	return o
 }

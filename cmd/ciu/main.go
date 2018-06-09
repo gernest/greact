@@ -43,6 +43,10 @@ func main() {
 					Name:  "o",
 					Value: "ciu/browsers/browsers.go",
 				},
+				cli.StringFlag{
+					Name:  "data",
+					Value: "caniuse/data.json",
+				},
 			},
 		},
 		{

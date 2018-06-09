@@ -33,24 +33,6 @@ func browser(w io.Writer, s map[string]map[string]string) error {
 
 const browsersTpl = `package browsers
 
-type Key string
-const(
-{{range $k,$v:=.}}
-{{encode $k}} Key="{{encode $k}}"
-{{- end}}
-)
-
-func (k Key)String()string  {
-	switch k {
-		{{- range $k,$v:=.}}
-	case {{encode $k}}:
-		return "{{$v}}"
-		{{- end}}	
-	default:
-		return ""
-	}
-}
-
 // New retuns a map of encoded browser keys to their values.
 func New()map[string]string  {
 	return map[string]string{
@@ -63,8 +45,7 @@ func New()map[string]string  {
 `
 
 func BrowserCMD(ctx *cli.Context) error {
-	f := ctx.Args().First()
-	b, err := ioutil.ReadFile(f)
+	b, err := ioutil.ReadFile(ctx.String("data"))
 	if err != nil {
 		return err
 	}

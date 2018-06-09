@@ -8,6 +8,9 @@ import (
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
 func Encode(i int64) (v string) {
+	if i == 0 {
+		return string(characters[0])
+	}
 	r := i
 	for r != 0 {
 		v += string(characters[r%62])

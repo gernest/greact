@@ -24,6 +24,10 @@ func Demo() {
 	sh.RunV("gopherjs", "build", "-o", "demo/main.js", pkg)
 }
 
+func Ciu() error {
+	return sh.RunV("go", "install", "./cmd/ciu/")
+}
+
 type Stats struct {
 	Stats map[string]map[string]string `json:"stats"`
 }

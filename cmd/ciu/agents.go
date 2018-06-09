@@ -1,9 +1,16 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"go/format"
+	"html/template"
+	"io"
+	"io/ioutil"
 	"sort"
 
 	"github.com/gernest/gs/ciu/browsers"
+	"github.com/urfave/cli"
 
 	"github.com/gernest/gs/cmd/ciu/base62"
 )
@@ -60,38 +67,150 @@ func invert(m map[string]string) map[string]string {
 	return o
 }
 
-func agentsCmd(agents map[string]Agent, versions map[string]string, full map[string]Agent) {
-	versionsInverted := invert(versions)
+type agetntOptions struct {
+	agents, full map[string]Agent
+	versions     map[string]string
+}
+
+func agentsCmd(w io.Writer, opts agetntOptions) error {
+	versionsInverted := invert(opts.versions)
 	b := invert(browsers.New())
 	var keys []string
-	for k := range agents {
+	for k := range opts.agents {
 		keys = append(keys, k)
 	}
 	type agetObj struct {
 		A map[string]float64
 		B string
 		C []string
+		D map[string]string
 		E string
 		F map[string]int64
-		D map[string]string
 	}
 	m := make(map[string]agetObj)
 	for _, v := range keys {
-		a := agents[v]
+		a := opts.agents[v]
 		av := make(map[string]float64)
 		for gk, gv := range a.UsageGlobal {
 			av[versionsInverted[gk]] = gv
 		}
 		mf := make(map[string]int64)
-		for _, item := range full[v].VersionList {
+		for _, item := range opts.full[v].VersionList {
 			mf[versionsInverted[item.Version]] = item.ReleaseData
 		}
-		m[b[v]] = agetObj{
+		o := agetObj{
 			A: av,
 			B: a.Prefix,
 			C: a.Versions,
 			E: a.Browser,
 			F: mf,
 		}
+		if a.DataPrefixEceptions != nil {
+			em := make(map[string]string)
+			for ek, ev := range a.DataPrefixEceptions {
+				em[versionsInverted[ek]] = ev
+			}
+			o.D = em
+		}
+		m[b[v]] = o
 	}
+	tpl, err := template.New("agents").Parse(agentsTpl)
+	if err != nil {
+		return err
+	}
+	return tpl.Execute(w, m)
+}
+
+const agentsTpl = `package agents
+
+type Agent struct {
+	A map[string]float64
+	B string
+	C []string
+	D map[string]string
+	E string
+	F map[string]int64
+}
+
+func New()map[string]Agent {
+	return map[string]Agent{
+		{{- range $ak,$av:=.}}
+		"{{$ak}}": Agent{
+			{{- with $av}}
+				{{- with .A}}
+				A: map[string]float64{
+					{{- range $k,$v:=.}}
+					"{{$k}}":{{$v}},
+					{{- end}}
+				},
+				{{- end}}	
+				{{- with .B}}
+				B: "{{.}}",
+				{{- end}}
+				{{- with .C}}
+				C: []string{
+					{{- range $k,$v:=. -}}
+					"{{$v}}",
+					{{- end}}
+				},
+				{{- end}}	
+				{{- with .D}}
+				D: map[string]string{
+					{{- range $k,$v:=.}}
+					"{{$k}}":"{{$v}}",
+					{{- end}}
+				},
+				{{- end}}	
+				{{- with .E}}
+				E: "{{.}}",
+				{{- end}}
+				{{- with .F}}
+				F: map[string]int64{
+					{{- range $k,$v:=.}}
+					"{{$k}}":{{$v}},
+					{{- end}}
+				},
+				{{- end}}	
+			{{- end}}
+		},
+		{{- end}}
+	}
+}
+
+`
+
+func AgentCMD(ctx *cli.Context) error {
+	b, err := ioutil.ReadFile(ctx.String("data"))
+	if err != nil {
+		return err
+	}
+	data := &Data{}
+	err = json.Unmarshal(b, data)
+	if err != nil {
+		return err
+	}
+	b, err = ioutil.ReadFile(ctx.String("full"))
+	if err != nil {
+		return err
+	}
+	full := &Data{}
+	err = json.Unmarshal(b, full)
+	if err != nil {
+		return err
+	}
+	v := browserVersions(data.Agents)
+	var buf bytes.Buffer
+	err = agentsCmd(&buf, agetntOptions{
+		agents:   data.Agents,
+		versions: v,
+		full:     full.Agents,
+	})
+	if err != nil {
+		return err
+	}
+	b, err = format.Source(buf.Bytes())
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(ctx.String("agents-file"), b, 0600)
 }

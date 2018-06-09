@@ -45,6 +45,24 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:   "agents",
+			Action: AgentCMD,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "full",
+					Value: "caniuse/fulldata-json//data-2.0.json",
+				},
+				cli.StringFlag{
+					Name:  "data",
+					Value: "caniuse/data.json",
+				},
+				cli.StringFlag{
+					Name:  "agents-file",
+					Value: "ciu/agents/agents.go",
+				},
+			},
+		},
 	}
 	if err := a.Run(os.Args); err != nil {
 		fmt.Println(err)

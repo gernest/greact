@@ -12,13 +12,19 @@ type Feature struct {
 }
 type Agent struct {
 	Name                string
-	Browser             string
-	Abbr                string
-	Prefix              string
-	Type                string
-	UsageGlobal         map[string]float64
-	Versions            []string
-	DataPrefixEceptions map[string]string
+	Browser             string             `json:"browser"`
+	Abbr                string             `json:"abbr"`
+	Prefix              string             `json:"prefix"`
+	Type                string             `json:"type"`
+	UsageGlobal         map[string]float64 `json:"usage_global"`
+	Versions            []string           `json:"versions"`
+	DataPrefixEceptions map[string]string  `json:"prefix_exceptions"`
+	VersionList         []Version          `json:"version_list"`
+}
+
+type Version struct {
+	Version     string `json:"version"`
+	ReleaseData int64  `json:"release_date"`
 }
 
 type Data struct {

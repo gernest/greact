@@ -13,13 +13,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-type Feature struct {
-	Stats map[string]map[string]string `json:"stats"`
-}
-type Data struct {
-	Features map[string]Feature `json:"data"`
-}
-
 func browser(w io.Writer, s map[string]map[string]string) error {
 	var keys []string
 	for k := range s {
@@ -38,7 +31,7 @@ func browser(w io.Writer, s map[string]map[string]string) error {
 	return tpl.Execute(w, keys)
 }
 
-const browsersTpl = `package browser 
+const browsersTpl = `package browsers
 
 type Key string
 const(

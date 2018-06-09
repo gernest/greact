@@ -1,4 +1,4 @@
-package browser
+package browsers
 
 type Key string
 

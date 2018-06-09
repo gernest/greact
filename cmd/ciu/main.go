@@ -7,6 +7,25 @@ import (
 	"github.com/urfave/cli"
 )
 
+type Feature struct {
+	Stats map[string]map[string]string `json:"stats"`
+}
+type Agent struct {
+	Name                string
+	Browser             string
+	Abbr                string
+	Prefix              string
+	Type                string
+	UsageGlobal         map[string]float64
+	Versions            []string
+	DataPrefixEceptions map[string]string
+}
+
+type Data struct {
+	Agents   map[string]Agent   `json:"agents"`
+	Features map[string]Feature `json:"data"`
+}
+
 func main() {
 	a := cli.NewApp()
 	a.Commands = []cli.Command{
@@ -16,7 +35,7 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "o",
-					Value: "ciu/browser/browser.go",
+					Value: "ciu/browsers/browsers.go",
 				},
 			},
 		},

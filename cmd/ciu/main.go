@@ -61,6 +61,10 @@ func main() {
 					Name:  "agents-file",
 					Value: "ciu/agents/agents.go",
 				},
+				cli.StringFlag{
+					Name:  "list-file",
+					Value: "ciu/versions/versions.go",
+				},
 			},
 		},
 	}

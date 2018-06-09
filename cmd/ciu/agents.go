@@ -15,7 +15,7 @@ import (
 	"github.com/gernest/gs/cmd/ciu/base62"
 )
 
-func browserVersions(agents map[string]Agent) map[string]string {
+func browserVersions(w io.Writer, agents map[string]Agent) (map[string]string, error) {
 	var keys []string
 	for k := range agents {
 		keys = append(keys, k)
@@ -56,8 +56,27 @@ func browserVersions(agents map[string]Agent) map[string]string {
 	for i, v := range m {
 		out[base62.Encode(int64(i))] = v.version
 	}
-	return out
+	tpl, err := template.New("browserList").Parse(browserVersionsTpl)
+	if err != nil {
+		return nil, err
+	}
+	err = tpl.Execute(w, out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
+
+const browserVersionsTpl = `package version
+
+func New()map[string]string  {
+	return map[string]string{
+		{{- range $k,$v:=.}}
+		"{{$k}}": "{{$v}}",
+		{{- end}}
+	}
+}
+`
 
 func invert(m map[string]string) map[string]string {
 	o := make(map[string]string)
@@ -198,8 +217,20 @@ func AgentCMD(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	v := browserVersions(data.Agents)
 	var buf bytes.Buffer
+	v, err := browserVersions(&buf, data.Agents)
+	if err != nil {
+		return err
+	}
+	b, err = format.Source(buf.Bytes())
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(ctx.String("list-file"), b, 0600)
+	if err != nil {
+		return err
+	}
+	buf.Reset()
 	err = agentsCmd(&buf, agetntOptions{
 		agents:   data.Agents,
 		versions: v,

@@ -51,6 +51,15 @@ func (k Key)String()string  {
 	}
 }
 
+// New retuns a map of encoded browser keys to their values.
+func New()map[string]string  {
+	return map[string]string{
+		{{- range $k,$v:=.}}
+		"{{encode $k}}" :"{{$v}}",
+		{{- end}}	
+	}
+}
+
 `
 
 func BrowserCMD(ctx *cli.Context) error {

@@ -180,3 +180,12 @@ func allFilter(f ...filter) filter {
 		return true
 	}
 }
+
+func defaultQuery() []string {
+	return []string{
+		"> 0.5%",
+		"last 2 versions",
+		"Firefox ESR",
+		"not dead",
+	}
+}

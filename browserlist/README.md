@@ -3,7 +3,6 @@ port of [browserlist](https://github.com/browserslist/browserslist)
 support
 
 - `> 5%` versions selected by global usage statistics. >=, < and <= work too.
-- `cover 99.5%`: most popular browsers that provide coverage.
 - `Firefox > 20`: versions of Firefox newer than 20. >=, < and <= work too.
 - `iOS 7`: the iOS browser version 7 directly.
 - `unreleased versions` or `unreleased Chrome versions`: alpha and beta versions.

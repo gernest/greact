@@ -2,6 +2,7 @@ package browserlist
 
 import (
 	"bufio"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -17,92 +18,66 @@ func query(str string) filter {
 	s.Split(bufio.ScanWords)
 	if s.Scan() {
 		x := s.Text()
-		switch x {
-		case ">":
+		switch {
+		case signs[x]:
 			if s.Scan() {
-				txt := s.Text()
-				if strings.HasSuffix(txt, "%") {
-					n := txt[:len(txt)-1]
-					v, err := strconv.ParseFloat(n, 64)
-					if err != nil {
-						panic(err)
-					}
-					nv := v * 0.01
-					return func(name string, ver version, usage float64) bool {
-						return usage > nv
-					}
-				}
-			}
-			return noop
-		case ">=":
-			if s.Scan() {
-				txt := s.Text()
-				if strings.HasSuffix(txt, "%") {
-					n := txt[:len(txt)-1]
-					v, err := strconv.ParseFloat(n, 64)
-					if err != nil {
-						panic(err)
-					}
-					nv := v * 0.01
-
-					return func(name string, ver version, usage float64) bool {
-						return usage >= nv
-					}
-				}
-			}
-			return noop
-		case "<":
-			if s.Scan() {
-				txt := s.Text()
-				if strings.HasSuffix(txt, "%") {
-					n := txt[:len(txt)-1]
-					v, err := strconv.ParseFloat(n, 64)
-					if err != nil {
-						panic(err)
-					}
-					nv := v * 0.01
-					return func(name string, ver version, usage float64) bool {
-						return usage < nv
-					}
-				}
-			}
-			return noop
-		case "<=":
-			if s.Scan() {
-				txt := s.Text()
-				if strings.HasSuffix(txt, "%") {
-					n := txt[:len(txt)-1]
-					v, err := strconv.ParseFloat(n, 64)
-					if err != nil {
-						panic(err)
-					}
-					nv := v * 0.01
-					return func(name string, ver version, usage float64) bool {
-						return usage <= nv
-					}
-				}
-			}
-			return noop
-		case "cover":
-			if s.Scan() {
-				txt := s.Text()
-				if strings.HasSuffix(txt, "%") {
-					n := txt[:len(txt)-1]
-					v, err := strconv.ParseFloat(n, 64)
-					if err != nil {
-						panic(err)
-					}
-					nv := v * 0.01
-					return func(name string, ver version, usage float64) bool {
-						return usage >= nv
-					}
-				}
+				return compare(x, s.Text())
 			}
 			return noop
 		}
 	}
-
 	return noop
+}
+
+var signs = map[string]bool{
+	">":  true,
+	">=": true,
+	"<":  true,
+	"<=": true,
+	"==": true,
+}
+
+func compare(sign string, ref string) filter {
+	v := version(ref)
+	return func(name string, ver version, usage float64) bool {
+		if strings.HasSuffix(ref, "%") {
+			n := ref[:len(ref)-1]
+			v, err := strconv.ParseFloat(n, 64)
+			if err != nil {
+				panic(err)
+			}
+			nv := v * 0.01
+			switch sign {
+			case ">":
+				fmt.Println(nv)
+				return usage > nv
+			case ">=":
+				return usage >= nv
+			case "<":
+				return usage < nv
+			case "<=":
+				return usage <= nv
+			case "==":
+				return usage == nv
+			default:
+				return false
+			}
+		}
+		switch sign {
+		case ">":
+			return ver.gt(v)
+		case ">=":
+			return ver.ge(v)
+		case "<":
+			return ver.lt(v)
+		case "<=":
+			return ver.le(v)
+		case "==":
+			return ver == v
+		default:
+			return false
+		}
+	}
 }
 
 func noop(_ string, _ version, _ float64) bool {
@@ -147,59 +122,44 @@ func not(f filter) filter {
 
 type version string
 
-func (v version) eq(v2 string) bool {
-	return string(v) == v2
+func (v version) eq(v2 version) bool {
+	return v == v2
 }
 
-func (v version) gt(v2 string) bool {
-	return v.filter(v2, func(a, b int) bool {
-		return a > b
-	})
+func (v version) gt(v2 version) bool {
+	m1 := v.getMajor()
+	m2 := v2.getMajor()
+	return m1 > m2
 }
 
-func (v version) lt(v2 string) bool {
-	return v.filter(v2, func(a, b int) bool {
-		return a < b
-	})
+func (v version) lt(v2 version) bool {
+	m1 := v.getMajor()
+	m2 := v2.getMajor()
+	return m1 < m2
 }
 
-func (v version) ge(v2 string) bool {
-	return v.filter(v2, func(a, b int) bool {
-		return a >= b
-	})
+func (v version) ge(v2 version) bool {
+	m1 := v.getMajor()
+	m2 := v2.getMajor()
+	return m1 >= m2
 }
 
-func (v version) le(v2 string) bool {
-	return v.filter(v2, func(a, b int) bool {
-		return a <= b
-	})
+func (v version) le(v2 version) bool {
+	m1 := v.getMajor()
+	m2 := v2.getMajor()
+	return m1 <= m2
 }
 
-func (v version) filter(v2 string, fn func(a, b int) bool) bool {
-	s := string(v)
-	if s == "" {
-		return false
+func (v version) getMajor() int {
+	if string(v) == "" {
+		return 0
 	}
-	p1 := strings.Split(s, ".")
-	p2 := strings.Split(v2, ".")
-	n := len(p1)
-	if len(p2) < n {
-		n = len(p2)
+	p := strings.Split(string(v), ".")[0]
+	b, err := strconv.Atoi(p)
+	if err == nil {
+		return b
 	}
-	for i := 0; i < n; i++ {
-		a, err := strconv.Atoi(p1[i])
-		if err != nil {
-			panic(err)
-		}
-		b, err := strconv.Atoi(p2[i])
-		if err != nil {
-			panic(err)
-		}
-		if fn(a, b) {
-			return true
-		}
-	}
-	return false
+	return 0
 }
 
 func allFilterQuery(q ...string) filter {

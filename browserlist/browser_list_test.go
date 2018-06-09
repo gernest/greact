@@ -276,7 +276,7 @@ func TestQueryNormal(t *testing.T) {
 		for _, v := range s {
 			g := q(v.name, v.version, v.usage)
 			if g != v.match {
-				t.Errorf("expected %v got %v", v.match, g)
+				t.Errorf("%v: expected %v got %v", v.usage, v.match, g)
 			}
 		}
 	})
@@ -318,21 +318,6 @@ func TestQueryNormal(t *testing.T) {
 			{name: "samsung", version: "6.2", usage: 1.71022, match: false},
 		}
 		q := query("<= 50%")
-		for _, v := range s {
-			g := q(v.name, v.version, v.usage)
-			if g != v.match {
-				t.Errorf("expected %v got %v :%v", v.match, g, v.usage)
-			}
-		}
-	})
-	t.Run("cover %", func(ts *testing.T) {
-		s := []stats{
-			{name: "samsung", version: "4", usage: 0.943211, match: true},
-			{name: "samsung", version: "5", usage: 0.228029, match: false},
-			{name: "samsung", version: "5.4", usage: 0.5, match: true},
-			{name: "samsung", version: "6.2", usage: 1.71022, match: true},
-		}
-		q := query("cover 50%")
 		for _, v := range s {
 			g := q(v.name, v.version, v.usage)
 			if g != v.match {

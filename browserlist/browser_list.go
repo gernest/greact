@@ -164,7 +164,7 @@ func lastMajorVersions(dataCtx map[string]data, v []string) ([]string, error) {
 		}
 		ver = i
 	}
-	for k := range agents.New() {
+	for _, k := range agents.Keys() {
 		d, ok := dataCtx[k]
 		if !ok {
 			return []string{}, nil
@@ -187,10 +187,10 @@ func lastVersions(dataCtx map[string]data, v []string) ([]string, error) {
 		ver = i
 	}
 	var o []string
-	for k := range agents.New() {
+	for _, k := range agents.Keys() {
 		d, ok := dataCtx[k]
 		if !ok {
-			return []string{}, nil
+			continue
 		}
 		if len(d.released) > ver {
 			idx := len(d.released) - ver
@@ -198,7 +198,6 @@ func lastVersions(dataCtx map[string]data, v []string) ([]string, error) {
 		} else {
 			o = append(o, mapNames(d.name, d.released...)...)
 		}
-
 	}
 	return o, nil
 }

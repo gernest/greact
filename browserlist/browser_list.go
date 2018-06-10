@@ -195,10 +195,66 @@ func defaultQuery() []string {
 
 type handler struct {
 	match  *regexp.Regexp
-	filter func([]string) []string
+	filter func([]string) ([]string, error)
 }
 
-var lastRegexp = regexp.MustCompile(`^last\s+(\d+)\s+major versions?$`)
+var dataCtx = getData()
+
+func allHandlers() []handler {
+	return []handler{
+		{
+			match:  regexp.MustCompile(`^last\s+(\d+)\s+major versions?$`),
+			filter: lastMajorVersions,
+		},
+	}
+}
+
+func lastMajorVersions(v []string) ([]string, error) {
+	var o []string
+	ver := 1
+	if len(v) == 1 {
+		i, err := strconv.Atoi(v[0])
+		if err != nil {
+			return nil, err
+		}
+		ver = i
+	}
+	for k := range agents.New() {
+		d, ok := dataCtx[k]
+		if !ok {
+			return []string{}, nil
+		}
+		i, err := getMajorVersions(d.released, ver)
+		if err != nil {
+			return nil, err
+		}
+		o = append(o, mapNames(d.name, i...)...)
+	}
+	return o, nil
+}
+func mapNames(base string, s ...string) (o []string) {
+	for _, v := range s {
+		o = append(o, base+" "+v)
+	}
+	return
+}
+
+func getMajorVersions(released []string, number int) ([]string, error) {
+	if len(released) == 0 {
+		return []string{}, nil
+	}
+	min := version(released[0]).getMajor() - number + 1
+	var o []string
+	for k, v := range released {
+		if k == 0 {
+			continue
+		}
+		if version(v).getMajor() > min {
+			o = append(o, v)
+		}
+	}
+	return o, nil
+}
 
 type data struct {
 	name     string
@@ -230,4 +286,21 @@ func normalize(s ...string) []string {
 		}
 	}
 	return o
+}
+
+func Query(s ...string) ([]string, error) {
+	h := allHandlers()
+	var o []string
+	for _, v := range s {
+		for _, c := range h {
+			if c.match.MatchString(v) {
+				i, err := c.filter(c.match.FindStringSubmatch(v)[1:])
+				if err != nil {
+					return nil, err
+				}
+				o = append(o, i...)
+			}
+		}
+	}
+	return o, nil
 }

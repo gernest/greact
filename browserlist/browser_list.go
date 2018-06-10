@@ -138,10 +138,8 @@ func defaultQuery() []string {
 
 type handler struct {
 	match  *regexp.Regexp
-	filter func([]string) ([]string, error)
+	filter func(map[string]data, []string) ([]string, error)
 }
-
-var dataCtx = getData()
 
 func allHandlers() []handler {
 	return []handler{
@@ -149,10 +147,14 @@ func allHandlers() []handler {
 			match:  regexp.MustCompile(`^last\s+(\d+)\s+major versions?$`),
 			filter: lastMajorVersions,
 		},
+		{
+			match:  regexp.MustCompile(`^last\s+(\d+)\s+versions?$`),
+			filter: lastVersions,
+		},
 	}
 }
 
-func lastMajorVersions(v []string) ([]string, error) {
+func lastMajorVersions(dataCtx map[string]data, v []string) ([]string, error) {
 	var o []string
 	ver := 1
 	if len(v) == 1 {
@@ -175,6 +177,32 @@ func lastMajorVersions(v []string) ([]string, error) {
 	}
 	return o, nil
 }
+func lastVersions(dataCtx map[string]data, v []string) ([]string, error) {
+	ver := 1
+	if len(v) == 1 {
+		i, err := strconv.Atoi(v[0])
+		if err != nil {
+			return nil, err
+		}
+		ver = i
+	}
+	var o []string
+	for k := range agents.New() {
+		d, ok := dataCtx[k]
+		if !ok {
+			return []string{}, nil
+		}
+		if len(d.released) > ver {
+			idx := len(d.released) - ver
+			o = append(o, mapNames(d.name, d.released[idx:]...)...)
+		} else {
+			o = append(o, mapNames(d.name, d.released...)...)
+		}
+
+	}
+	return o, nil
+}
+
 func mapNames(base string, s ...string) (o []string) {
 	for _, v := range s {
 		o = append(o, base+" "+v)
@@ -232,12 +260,16 @@ func normalize(s ...string) []string {
 }
 
 func Query(s ...string) ([]string, error) {
+	return QueryWith(getData(), s...)
+}
+
+func QueryWith(dataCtx map[string]data, s ...string) ([]string, error) {
 	h := allHandlers()
 	var o []string
 	for _, v := range s {
 		for _, c := range h {
 			if c.match.MatchString(v) {
-				i, err := c.filter(c.match.FindStringSubmatch(v)[1:])
+				i, err := c.filter(dataCtx, c.match.FindStringSubmatch(v)[1:])
 				if err != nil {
 					return nil, err
 				}

@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"sort"
 
 	"github.com/urfave/cli"
 )
@@ -31,6 +32,7 @@ func agentsCmd(w io.Writer, opts agetntOptions) error {
 	for k := range opts.agents {
 		keys = append(keys, k)
 	}
+	sort.Strings(keys)
 	type agetObj struct {
 		A map[string]float64
 		B string

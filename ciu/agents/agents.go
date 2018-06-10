@@ -11,7 +11,7 @@ type Agent struct {
 
 // Keys returns a sorted slice of agents names.
 func Keys() []string {
-	return []string{"and_qq", "and_chr", "safari", "ios_saf", "bb", "op_mob", "samsung", "baidu", "edge", "firefox", "android", "and_uc", "and_ff", "ie_mob", "ie", "chrome", "opera", "op_mini"}
+	return []string{"and_chr", "and_ff", "and_qq", "and_uc", "android", "baidu", "bb", "chrome", "edge", "firefox", "ie", "ie_mob", "ios_saf", "op_mini", "op_mob", "opera", "safari", "samsung"}
 }
 
 func New() map[string]Agent {

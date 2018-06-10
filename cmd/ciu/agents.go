@@ -70,7 +70,10 @@ func agentsCmd(w io.Writer, opts agetntOptions) error {
 	if err != nil {
 		return err
 	}
-	return tpl.Execute(w, m)
+	return tpl.Execute(w, map[string]interface{}{
+		"agents": m,
+		"keys":   keys,
+	})
 }
 
 const agentsTpl = `package agents
@@ -84,9 +87,18 @@ type Agent struct {
 	ReleaseDate map[string]int64
 }
 
+// Keys returns a sorted slice of agents names.
+func Keys()[]string  {
+	return []string{
+		{{- range $k,$v:= .keys -}}
+		"{{$v}}",
+		{{- end}}
+	}
+}
+
 func New()map[string]Agent {
 	return map[string]Agent{
-		{{- range $ak,$av:=.}}
+		{{- range $ak,$av:=.agents}}
 		"{{$ak}}": Agent{
 			{{- with $av}}
 				{{- with .A}}

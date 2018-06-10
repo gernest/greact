@@ -9,6 +9,11 @@ type Agent struct {
 	ReleaseDate      map[string]int64
 }
 
+// Keys returns a sorted slice of agents names.
+func Keys() []string {
+	return []string{"and_qq", "and_chr", "safari", "ios_saf", "bb", "op_mob", "samsung", "baidu", "edge", "firefox", "android", "and_uc", "and_ff", "ie_mob", "ie", "chrome", "opera", "op_mini"}
+}
+
 func New() map[string]Agent {
 	return map[string]Agent{
 		"and_chr": Agent{

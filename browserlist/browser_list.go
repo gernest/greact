@@ -266,6 +266,7 @@ func QueryWith(dataCtx map[string]data, s ...string) ([]string, error) {
 	h := allHandlers()
 	var o []string
 	for _, v := range s {
+		v = strings.ToLower(v)
 		for _, c := range h {
 			if c.match.MatchString(v) {
 				i, err := c.filter(dataCtx, c.match.FindStringSubmatch(v)[1:])

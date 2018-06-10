@@ -1,8 +1,6 @@
 package browserlist
 
 import (
-	"bufio"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -10,78 +8,48 @@ import (
 	"github.com/gernest/gs/ciu/agents"
 )
 
-type filter func(name string, version version, usage float64) bool
-
-func query(str string) filter {
-	str = strings.TrimSpace(str)
-	if str == "" {
-		return noop
-	}
-	s := bufio.NewScanner(strings.NewReader(str))
-	s.Split(bufio.ScanWords)
-	if s.Scan() {
-		x := s.Text()
-		switch {
-		case signs[x]:
-			if s.Scan() {
-				return compare(x, s.Text())
-			}
-			return noop
-		}
-	}
-	return noop
-}
-
-var signs = map[string]bool{
-	">":  true,
-	">=": true,
-	"<":  true,
-	"<=": true,
-	"==": true,
-}
-
-func compare(sign string, ref string) filter {
-	v := version(ref)
-	return func(name string, ver version, usage float64) bool {
-		if strings.HasSuffix(ref, "%") {
-			n := ref[:len(ref)-1]
-			v, err := strconv.ParseFloat(n, 64)
-			if err != nil {
-				panic(err)
-			}
-			nv := v * 0.01
-			switch sign {
-			case ">":
-				fmt.Println(nv)
-				return usage > nv
-			case ">=":
-				return usage >= nv
-			case "<":
-				return usage < nv
-			case "<=":
-				return usage <= nv
-			case "==":
-				return usage == nv
-			default:
-				return false
-			}
-		}
-		switch sign {
-		case ">":
-			return ver.gt(v)
-		case ">=":
-			return ver.ge(v)
-		case "<":
-			return ver.lt(v)
-		case "<=":
-			return ver.le(v)
-		case "==":
-			return ver == v
-		default:
-			return false
-		}
-	}
-}
+// func compare(sign string, ref string) filter {
+// 	v := version(ref)
+// 	return func(name string, ver version, usage float64) bool {
+// 		if strings.HasSuffix(ref, "%") {
+// 			n := ref[:len(ref)-1]
+// 			v, err := strconv.ParseFloat(n, 64)
+// 			if err != nil {
+// 				panic(err)
+// 			}
+// 			nv := v * 0.01
+// 			switch sign {
+// 			case ">":
+// 				fmt.Println(nv)
+// 				return usage > nv
+// 			case ">=":
+// 				return usage >= nv
+// 			case "<":
+// 				return usage < nv
+// 			case "<=":
+// 				return usage <= nv
+// 			case "==":
+// 				return usage == nv
+// 			default:
+// 				return false
+// 			}
+// 		}
+// 		switch sign {
+// 		case ">":
+// 			return ver.gt(v)
+// 		case ">=":
+// 			return ver.ge(v)
+// 		case "<":
+// 			return ver.lt(v)
+// 		case "<=":
+// 			return ver.le(v)
+// 		case "==":
+// 			return ver == v
+// 		default:
+// 			return false
+// 		}
+// 	}
+// }
 
 func noop(_ string, _ version, _ float64) bool {
 	return false
@@ -114,12 +82,6 @@ func init() {
 	aliasReverse = make(map[string]string)
 	for k, v := range browserAlias {
 		aliasReverse[strings.ToLower(v)] = k
-	}
-}
-
-func not(f filter) filter {
-	return func(name string, version version, usage float64) bool {
-		return !f(name, version, usage)
 	}
 }
 
@@ -163,25 +125,6 @@ func (v version) getMajor() int {
 		return b
 	}
 	return 0
-}
-
-func allFilterQuery(q ...string) filter {
-	var f []filter
-	for _, v := range q {
-		f = append(f, query(v))
-	}
-	return allFilter(f...)
-}
-
-func allFilter(f ...filter) filter {
-	return func(name string, v version, usage float64) bool {
-		for _, fn := range f {
-			if !fn(name, v, usage) {
-				return false
-			}
-		}
-		return true
-	}
 }
 
 func defaultQuery() []string {

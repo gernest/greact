@@ -1,8 +1,11 @@
 package browserlist
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/kr/pretty"
 )
 
 func TestLast(t *testing.T) {
@@ -34,9 +37,19 @@ func TestLast(t *testing.T) {
 		if err != nil {
 			ts.Fatal(err)
 		}
-		e := []string{"bb 8", "edge 12", "ie 10", "ie 11", "chrome 38", "chrome 39"}
+		e := []string{"bb 8", "chrome 38", "chrome 39", "edge 12", "ie 10", "ie 11"}
 		if !reflect.DeepEqual(v, e) {
-			ts.Errorf("expected %v got %v", e, v)
+			ts.Errorf("expected %v got %v", e, pretty.Sprint(v))
+		}
+	})
+	t.Run("support pluralization", func(ts *testing.T) {
+		v, err := QueryWith(customData, "last 1 version")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		e := []string{"bb 8", "chrome 39", "edge 12", "ie 11"}
+		if !reflect.DeepEqual(v, e) {
+			ts.Errorf("expected %v got %v", e, fmt.Sprint(v))
 		}
 	})
 }

@@ -151,6 +151,14 @@ func allHandlers() []handler {
 			match:  regexp.MustCompile(`^last\s+(\d+)\s+versions?$`),
 			filter: lastVersions,
 		},
+		{
+			match:  regexp.MustCompile(`^last\s+(\d+)\s+(\w+)\s+major versions?$`),
+			filter: lastMajorVersionsName,
+		},
+		{
+			match:  regexp.MustCompile(`^last\s+(\d+)\s+(\w+)\s+versions?$`),
+			filter: lastVersionsName,
+		},
 	}
 }
 
@@ -177,14 +185,33 @@ func lastMajorVersions(dataCtx map[string]data, v []string) ([]string, error) {
 	}
 	return o, nil
 }
+func lastMajorVersionsName(dataCtx map[string]data, v []string) ([]string, error) {
+	if len(v) != 2 {
+		return []string{}, nil
+	}
+	ver, err := strconv.Atoi(v[0])
+	if err != nil {
+		return nil, err
+	}
+	name := v[1]
+	d, ok := dataCtx[name]
+	if !ok {
+		return []string{}, nil
+	}
+	i, err := getMajorVersions(d.released, ver)
+	if err != nil {
+		return nil, err
+	}
+	return mapNames(name, i...), nil
+}
+
 func lastVersions(dataCtx map[string]data, v []string) ([]string, error) {
-	ver := 1
-	if len(v) == 1 {
-		i, err := strconv.Atoi(v[0])
-		if err != nil {
-			return nil, err
-		}
-		ver = i
+	if len(v) != 1 {
+		return []string{}, nil
+	}
+	ver, err := strconv.Atoi(v[0])
+	if err != nil {
+		return nil, err
 	}
 	var o []string
 	for _, k := range agents.Keys() {
@@ -200,6 +227,26 @@ func lastVersions(dataCtx map[string]data, v []string) ([]string, error) {
 		}
 	}
 	return o, nil
+}
+
+func lastVersionsName(dataCtx map[string]data, v []string) ([]string, error) {
+	if len(v) != 2 {
+		return []string{}, nil
+	}
+	ver, err := strconv.Atoi(v[0])
+	if err != nil {
+		return nil, err
+	}
+	name := v[1]
+	d, ok := dataCtx[name]
+	if !ok {
+		return []string{}, nil
+	}
+	if len(d.released) > ver {
+		idx := len(d.released) - ver
+		return mapNames(d.name, d.released[idx:]...), nil
+	}
+	return mapNames(d.name, d.released...), nil
 }
 
 func mapNames(base string, s ...string) (o []string) {

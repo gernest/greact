@@ -178,13 +178,18 @@ func allHandlers() []handler {
 			match:  regexp.MustCompile(`^since (\d+)(?:-(\d+))?(?:-(\d+))?$`),
 			filter: sinceDate,
 		},
+		{
+			match:  regexp.MustCompile(`^(>=?|<=?)\s*(\d*\.?\d+)%$`),
+			filter: popularitySign,
+		},
 	}
 }
 
+func popularitySign(dataCtx map[string]data, v []string) ([]string, error) {
+	return []string{}, nil
+}
+
 func lastYears(dataCtx map[string]data, v []string) ([]string, error) {
-	if len(v) != 1 {
-		return []string{}, nil
-	}
 	i, err := strconv.Atoi(v[0])
 	if err != nil {
 		return nil, err
@@ -197,9 +202,6 @@ func lastYears(dataCtx map[string]data, v []string) ([]string, error) {
 }
 
 func sinceDate(dataCtx map[string]data, v []string) ([]string, error) {
-	if len(v) != 3 {
-		return []string{}, nil
-	}
 	year, err := strconv.Atoi(v[0])
 	if err != nil {
 		return nil, err
@@ -264,9 +266,6 @@ func unreleased(dataCtx map[string]data, v []string) ([]string, error) {
 }
 
 func unreleasedName(dataCtx map[string]data, v []string) ([]string, error) {
-	if len(v) != 1 {
-		return []string{}, nil
-	}
 	name := v[0]
 	d, ok := dataCtx[name]
 	if !ok {
@@ -287,7 +286,7 @@ func unreleasedName(dataCtx map[string]data, v []string) ([]string, error) {
 func lastMajorVersions(dataCtx map[string]data, v []string) ([]string, error) {
 	var o []string
 	ver := 1
-	if len(v) == 1 {
+	if v[0] != "" {
 		i, err := strconv.Atoi(v[0])
 		if err != nil {
 			return nil, err
@@ -308,9 +307,6 @@ func lastMajorVersions(dataCtx map[string]data, v []string) ([]string, error) {
 	return o, nil
 }
 func lastMajorVersionsName(dataCtx map[string]data, v []string) ([]string, error) {
-	if len(v) != 2 {
-		return []string{}, nil
-	}
 	ver, err := strconv.Atoi(v[0])
 	if err != nil {
 		return nil, err
@@ -328,9 +324,6 @@ func lastMajorVersionsName(dataCtx map[string]data, v []string) ([]string, error
 }
 
 func lastVersions(dataCtx map[string]data, v []string) ([]string, error) {
-	if len(v) != 1 {
-		return []string{}, nil
-	}
 	ver, err := strconv.Atoi(v[0])
 	if err != nil {
 		return nil, err
@@ -352,9 +345,6 @@ func lastVersions(dataCtx map[string]data, v []string) ([]string, error) {
 }
 
 func lastVersionsName(dataCtx map[string]data, v []string) ([]string, error) {
-	if len(v) != 2 {
-		return []string{}, nil
-	}
 	ver, err := strconv.Atoi(v[0])
 	if err != nil {
 		return nil, err

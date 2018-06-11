@@ -52,4 +52,15 @@ func TestLast(t *testing.T) {
 			ts.Errorf("expected %v got %v", e, fmt.Sprint(v))
 		}
 	})
+	t.Run("case insensitive", func(ts *testing.T) {
+		v, err := QueryWith(customData, "Last 01 Version")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		e := []string{"bb 8", "chrome 39", "edge 12", "ie 11"}
+		if !reflect.DeepEqual(v, e) {
+			ts.Errorf("expected %v got %v", e, fmt.Sprint(v))
+		}
+	})
+
 }

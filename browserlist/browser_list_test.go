@@ -64,3 +64,57 @@ func TestLast(t *testing.T) {
 	})
 
 }
+
+func TestSince(t *testing.T) {
+	ctx := map[string]data{
+		"ie": data{
+			name:     "ie",
+			versions: []string{"1", "2", "3"},
+			releaseDate: map[string]int64{
+				"1": 0,          // Thu, 01 Jan 1970 00:00:00 +0000
+				"2": 1483228800, // Sun, 01 Jan 2017 00:00:00 +0000
+				"3": 1485907200, // Wed, 01 Feb 2017 00:00:00 +0000
+			},
+		},
+	}
+	t.Run("selects versions released on year boundaries", func(ts *testing.T) {
+		e := []string{"ie 1", "ie 2", "ie 3"}
+		g, err := QueryWith(ctx, "since 1970")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(e, g) {
+			ts.Errorf("expected %v got %v", e, g)
+		}
+	})
+	t.Run("is case insensitive", func(ts *testing.T) {
+		e := []string{"ie 1", "ie 2", "ie 3"}
+		g, err := QueryWith(ctx, "Since 1970")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(e, g) {
+			ts.Errorf("expected %v got %v", e, g)
+		}
+	})
+	t.Run("selects versions released on year and month boundaries", func(ts *testing.T) {
+		e := []string{"ie 2", "ie 3"}
+		g, err := QueryWith(ctx, "since 2017-01")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(e, g) {
+			ts.Errorf("expected %v got %v", e, g)
+		}
+	})
+	t.Run("selects versions released on date boundaries", func(ts *testing.T) {
+		e := []string{"ie 3"}
+		g, err := QueryWith(ctx, "since 2017-02-01")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(e, g) {
+			ts.Errorf("expected %v got %v", e, g)
+		}
+	})
+}

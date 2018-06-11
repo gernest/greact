@@ -1,9 +1,12 @@
 package browserlist
 
 import (
+	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gernest/gs/ciu/agents"
 )
@@ -164,11 +167,81 @@ func allHandlers() []handler {
 			filter: unreleased,
 		},
 		{
-			match:  regexp.MustCompile(`^unreleased\s+(\w+)\s+versions?$/`),
+			match:  regexp.MustCompile(`^unreleased\s+(\w+)\s+versions?$`),
 			filter: unreleasedName,
+		},
+		{
+			match:  regexp.MustCompile(`^last\s+(\d+)\s+years?$`),
+			filter: lastYears,
+		},
+		{
+			match:  regexp.MustCompile(`^since (\d+)(?:-(\d+))?(?:-(\d+))?$`),
+			filter: sinceDate,
 		},
 	}
 }
+
+func lastYears(dataCtx map[string]data, v []string) ([]string, error) {
+	if len(v) != 1 {
+		return []string{}, nil
+	}
+	i, err := strconv.Atoi(v[0])
+	if err != nil {
+		return nil, err
+	}
+	now := time.Now()
+	year, month, day := now.Date()
+	year -= i
+	n := time.Date(year, month, day, 0, 0, 0, 0, time.UTC).UnixNano() * 1000
+	return filterByYear(dataCtx, n)
+}
+
+func sinceDate(dataCtx map[string]data, v []string) ([]string, error) {
+	if len(v) != 3 {
+		return []string{}, nil
+	}
+	year, err := strconv.Atoi(v[0])
+	if err != nil {
+		return nil, err
+	}
+	month := 1
+	if v[1] != "" {
+		month, err = strconv.Atoi(v[1])
+		if err != nil {
+			return nil, err
+		}
+	}
+	day := 1
+	if v[2] != "" {
+		day, err = strconv.Atoi(v[2])
+		if err != nil {
+			return nil, err
+		}
+	}
+	n := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC).Unix()
+	return filterByYear(dataCtx, n)
+}
+
+func filterByYear(dataCTx map[string]data, since int64) ([]string, error) {
+	var o []string
+	fmt.Println(since)
+	for _, name := range agents.Keys() {
+		d, ok := dataCTx[name]
+		if !ok {
+			continue
+		}
+		var vers []string
+		for key, value := range d.releaseDate {
+			if value >= since {
+				vers = append(vers, key)
+			}
+		}
+		sort.Strings(vers)
+		o = append(o, mapNames(name, vers...)...)
+	}
+	return o, nil
+}
+
 func unreleased(dataCtx map[string]data, v []string) ([]string, error) {
 	var o []string
 	for _, key := range agents.Keys() {
@@ -323,9 +396,10 @@ func getMajorVersions(released []string, number int) ([]string, error) {
 }
 
 type data struct {
-	name     string
-	versions []string
-	released []string
+	name        string
+	versions    []string
+	released    []string
+	releaseDate map[string]int64
 }
 
 func getData() map[string]data {
@@ -333,8 +407,9 @@ func getData() map[string]data {
 	for k, v := range agents.New() {
 		ve := normalize(v.Versions...)
 		d := data{
-			name:     k,
-			versions: ve,
+			name:        k,
+			versions:    ve,
+			releaseDate: v.ReleaseDate,
 		}
 		if len(ve) > 2 {
 			d.released = ve[len(ve)-2:]

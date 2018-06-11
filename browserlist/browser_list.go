@@ -159,7 +159,31 @@ func allHandlers() []handler {
 			match:  regexp.MustCompile(`^last\s+(\d+)\s+(\w+)\s+versions?$`),
 			filter: lastVersionsName,
 		},
+		{
+			match:  regexp.MustCompile(`^unreleased\s+versions$`),
+			filter: unreleased,
+		},
 	}
+}
+func unreleased(dataCtx map[string]data, v []string) ([]string, error) {
+	var o []string
+	for _, key := range agents.Keys() {
+		d, ok := dataCtx[key]
+		if !ok {
+			continue
+		}
+		var vers []string
+		for _, ver := range d.versions {
+			for _, rel := range d.released {
+				if rel == ver {
+					continue
+				}
+			}
+			vers = append(vers, ver)
+		}
+		o = append(o, mapNames(key, vers...)...)
+	}
+	return o, nil
 }
 
 func lastMajorVersions(dataCtx map[string]data, v []string) ([]string, error) {

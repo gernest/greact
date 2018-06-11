@@ -163,6 +163,10 @@ func allHandlers() []handler {
 			match:  regexp.MustCompile(`^unreleased\s+versions$`),
 			filter: unreleased,
 		},
+		{
+			match:  regexp.MustCompile(`^unreleased\s+(\w+)\s+versions?$/`),
+			filter: unreleasedName,
+		},
 	}
 }
 func unreleased(dataCtx map[string]data, v []string) ([]string, error) {
@@ -184,6 +188,27 @@ func unreleased(dataCtx map[string]data, v []string) ([]string, error) {
 		o = append(o, mapNames(key, vers...)...)
 	}
 	return o, nil
+}
+
+func unreleasedName(dataCtx map[string]data, v []string) ([]string, error) {
+	if len(v) != 1 {
+		return []string{}, nil
+	}
+	name := v[0]
+	d, ok := dataCtx[name]
+	if !ok {
+		return []string{}, nil
+	}
+	var vers []string
+	for _, ver := range d.versions {
+		for _, rel := range d.released {
+			if rel == ver {
+				continue
+			}
+		}
+		vers = append(vers, ver)
+	}
+	return mapNames(name, vers...), nil
 }
 
 func lastMajorVersions(dataCtx map[string]data, v []string) ([]string, error) {

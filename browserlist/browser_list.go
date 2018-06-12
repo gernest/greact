@@ -186,7 +186,41 @@ func allHandlers() []handler {
 }
 
 func popularitySign(dataCtx map[string]data, v []string) ([]string, error) {
-	return []string{}, nil
+	sign := v[0]
+	popularity, err := strconv.ParseFloat(v[1], 64)
+	if err != nil {
+		return nil, err
+	}
+	var o []string
+	for _, name := range agents.Keys() {
+		d, ok := dataCtx[name]
+		if !ok {
+			continue
+		}
+		var vers []string
+		for rel, cov := range d.usage {
+			switch sign {
+			case ">":
+				if cov > popularity {
+					vers = append(vers, rel)
+				}
+			case "<":
+				if cov < popularity {
+					vers = append(vers, rel)
+				}
+			case ">=":
+				if cov >= popularity {
+					vers = append(vers, rel)
+				}
+			case "<=":
+				if cov <= popularity {
+					vers = append(vers, rel)
+				}
+			}
+		}
+		o = append(o, mapNames(name, vers...)...)
+	}
+	return o, nil
 }
 
 func lastYears(dataCtx map[string]data, v []string) ([]string, error) {
@@ -390,6 +424,7 @@ type data struct {
 	versions    []string
 	released    []string
 	releaseDate map[string]int64
+	usage       map[string]float64
 }
 
 func getData() map[string]data {
@@ -400,6 +435,7 @@ func getData() map[string]data {
 			name:        k,
 			versions:    ve,
 			releaseDate: v.ReleaseDate,
+			usage:       v.UsageGlobal,
 		}
 		if len(ve) > 2 {
 			d.released = ve[len(ve)-2:]

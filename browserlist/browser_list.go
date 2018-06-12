@@ -12,38 +12,23 @@ import (
 )
 
 var browserAlias = map[string]string{
-	"and_chr": "ChromeForAndroid",
-	"and_ff":  "FirefoxForAndroid",
-	"and_qq":  "QQForAndroid",
-	"and_uc":  "UCForAndroid",
-	"android": "Android",
-	"baidu":   "Baidu",
-	"bb":      "BlackBerry",
-	"chrome":  "Chrome",
-	"edge":    "Edge",
-	"firefox": "Firefox",
-	"ie":      "InternetExplorer",
-	"ie_mob":  "InternetExplorerMobile",
-	"ios_saf": "IOSSafari",
-	"op_mini": "OperaMini",
-	"op_mob":  "OperaMobile",
-	"opera":   "Opera",
-	"safari":  "Safari",
-	"samsung": "Samsung",
-}
-
-var aliasReverse map[string]string
-
-func init() {
-	aliasReverse = make(map[string]string)
-	for k, v := range browserAlias {
-		aliasReverse[strings.ToLower(v)] = k
-	}
+	"fx":             "firefox",
+	"ff":             "firefox",
+	"ios":            "ios_saf",
+	"explorer":       "ie",
+	"blackberry":     "bb",
+	"explorermobile": "ie_mob",
+	"operamini":      "op_mini",
+	"operamobile":    "op_mob",
+	"chromeandroid":  "and_chr",
+	"firefoxandroid": "and_ff",
+	"ucandroid":      "and_uc",
+	"qqandroid":      "and_qq",
 }
 
 func browserName(name string) string {
 	name = strings.ToLower(name)
-	if n, ok := aliasReverse[name]; ok {
+	if n, ok := browserAlias[name]; ok {
 		return n
 	}
 	return name

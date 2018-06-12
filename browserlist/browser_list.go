@@ -41,6 +41,14 @@ func init() {
 	}
 }
 
+func browserName(name string) string {
+	name = strings.ToLower(name)
+	if n, ok := aliasReverse[name]; ok {
+		return n
+	}
+	return name
+}
+
 type version string
 
 func (v version) eq(v2 version) bool {
@@ -213,7 +221,6 @@ func sinceDate(dataCtx map[string]data, v []string) ([]string, error) {
 
 func filterByYear(dataCTx map[string]data, since int64) ([]string, error) {
 	var o []string
-	fmt.Println(since)
 	for _, name := range agents.Keys() {
 		d, ok := dataCTx[name]
 		if !ok {
@@ -254,9 +261,10 @@ func unreleased(dataCtx map[string]data, v []string) ([]string, error) {
 
 func unreleasedName(dataCtx map[string]data, v []string) ([]string, error) {
 	name := v[0]
+	name = browserName(name)
 	d, ok := dataCtx[name]
 	if !ok {
-		return []string{}, nil
+		return nil, fmt.Errorf("unknown browser %s", name)
 	}
 	var vers []string
 	for _, ver := range d.versions {
@@ -299,9 +307,10 @@ func lastMajorVersionsName(dataCtx map[string]data, v []string) ([]string, error
 		return nil, err
 	}
 	name := v[1]
+	name = browserName(name)
 	d, ok := dataCtx[name]
 	if !ok {
-		return []string{}, nil
+		return nil, fmt.Errorf("unknown browser %s", name)
 	}
 	i, err := getMajorVersions(d.released, ver)
 	if err != nil {
@@ -337,9 +346,10 @@ func lastVersionsName(dataCtx map[string]data, v []string) ([]string, error) {
 		return nil, err
 	}
 	name := v[1]
+	name = browserName(name)
 	d, ok := dataCtx[name]
 	if !ok {
-		return []string{}, nil
+		return nil, fmt.Errorf("unknown browser %s", name)
 	}
 	if len(d.released) > ver {
 		idx := len(d.released) - ver

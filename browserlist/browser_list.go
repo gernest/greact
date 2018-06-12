@@ -11,53 +11,6 @@ import (
 	"github.com/gernest/gs/ciu/agents"
 )
 
-// func compare(sign string, ref string) filter {
-// 	v := version(ref)
-// 	return func(name string, ver version, usage float64) bool {
-// 		if strings.HasSuffix(ref, "%") {
-// 			n := ref[:len(ref)-1]
-// 			v, err := strconv.ParseFloat(n, 64)
-// 			if err != nil {
-// 				panic(err)
-// 			}
-// 			nv := v * 0.01
-// 			switch sign {
-// 			case ">":
-// 				fmt.Println(nv)
-// 				return usage > nv
-// 			case ">=":
-// 				return usage >= nv
-// 			case "<":
-// 				return usage < nv
-// 			case "<=":
-// 				return usage <= nv
-// 			case "==":
-// 				return usage == nv
-// 			default:
-// 				return false
-// 			}
-// 		}
-// 		switch sign {
-// 		case ">":
-// 			return ver.gt(v)
-// 		case ">=":
-// 			return ver.ge(v)
-// 		case "<":
-// 			return ver.lt(v)
-// 		case "<=":
-// 			return ver.le(v)
-// 		case "==":
-// 			return ver == v
-// 		default:
-// 			return false
-// 		}
-// 	}
-// }
-
-func noop(_ string, _ version, _ float64) bool {
-	return false
-}
-
 var browserAlias = map[string]string{
 	"and_chr": "ChromeForAndroid",
 	"and_ff":  "FirefoxForAndroid",

@@ -164,6 +164,7 @@ func popularitySign(dataCtx map[string]data, v []string) ([]string, error) {
 				}
 			}
 		}
+		sort.Strings(vers)
 		o = append(o, mapNames(name, vers...)...)
 	}
 	return o, nil

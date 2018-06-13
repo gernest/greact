@@ -118,3 +118,86 @@ func TestSince(t *testing.T) {
 		}
 	})
 }
+
+func TestGlobal(t *testing.T) {
+	ctx := map[string]data{
+		"ie": data{
+			usage: map[string]float64{
+				"8":  1,
+				"9":  5,
+				"10": 10.1,
+				"11": 75,
+			},
+		},
+	}
+	t.Run("selects browsers by popularity", func(ts *testing.T) {
+		e := []string{"ie 10", "ie 11"}
+		g, err := QueryWith(ctx, "> 10%")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(e, g) {
+			t.Errorf("expected %v got %v", e, g)
+		}
+	})
+	t.Run("selects popularity by more or equal", func(ts *testing.T) {
+		e := []string{"ie 10", "ie 11", "ie 9"}
+		g, err := QueryWith(ctx, ">= 5%")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(e, g) {
+			t.Errorf("expected %v got %v", e, g)
+		}
+	})
+	t.Run("selects browsers by unpopularity", func(ts *testing.T) {
+		e := []string{"ie 8"}
+		g, err := QueryWith(ctx, "< 5%")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(e, g) {
+			t.Errorf("expected %v got %v", e, g)
+		}
+	})
+	t.Run("selects unpopularity by less or equal", func(ts *testing.T) {
+		e := []string{"ie 8", "ie 9"}
+		g, err := QueryWith(ctx, "<= 5%")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(e, g) {
+			t.Errorf("expected %v got %v", e, g)
+		}
+	})
+	t.Run("accepts non-space query", func(ts *testing.T) {
+		e := []string{"ie 10", "ie 11"}
+		g, err := QueryWith(ctx, ">10%")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(e, g) {
+			t.Errorf("expected %v got %v", e, g)
+		}
+	})
+	t.Run("works with float", func(ts *testing.T) {
+		e := []string{"ie 11"}
+		g, err := QueryWith(ctx, "> 10.2%")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(e, g) {
+			t.Errorf("expected %v got %v", e, g)
+		}
+	})
+	t.Run("works with float that has a leading dot", func(ts *testing.T) {
+		e := []string{"ie 10", "ie 11", "ie 8", "ie 9"}
+		g, err := QueryWith(ctx, "> .2%")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(e, g) {
+			t.Errorf("expected %v got %v", e, g)
+		}
+	})
+}

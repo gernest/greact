@@ -438,19 +438,47 @@ func QueryWith(dataCtx map[string]data, s ...string) ([]string, error) {
 	var o []string
 	for _, v := range s {
 		v = strings.ToLower(v)
+		exclude := false
+		if strings.HasPrefix(v, "not ") {
+			exclude = true
+			v = strings.TrimSpace(v[4:])
+		}
 		for _, c := range h {
 			if c.match.MatchString(v) {
 				i, err := c.filter(dataCtx, c.match.FindStringSubmatch(v)[1:])
 				if err != nil {
 					return nil, err
 				}
-				o = append(o, i...)
+				if exclude {
+					o = filterSlice(o, func(sv string) bool {
+						for _, val := range i {
+							if val == sv {
+								return true
+							}
+						}
+						return false
+					})
+				} else {
+					o = append(o, i...)
+				}
 			}
+			return nil, fmt.Errorf("unknown query %s", v)
 		}
 	}
 	o = uniq(o...)
 	sortResults(o)
 	return o, nil
+}
+
+func filterSlice(s []string, fn func(string) bool) []string {
+	var o []string
+	for _, v := range s {
+		if fn(v) {
+			continue
+		}
+		o = append(o, v)
+	}
+	return o
 }
 
 func sortResults(results []string) {

@@ -128,6 +128,18 @@ func allHandlers() []handler {
 			match:  regexp.MustCompile(`^(>=?|<=?)\s*(\d*\.?\d+)%$`),
 			filter: popularitySign,
 		},
+		{
+			match: regexp.MustCompile(`(operamini|op_mini)\s+all`),
+			filter: func(_ map[string]data, _ []string) ([]string, error) {
+				return []string{"firefox 52", "firefox 60"}, nil
+			},
+		},
+		{
+			match: regexp.MustCompile(`^defaults$`),
+			filter: func(_ map[string]data, _ []string) ([]string, error) {
+				return Query(defaultQuery()...)
+			},
+		},
 	}
 }
 

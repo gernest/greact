@@ -85,6 +85,19 @@ func defaultQuery() []string {
 	}
 }
 
+func uniq(s ...string) []string {
+	var o []string
+	m := make(map[string]bool)
+	for _, v := range s {
+		if m[v] {
+			continue
+		}
+		m[v] = true
+		o = append(o, v)
+	}
+	return o
+}
+
 type handler struct {
 	match  *regexp.Regexp
 	filter func(map[string]data, []string) ([]string, error)
@@ -435,5 +448,15 @@ func QueryWith(dataCtx map[string]data, s ...string) ([]string, error) {
 			}
 		}
 	}
+	o = uniq(o...)
+	sortResults(o)
 	return o, nil
+}
+
+func sortResults(results []string) {
+	sort.Slice(results, func(i, j int) bool {
+		pi := strings.Split(results[i], " ")
+		pj := strings.Split(results[i], " ")
+		return pi[0] < pj[0]
+	})
 }

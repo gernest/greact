@@ -8,7 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gernest/gs/agents"
+	"github.com/gernest/gs/browserlist"
+	"github.com/gernest/gs/ciu/agents"
 	"github.com/gernest/gs/data"
 )
 
@@ -30,39 +31,11 @@ type Broswer struct {
 	Prefixcache  []string
 	prefixRegexp *regexp.Regexp
 	Selected     []string
+	Data         map[string]agents.Agent
 }
 
-func NewBrowser(filter ...func(name, version string) bool) *Broswer {
-	b := &Broswer{}
-	re := ""
-	all := agents.All()
-	for k, a := range all {
-		pre := "-" + a.Prefix + "-"
-		if k == 0 {
-			re = pre
-		} else {
-			re += "|" + pre
-		}
-		b.Prefixcache = append(b.Prefixcache, pre)
-	}
-	b.Prefixcache = uniq(b.Prefixcache)
-	sort.Strings(b.Prefixcache)
-	reg := regexp.MustCompile(re)
-	b.prefixRegexp = reg
-	if len(filter) > 0 {
-		f := filter[0]
-		for _, v := range all {
-			for _, version := range v.Versions {
-				if f(v.Name, version) {
-					b.Selected = append(b.Selected, v.Name+" "+version)
-				}
-			}
-		}
-		if len(b.Selected) > 0 {
-			sortBrowsers(b.Selected)
-		}
-	}
-	return b
+func (b *Broswer) Parse(queries ...string) ([]string, error) {
+	return browserlist.Query(queries...)
 }
 
 func uniq(s []string) []string {
@@ -102,15 +75,26 @@ func (b *Broswer) WithPrefix(value string) bool {
 func (b *Broswer) Prefix(name string) string {
 	p := strings.Split(name, " ")
 	name, version := p[0], p[1]
-	a := agents.AgentsMap[name]
+	d := b.Data[name]
 	prefix := ""
-	if a.DataPrefixEceptions != nil {
-		prefix = a.DataPrefixEceptions[version]
+	if d.PrefixExceptions != nil {
+		prefix = d.PrefixExceptions[version]
 	}
 	if prefix == "" {
-		prefix = a.Prefix
+		prefix = d.Prefix
 	}
 	return "-" + prefix + "-"
+}
+
+func (b *Broswer) Prefixes() []string {
+	if b.Prefixcache != nil {
+		return b.Prefixcache
+	}
+	for _, v := range agents.New() {
+		b.Prefixcache = append(b.Prefixcache, "-"+v.Prefix+"-")
+	}
+	b.Prefixcache = uniq(b.Prefixcache)
+	return b.Prefixcache
 }
 
 func (b *Broswer) IsSelected(name string) bool {

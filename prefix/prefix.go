@@ -27,15 +27,19 @@ func UnPrefix(s string) string {
 	return string(re.ReplaceAll([]byte(s), []byte("")))
 }
 
-type Broswer struct {
+type Browser struct {
 	Prefixcache  []string
 	prefixRegexp *regexp.Regexp
 	Selected     []string
 	Data         map[string]agents.Agent
 }
 
-func (b *Broswer) Parse(queries ...string) ([]string, error) {
-	return browserlist.Query(queries...)
+func NewBrowser(queries ...string) (*Browser, error) {
+	selected, err := browserlist.Query(queries...)
+	if err != nil {
+		return nil, err
+	}
+	return &Browser{Selected: selected}, nil
 }
 
 func uniq(s []string) []string {
@@ -68,11 +72,11 @@ func sortBrowsers(v []string) {
 	})
 }
 
-func (b *Broswer) WithPrefix(value string) bool {
+func (b *Browser) WithPrefix(value string) bool {
 	return b.prefixRegexp.Match([]byte(value))
 }
 
-func (b *Broswer) Prefix(name string) string {
+func (b *Browser) Prefix(name string) string {
 	p := strings.Split(name, " ")
 	name, version := p[0], p[1]
 	d := b.Data[name]
@@ -86,7 +90,7 @@ func (b *Broswer) Prefix(name string) string {
 	return "-" + prefix + "-"
 }
 
-func (b *Broswer) Prefixes() []string {
+func (b *Browser) Prefixes() []string {
 	if b.Prefixcache != nil {
 		return b.Prefixcache
 	}
@@ -97,7 +101,7 @@ func (b *Broswer) Prefixes() []string {
 	return b.Prefixcache
 }
 
-func (b *Broswer) IsSelected(name string) bool {
+func (b *Browser) IsSelected(name string) bool {
 	if b.Selected != nil {
 		return sliceContains(b.Selected, name)
 	}
@@ -110,7 +114,7 @@ type SelectedOptions struct {
 }
 
 type Prefixes struct {
-	Browsers *Broswer
+	Browsers *Browser
 	Data     map[string]data.Data
 	Opts     *PrefixesOptions
 }

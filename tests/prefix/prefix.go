@@ -111,7 +111,7 @@ func TestBrowser() mad.Test {
 				}{
 					{"chrome 30", "-webkit-"},
 				}
-				b, err := prefix.NewBrowser(agents.New())
+				b, err := prefix.NewBrowser(agents.New(), "chrome 30")
 				if err != nil {
 					t.Fatal(err)
 				}

@@ -29,7 +29,7 @@ func UnPrefix(s string) string {
 
 type Browser struct {
 	Prefixcache  []string
-	prefixRegexp *regexp.Regexp
+	PrefixRegexp *regexp.Regexp
 	Selected     []string
 	Data         map[string]agents.Agent
 }
@@ -39,7 +39,17 @@ func NewBrowser(data map[string]agents.Agent, queries ...string) (*Browser, erro
 	if err != nil {
 		return nil, err
 	}
-	return &Browser{Selected: selected, Data: data}, nil
+	re := ""
+	for _, a := range agents.New() {
+		pre := "-" + a.Prefix + "-"
+		if re != "" {
+			re += "|" + pre
+		} else {
+			re = pre
+		}
+	}
+	reg := regexp.MustCompile(re)
+	return &Browser{Selected: selected, Data: data, PrefixRegexp: reg}, nil
 }
 
 func uniq(s []string) []string {
@@ -73,7 +83,7 @@ func sortBrowsers(v []string) {
 }
 
 func (b *Browser) WithPrefix(value string) bool {
-	return b.prefixRegexp.Match([]byte(value))
+	return b.PrefixRegexp.Match([]byte(value))
 }
 
 func (b *Browser) Prefix(name string) string {

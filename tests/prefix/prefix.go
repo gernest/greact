@@ -1,11 +1,12 @@
-package tests
+package prefix
 
 import (
 	"reflect"
 	"sort"
 	"strconv"
 
-	"github.com/gernest/gs/agents"
+	"github.com/gernest/gs/ciu/agents"
+
 	"github.com/gernest/gs/data"
 	"github.com/gernest/gs/prefix"
 	"github.com/gernest/mad"
@@ -54,27 +55,34 @@ func TestBrowser() mad.Test {
 	return mad.List{
 		mad.Describe("Prefixes",
 			mad.It("must contain all browser vendor prefixes", func(t mad.T) {
-				b := prefix.NewBrowser()
+				b, err := prefix.NewBrowser(agents.New())
+				if err != nil {
+					t.Fatal(err)
+				}
 				expect := []string{"-moz-", "-ms-", "-o-", "-webkit-"}
 				g := b.Prefixcache
-				for k, v := range expect {
-					if g[k] != v {
-						t.Fatalf("expected %v got %v", expect, g)
-					}
+				if !reflect.DeepEqual(expect, g) {
+					t.Errorf("expected %v got %v", expect, g)
 				}
 			}),
 		),
 		mad.Describe("WithPrefix",
 			mad.It("must return true when the prefix exist", func(t mad.T) {
 				s := "1 -o-calc(1)"
-				b := prefix.NewBrowser()
+				b, err := prefix.NewBrowser(agents.New())
+				if err != nil {
+					t.Fatal(err)
+				}
 				if !b.WithPrefix(s) {
 					t.Error("expected to be true")
 				}
 			}),
 			mad.It("must return false when the prefix does not exist", func(t mad.T) {
 				s := "1 calc(1)"
-				b := prefix.NewBrowser()
+				b, err := prefix.NewBrowser(agents.New())
+				if err != nil {
+					t.Fatal(err)
+				}
 				if b.WithPrefix(s) {
 					t.Error("expected to be false")
 				}
@@ -82,49 +90,17 @@ func TestBrowser() mad.Test {
 		),
 		mad.Describe("selected",
 			mad.It("must select the right browser", func(t mad.T) {
-				var less = func(name, ver string) bool {
-					if ver == "" {
-						return false
-					}
-					v := parseFloat(ver)
-					return name == agents.InternetExplorer.Name && v < 7
+				b, err := prefix.NewBrowser(agents.New(), "chrome 30", "chrome 31")
+				if err != nil {
+					t.Fatal(err)
 				}
-				var combined = func(name, ver string) bool {
-					if ver == "" {
-						return false
-					}
-					v := parseFloat(ver)
-					return name == agents.InternetExplorer.Name && v == 10 ||
-						name == agents.InternetExplorer.Name && v < 6
+				if !b.IsSelected("chrome 30") {
+					t.Error("expected to be true")
 				}
-				var nothing = func(name, ver string) bool {
-					return false
+				if !b.IsSelected("chrome 31") {
+					t.Error("expected to be true")
 				}
-				s := []struct {
-					src    func(string, string) bool
-					expect []string
-				}{
-					{nothing, nil},
-					{less, []string{"ie 5.5", "ie 6"}},
-					{combined, []string{"ie 5.5", "ie 10"}},
-				}
-				for _, v := range s {
-					b := prefix.NewBrowser(v.src)
-					if v.expect == nil {
-						if b.Selected != nil {
-							t.Errorf("expected nil got %v", b.Selected)
-						}
-					} else {
-						if len(v.expect) != len(b.Selected) {
-							t.Fatalf("expected %v got %v", v.expect, b.Selected)
-						}
-						for k, val := range v.expect {
-							if b.Selected[k] != val {
-								t.Fatalf("expected %v got %v", v.expect, b.Selected)
-							}
-						}
-					}
-				}
+
 			}),
 		),
 		mad.Describe("Prefix",
@@ -135,31 +111,15 @@ func TestBrowser() mad.Test {
 				}{
 					{"chrome 30", "-webkit-"},
 				}
-				b := prefix.NewBrowser()
+				b, err := prefix.NewBrowser(agents.New())
+				if err != nil {
+					t.Fatal(err)
+				}
 				for _, v := range s {
 					g := b.Prefix(v.src)
 					if g != v.expect {
 						t.Errorf("expected %s got %s", v.expect, g)
 					}
-				}
-			}),
-		),
-		mad.Describe("IsSelected",
-			mad.It("must be selected", func(t mad.T) {
-				b := prefix.NewBrowser(func(name, ver string) bool {
-					if ver == "" {
-						return false
-					}
-					v := parseFloat(ver)
-					return name == agents.Chrome.Name && v == 30 ||
-						name == agents.Chrome.Name && v == 31
-				})
-
-				if !b.IsSelected("chrome 30") {
-					t.Error("expected to be true")
-				}
-				if b.IsSelected("ie 6") {
-					t.Error("expected to be false")
 				}
 			}),
 		),
@@ -188,14 +148,14 @@ func TestPrefixes() mad.Test {
 				},
 			}
 
-			fill := &prefix.Prefixes{
-				Browsers: prefix.NewBrowser(func(name, version string) bool {
-					return name == "firefox" && version == "21" ||
-						name == "ie" && version == "7"
-				}),
-				Data: tdata.prefixes,
+			b, err := prefix.NewBrowser(agents.New(), "irefox 21", "ie 7")
+			if err != nil {
+				t.Fatal(err)
 			}
-
+			fill := &prefix.Prefixes{
+				Browsers: b,
+				Data:     tdata.prefixes,
+			}
 			sample := []struct {
 				key   string
 				add   bool

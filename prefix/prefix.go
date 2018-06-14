@@ -35,6 +35,9 @@ type Browser struct {
 }
 
 func NewBrowser(data map[string]agents.Agent, queries ...string) (*Browser, error) {
+	if queries == nil {
+		queries = []string{"defaults"}
+	}
 	selected, err := browserlist.Query(queries...)
 	if err != nil {
 		return nil, err
@@ -49,7 +52,18 @@ func NewBrowser(data map[string]agents.Agent, queries ...string) (*Browser, erro
 		}
 	}
 	reg := regexp.MustCompile(re)
-	return &Browser{Selected: selected, Data: data, PrefixRegexp: reg}, nil
+	var prefixcache []string
+	for _, v := range agents.New() {
+		prefixcache = append(prefixcache, "-"+v.Prefix+"-")
+	}
+	prefixcache = uniq(prefixcache)
+	sort.Strings(prefixcache)
+	return &Browser{
+		Selected:     selected,
+		Data:         data,
+		PrefixRegexp: reg,
+		Prefixcache:  prefixcache,
+	}, nil
 }
 
 func uniq(s []string) []string {
@@ -108,6 +122,7 @@ func (b *Browser) Prefixes() []string {
 		b.Prefixcache = append(b.Prefixcache, "-"+v.Prefix+"-")
 	}
 	b.Prefixcache = uniq(b.Prefixcache)
+	sort.Strings(b.Prefixcache)
 	return b.Prefixcache
 }
 

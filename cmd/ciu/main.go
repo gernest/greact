@@ -36,20 +36,6 @@ func main() {
 	a := cli.NewApp()
 	a.Commands = []cli.Command{
 		{
-			Name:   "browser",
-			Action: BrowserCMD,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "o",
-					Value: "ciu/browsers/browsers.go",
-				},
-				cli.StringFlag{
-					Name:  "data",
-					Value: "caniuse/data.json",
-				},
-			},
-		},
-		{
 			Name:   "agents",
 			Action: AgentCMD,
 			Flags: []cli.Flag{

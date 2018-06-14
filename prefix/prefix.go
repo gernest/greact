@@ -34,12 +34,12 @@ type Browser struct {
 	Data         map[string]agents.Agent
 }
 
-func NewBrowser(queries ...string) (*Browser, error) {
+func NewBrowser(data map[string]agents.Agent, queries ...string) (*Browser, error) {
 	selected, err := browserlist.Query(queries...)
 	if err != nil {
 		return nil, err
 	}
-	return &Browser{Selected: selected}, nil
+	return &Browser{Selected: selected, Data: data}, nil
 }
 
 func uniq(s []string) []string {

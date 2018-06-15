@@ -148,7 +148,7 @@ func TestPrefixes() mad.Test {
 				},
 			}
 
-			b, err := prefix.NewBrowser(agents.New(), "irefox 21", "ie 7")
+			b, err := prefix.NewBrowser(agents.New(), "firefox 21", "ie 7")
 			if err != nil {
 				t.Fatal(err)
 			}

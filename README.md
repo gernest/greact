@@ -1,2 +1,2 @@
 # gs
-write css in go
+__under active development__

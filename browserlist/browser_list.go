@@ -153,7 +153,93 @@ func allHandlers() []handler {
 				return Query(defaultQuery()...)
 			},
 		},
+		{
+			match: regexp.MustCompile(`^(\w+)\s*(>=?|<=?)\s*([\d.]+)$`),
+			filter: func(dataCtx map[string]data, args []string) ([]string, error) {
+				name, sign, ver := args[0], args[1], args[2]
+				d, ok := dataCtx[browserName(name)]
+				if !ok {
+					return nil, fmt.Errorf("unknown browser name :%s", name)
+				}
+				v, err := strconv.ParseFloat(ver, 64)
+				if err != nil {
+					return nil, err
+				}
+				result := filterSlice(d.released, func(s string) bool {
+					sv, err := strconv.ParseFloat(s, 64)
+					if err != nil {
+						return false
+					}
+					switch sign {
+					case ">":
+						return sv > v
+					case ">=":
+						return sv >= v
+					case "<":
+						return sv < v
+					case "<=":
+						return sv <= v
+					default:
+						return false
+					}
+				})
+				return mapNames(d.name, result...), nil
+			},
+		},
+		{
+			match: regexp.MustCompile(`^(\w+)\s+(tp|[\d.]+)$`),
+			filter: func(dataCtx map[string]data, args []string) ([]string, error) {
+				name, ver := args[0], args[1]
+				if ver == "tp" {
+					ver = "TP"
+				}
+				d, ok := dataCtx[browserName(name)]
+				if !ok {
+					return nil, fmt.Errorf("unknown browser name :%s", name)
+				}
+				alias := normalizeVersion(d, ver)
+				if alias != "" {
+					ver = alias
+				} else {
+					if !strings.Contains(ver, ".") {
+						alias = ver + ".0"
+					} else {
+						alias = strings.TrimSuffix(ver, ".0")
+					}
+					alias = normalizeVersion(d, alias)
+					if alias != "" {
+						ver = alias
+					} else {
+						return nil, fmt.Errorf("unknown version %s", ver)
+					}
+				}
+				return []string{d.name + " " + ver}, nil
+			},
+		},
+		{
+			match: regexp.MustCompile(`^dead$`),
+			filter: func(dataCtx map[string]data, _ []string) ([]string, error) {
+				dead := []string{"ie <= 10", "ie_mob <= 10", "bb <= 10", "op_mob <= 12.1"}
+				return QueryWith(dataCtx, dead...)
+			},
+		},
 	}
+}
+
+func normalizeVersion(d data, ver string) string {
+	for _, v := range d.versions {
+		if v == ver {
+			return v
+		}
+	}
+	a := getAlias()
+	if v, ok := a[d.name][ver]; ok {
+		return v
+	}
+	if len(d.versions) == 1 {
+		return d.versions[0]
+	}
+	return ""
 }
 
 func popularitySign(dataCtx map[string]data, v []string) ([]string, error) {
@@ -419,6 +505,24 @@ func getData() map[string]data {
 	return m
 }
 
+func getAlias() map[string]map[string]string {
+	o := make(map[string]map[string]string)
+	for k, v := range getData() {
+		m := make(map[string]string)
+		for _, ver := range v.versions {
+			if ver != "" {
+				if strings.Contains(ver, "-") {
+					for _, p := range strings.Split(ver, "-") {
+						m[p] = ver
+					}
+				}
+			}
+		}
+		o[k] = m
+	}
+	return o
+}
+
 func normalize(s ...string) []string {
 	var o []string
 	for _, v := range s {
@@ -443,8 +547,12 @@ func QueryWith(dataCtx map[string]data, s ...string) ([]string, error) {
 			exclude = true
 			v = strings.TrimSpace(v[4:])
 		}
+		match := false
 		for _, c := range h {
 			if c.match.MatchString(v) {
+				if !match {
+					match = true
+				}
 				i, err := c.filter(dataCtx, c.match.FindStringSubmatch(v)[1:])
 				if err != nil {
 					return nil, err
@@ -461,7 +569,10 @@ func QueryWith(dataCtx map[string]data, s ...string) ([]string, error) {
 				} else {
 					o = append(o, i...)
 				}
+				continue
 			}
+		}
+		if !match {
 			return nil, fmt.Errorf("unknown query %s", v)
 		}
 	}
@@ -474,9 +585,8 @@ func filterSlice(s []string, fn func(string) bool) []string {
 	var o []string
 	for _, v := range s {
 		if fn(v) {
-			continue
+			o = append(o, v)
 		}
-		o = append(o, v)
 	}
 	return o
 }

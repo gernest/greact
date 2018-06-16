@@ -128,13 +128,13 @@ type Dispatch struct {
 	queries            map[string]*Query
 }
 
-func NewDispatch() *Dispatch {
-	m := js.Global.Get("matchMedia")
-	if m == nil {
-		panic(ErrNotSupported)
-	}
-	s := js.Global.Call("matchMedia", "only all").Get("matches").Bool()
-	return &Dispatch{BrowserIsIncapable: !s}
+func NewDispatch(isIncapable bool) *Dispatch {
+	// m := js.Global.Get("matchMedia")
+	// if m == nil {
+	// 	panic(ErrNotSupported)
+	// }
+	// s := js.Global.Call("matchMedia", "only all").Get("matches").Bool()
+	return &Dispatch{BrowserIsIncapable: isIncapable}
 }
 
 func (d *Dispatch) Register(mql MediaQueryList, query string, shoudDegrade bool, opts ...*Options) {

@@ -1,24 +1,33 @@
 package media
 
 import (
-	"github.com/gernest/vected/dom"
 	"github.com/gopherjs/gopherjs/js"
 )
+
+type MediaQueryList interface {
+	AddListener(func(*js.Object))
+	RemoveListener(func(*js.Object))
+	Matches() bool
+}
+
+type Event struct {
+	*js.Object
+	Matches bool `js:"matches"`
+}
 
 type Query struct {
 	Query           string
 	IsUnconditional bool
-	mql             *dom.MediaQueyList
+	mql             MediaQueryList
 	handlers        []*Handler
 }
 
-func NewMediaQuery(query string, isUnconditional bool) *Query {
+func NewMediaQuery(mql MediaQueryList, query string, isUnconditional bool) *Query {
 	m := &Query{
 		Query:           query,
 		IsUnconditional: isUnconditional,
 	}
-	o := js.Global.Call("matchMedia", query)
-	m.mql = &dom.MediaQueyList{Object: o}
+	m.mql = mql
 	m.mql.AddListener(m.listen)
 	return m
 }
@@ -32,7 +41,7 @@ func (m *Query) clear() {
 }
 
 func (m *Query) listen(o *js.Object) {
-	e := dom.ToMediaQueryListEvent(o)
+	e := &Event{Object: o}
 	var on bool
 	if e.Matches || m.IsUnconditional {
 		on = true
@@ -48,7 +57,7 @@ func (m *Query) listen(o *js.Object) {
 
 func (m *Query) AddHandler(h *Handler) {
 	m.handlers = append(m.handlers, h)
-	if m.mql.Matches || m.IsUnconditional {
+	if m.mql.Matches() || m.IsUnconditional {
 		h.on()
 	}
 }
@@ -128,11 +137,11 @@ func NewDispatch() *Dispatch {
 	return &Dispatch{BrowserIsIncapable: !s}
 }
 
-func (d *Dispatch) Register(query string, shoudDegrade bool, opts ...*Options) {
+func (d *Dispatch) Register(mql MediaQueryList, query string, shoudDegrade bool, opts ...*Options) {
 	isUnconditional := shoudDegrade && d.BrowserIsIncapable
 	q, ok := d.queries[query]
 	if !ok {
-		q = NewMediaQuery(query, isUnconditional)
+		q = NewMediaQuery(mql, query, isUnconditional)
 		d.queries[query] = q
 	}
 	for _, v := range opts {

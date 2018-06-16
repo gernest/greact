@@ -201,3 +201,15 @@ func TestGlobal(t *testing.T) {
 		}
 	})
 }
+
+func TestDead(t *testing.T) {
+	t.Run("selects dead browsers by keywords", func(ts *testing.T) {
+		v, err := Query("dead")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if len(v) <= 0 {
+			t.Errorf("expected to more than one dead browser")
+		}
+	})
+}

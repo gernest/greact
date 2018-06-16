@@ -5,9 +5,14 @@ import (
 )
 
 type MediaQueryList interface {
-	AddListener(func(*js.Object))
-	RemoveListener(func(*js.Object))
+	AddListener(*Listener)
+	RemoveListener(*Listener)
 	Matches() bool
+}
+
+type Listener struct {
+	Name   string
+	Listen func(*js.Object)
 }
 
 type Event struct {
@@ -20,6 +25,7 @@ type Query struct {
 	IsUnconditional bool
 	mql             MediaQueryList
 	handlers        []*Handler
+	Listener        *Listener
 }
 
 func NewMediaQuery(mql MediaQueryList, query string, isUnconditional bool) *Query {
@@ -28,7 +34,8 @@ func NewMediaQuery(mql MediaQueryList, query string, isUnconditional bool) *Quer
 		IsUnconditional: isUnconditional,
 	}
 	m.mql = mql
-	m.mql.AddListener(m.listen)
+	m.Listener = m.Listen()
+	m.mql.AddListener(m.Listener)
 	return m
 }
 
@@ -36,8 +43,12 @@ func (m *Query) clear() {
 	for _, v := range m.handlers {
 		v.destroy()
 	}
-	m.mql.RemoveListener(m.listen)
+	m.mql.RemoveListener(m.Listener)
 	m.handlers = nil
+}
+
+func (m *Query) Listen() *Listener {
+	return &Listener{Name: m.Query, Listen: m.listen}
 }
 
 func (m *Query) listen(o *js.Object) {

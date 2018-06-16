@@ -121,19 +121,23 @@ func (e *Error) Error() string {
 	return e.msg
 }
 
-var ErrNotSupported = &Error{msg: "matchMedia not present, legacy browsers require a polyfill"}
-
 type Dispatch struct {
 	BrowserIsIncapable bool
 	queries            map[string]*Query
 }
 
+// IsBrowserIncapable returns true when the browser doesn't support media
+// queries.
+func IsBrowserIncapable() bool {
+	m := js.Global.Get("matchMedia")
+	if m == nil {
+		return true
+	}
+	s := js.Global.Call("matchMedia", "only all").Get("matches").Bool()
+	return !s
+}
+
 func NewDispatch(isIncapable bool) *Dispatch {
-	// m := js.Global.Get("matchMedia")
-	// if m == nil {
-	// 	panic(ErrNotSupported)
-	// }
-	// s := js.Global.Call("matchMedia", "only all").Get("matches").Bool()
 	return &Dispatch{BrowserIsIncapable: isIncapable}
 }
 

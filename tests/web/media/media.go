@@ -21,8 +21,9 @@ func (q *queryList) RemoveListener(ls *media.Listener) {
 }
 
 func (q *queryList) Matches() bool {
-	return true
+	return len(q.listeners) > 0
 }
+
 func TestMediaQuery() mad.Test {
 	return mad.List{
 		mad.It("will add media query listener when constructed", func(t mad.T) {
@@ -35,6 +36,20 @@ func TestMediaQuery() mad.Test {
 			}
 			if v != m.Listener {
 				t.Errorf("expected listeners to match")
+			}
+		}),
+		mad.It("will turn on handler when added if query is already matching", func(t mad.T) {
+			ql := &queryList{}
+			query := "(max-width: 1000px)"
+			m := media.NewMediaQuery(ql, query, false)
+			called := false
+			m.AddHandler(&media.Options{
+				Match: func() {
+					called = true
+				},
+			})
+			if !called {
+				t.Errorf("expected options.Match to be called")
 			}
 		}),
 	}

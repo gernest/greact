@@ -66,7 +66,8 @@ func (m *Query) listen(o *js.Object) {
 	}
 }
 
-func (m *Query) AddHandler(h *Handler) {
+func (m *Query) AddHandler(opts *Options) {
+	h := NewQueryHandler(opts)
 	m.handlers = append(m.handlers, h)
 	if m.mql.Matches() || m.IsUnconditional {
 		h.on()
@@ -160,7 +161,7 @@ func (d *Dispatch) Register(mql MediaQueryList, query string, shoudDegrade bool,
 		d.queries[query] = q
 	}
 	for _, v := range opts {
-		q.AddHandler(NewQueryHandler(v))
+		q.AddHandler(v)
 	}
 }
 

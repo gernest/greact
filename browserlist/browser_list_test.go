@@ -272,4 +272,24 @@ func TestElectron(t *testing.T) {
 			t.Errorf("expected %v got %v", e, v)
 		}
 	})
+	t.Run("returns on unknown Electron range version", func(ts *testing.T) {
+		_, err := Query("electron 0.1-1.2")
+		if err == nil {
+			t.Error("expected an error")
+		}
+		_, err = Query("electron 0.37-999")
+		if err == nil {
+			t.Error("expected an error")
+		}
+	})
+	t.Run("converts Electron versions to Chrome", func(ts *testing.T) {
+		v, err := Query("electron <= 0.21")
+		if err != nil {
+			ts.Error(err)
+		}
+		e := []string{"chrome 39", "chrome 40"}
+		if !reflect.DeepEqual(v, e) {
+			t.Errorf("expected %v got %v", e, v)
+		}
+	})
 }

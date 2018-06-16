@@ -181,7 +181,7 @@ func allHandlers() []handler {
 			filter: func(dataCtx map[string]data, args []string) ([]string, error) {
 				var results []string
 				sign := args[0]
-				ver := args[0]
+				ver := args[1]
 				v, err := strconv.ParseFloat(ver, 54)
 				if err != nil {
 					return nil, err
@@ -210,6 +210,7 @@ func allHandlers() []handler {
 						}
 					}
 				}
+				sort.Strings(results)
 				return results, nil
 			},
 		},

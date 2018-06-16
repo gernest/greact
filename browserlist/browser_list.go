@@ -163,8 +163,8 @@ func allHandlers() []handler {
 					return nil, err
 				}
 				var result []string
-				for k, v := range e2c.Versions {
-					kf, err := strconv.ParseFloat(k, 64)
+				for _, v := range e2c.Versions {
+					kf, err := strconv.ParseFloat(v, 64)
 					if err != nil {
 						return nil, err
 					}
@@ -172,6 +172,7 @@ func allHandlers() []handler {
 						result = append(result, "chrome "+v)
 					}
 				}
+				sort.Strings(result)
 				return result, nil
 			},
 		},

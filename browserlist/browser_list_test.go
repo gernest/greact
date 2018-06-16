@@ -244,3 +244,16 @@ func TestOpera(t *testing.T) {
 		}
 	})
 }
+
+func TestElectron(t *testing.T) {
+	t.Run("converts Electron to Chrome", func(ts *testing.T) {
+		v, err := Query("electron 1.1")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		e := []string{"chrome 50"}
+		if !reflect.DeepEqual(v, e) {
+			t.Errorf("expected %v got %v", e, v)
+		}
+	})
+}

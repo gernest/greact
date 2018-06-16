@@ -31,10 +31,10 @@ func MakeMotion(class, keyframe string, duration string) gs.CSSRule {
 			gs.P("animation-play-state", "paused"),
 		),
 		gs.S(join(
-			ToClass(class, enter), ToClass(class, enter, "active"),
+			ToClass(class, enter), ToClass(class, enter, "-active"),
 		),
 			gs.S(
-				join("&,", ToClass(class, enter), ToClass(class, enter, "active")),
+				join("&,", ToClass(class, enter), ToClass(class, appear, "-active")),
 				gs.P("animation-name", join("~", keyframe, "In")),
 				gs.P("animation-play-state", "running"),
 			),

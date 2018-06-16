@@ -142,9 +142,15 @@ func allHandlers() []handler {
 			filter: popularitySign,
 		},
 		{
-			match: regexp.MustCompile(`(operamini|op_mini)\s+all`),
+			match: regexp.MustCompile(`^(firefox|ff|fx)\s+esr$`),
 			filter: func(_ map[string]data, _ []string) ([]string, error) {
 				return []string{"firefox 52", "firefox 60"}, nil
+			},
+		},
+		{
+			match: regexp.MustCompile(`(operamini|op_mini)\s+all`),
+			filter: func(_ map[string]data, _ []string) ([]string, error) {
+				return []string{"op_mini all"}, nil
 			},
 		},
 		{

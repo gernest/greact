@@ -213,3 +213,21 @@ func TestDead(t *testing.T) {
 		}
 	})
 }
+
+func TestDefaults(t *testing.T) {
+	t.Run("selects defaults by keywords", func(ts *testing.T) {
+		v, err := Query("defaults", "ie 6")
+		if err != nil {
+			ts.Fatal(err)
+		}
+		q := defaultQuery()
+		q = append(q, "ie 6")
+		nv, err := Query(q...)
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if !reflect.DeepEqual(v, nv) {
+			t.Errorf("expected %v to equal %v", v, nv)
+		}
+	})
+}

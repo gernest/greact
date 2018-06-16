@@ -41,18 +41,18 @@ func TestToString() mad.Test {
   margin-right:0px;
   height:auto;
   zoom:1;
-  .test:before {
-    content: ;
-    display:table;
-  }
-  .test:after {
-    content: ;
-    display:table;
-    clear:both;
-    visibility:hidden;
-    font-size:0;
-    height:0;
-  }
+}
+.test:before {
+  content: ;
+  display:table;
+}
+.test:after {
+  content: ;
+  display:table;
+  clear:both;
+  visibility:hidden;
+  font-size:0;
+  height:0;
 }`
 		if txt != expect {
 			t.Errorf("expected %s got %s", expect, txt)

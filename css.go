@@ -2,12 +2,9 @@ package gs
 
 import (
 	"bytes"
+	"io"
 	"strings"
 )
-
-type stringer interface {
-	String() string
-}
 
 // RuleList is a list of css style rules.
 type RuleList []CSSRule
@@ -16,20 +13,19 @@ func (RuleList) isRule() {}
 
 func (r RuleList) String() string {
 	var buf bytes.Buffer
-	for k, v := range r {
-		if s, ok := v.(stringer); ok {
-			sc := s.String()
-			if sc == "" {
-				continue
-			}
-			if k != 0 {
-				buf.WriteByte('\n')
-				buf.WriteByte('\n')
-			}
-			buf.WriteString(sc)
+	r.Print(&buf)
+	return buf.String()
+}
+
+func (r RuleList) Print(o io.Writer) (int64, error) {
+	var buf bytes.Buffer
+	for _, v := range r {
+		_, err := v.Print(&buf)
+		if err != nil {
+			return 0, err
 		}
 	}
-	return buf.String()
+	return buf.WriteTo(o)
 }
 
 // filter out nil values
@@ -59,6 +55,11 @@ func (s SimpleRule) String() string {
 	return s.Key + ":" + s.Value + ";"
 }
 
+func (s SimpleRule) Print(o io.Writer) (int64, error) {
+	v, err := o.Write([]byte(s.Key + ":" + s.Value + ";"))
+	return int64(v), err
+}
+
 func P(key, value string) CSSRule {
 	return SimpleRule{Key: key, Value: value}
 }
@@ -76,16 +77,37 @@ type StyleRule struct {
 }
 
 func (s StyleRule) String() string {
+	var buf bytes.Buffer
+	s.Print(&buf)
+	return buf.String()
+}
+
+func (s StyleRule) Print(o io.Writer) (int64, error) {
 	if len(s.Rules) == 0 {
-		return ""
+		return 0, nil
 	}
 	var buf bytes.Buffer
-	buf.WriteString(s.Selector + " {\n")
+	var body bytes.Buffer
 	for _, v := range s.Rules {
-		buf.WriteString(indent(v.String(), 2))
+		switch v.(type) {
+		case SimpleRule:
+			if body.Len() == 0 {
+				body.WriteString(s.Selector + " {\n")
+			}
+			body.WriteString(indent(v.String(), 2))
+		default:
+			_, err := v.Print(&buf)
+			if err != nil {
+				return 0, err
+			}
+		}
 	}
-	buf.WriteString("}")
-	return buf.String()
+	if body.Len() > 0 {
+		body.WriteString("}\n")
+		buf.WriteTo(&body)
+		return body.WriteTo(o)
+	}
+	return buf.WriteTo(o)
 }
 
 func (StyleRule) isRule() {}
@@ -101,21 +123,40 @@ type Conditional struct {
 
 func (c Conditional) String() string {
 	var buf bytes.Buffer
-	buf.WriteString(c.Key + " {\n")
-	for k, v := range c.Rules {
-		if s, ok := v.(stringer); ok {
-			if k != 0 {
-				buf.WriteByte('\n')
+	c.Print(&buf)
+	return buf.String()
+}
+
+func (c Conditional) Print(o io.Writer) (int64, error) {
+	var buf bytes.Buffer
+	var body bytes.Buffer
+	for _, v := range c.Rules {
+		switch v.(type) {
+		case SimpleRule:
+			_, err := v.Print(&body)
+			if err != nil {
+				return 0, err
 			}
-			buf.WriteString(indent(s.String(), 2))
+		default:
+			_, err := v.Print(&buf)
+			if err != nil {
+				return 0, err
+			}
 		}
 	}
-	return buf.String()
+	if body.Len() > 0 {
+		buf.WriteString(c.Key + " {\n")
+		body.WriteTo(&buf)
+		buf.WriteString("}")
+
+	}
+	return buf.WriteTo(o)
 }
 
 func (Conditional) isRule() {}
 
 func indent(s string, by int) string {
+	s = strings.TrimSpace(s)
 	p := strings.Split(s, "\n")
 	var o bytes.Buffer
 	idx := ""
@@ -140,7 +181,8 @@ func Cond(cond string, rules ...CSSRule) CSSRule {
 
 type CSSRule interface {
 	//we don't want users to implement this.
-	stringer
+	Print(io.Writer) (int64, error)
+	String() string
 	isRule()
 }
 
@@ -189,7 +231,9 @@ func replaceParent(parent, selector string) string {
 
 func ToString(rule CSSRule, ts ...Transformer) string {
 	rule = Process(rule, ts...)
-	return rule.String()
+	var buf bytes.Buffer
+	rule.Print(&buf)
+	return strings.TrimSpace(buf.String())
 }
 
 type Options struct {

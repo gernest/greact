@@ -34,9 +34,9 @@ func (s *Sheet) AddRule(rules CSSRule) ClassMap {
 	return m
 }
 
-func (s *Sheet) Text() string {
-	return s.rules.String()
-}
+// func (s *Sheet) Text() string {
+// 	return s.rules.String()
+// }
 
 func NewSheet(idGen func() string) *Sheet {
 	return &Sheet{CLasses: make(ClassMap), idGen: idGen}

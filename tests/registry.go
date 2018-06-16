@@ -41,7 +41,8 @@ func TestRegistry() mad.Test {
 				e := `.hello-1-1 {
   key1:value1;
   key2:value2;
-}`
+}
+`
 				if o.rules[0] != e {
 					t.Errorf("expected %s got %s", e, o.rules[0])
 				}

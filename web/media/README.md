@@ -1,1 +1,1 @@
-port of [enquire.js](https://github.com/WickyNilliams/enquire.js/)
+ports [enquire.js](https://github.com/WickyNilliams/enquire.js/)

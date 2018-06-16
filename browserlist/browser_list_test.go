@@ -231,3 +231,16 @@ func TestDefaults(t *testing.T) {
 		}
 	})
 }
+
+func TestOpera(t *testing.T) {
+	t.Run("selects opera mini", func(ts *testing.T) {
+		q := "op_mini all"
+		v, err := Query(q)
+		if err != nil {
+			ts.Fatal(err)
+		}
+		if v[0] != q {
+			t.Errorf("expected %s got %s", q, v[0])
+		}
+	})
+}

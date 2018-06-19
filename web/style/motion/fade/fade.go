@@ -6,6 +6,12 @@ import (
 	"github.com/gernest/vected/web/themes"
 )
 
+const (
+	FadeIn    = "fadeIn"
+	FadeOut   = "fadeOut"
+	FrameName = "fade"
+)
+
 func Fade(klass, keyframe string) gs.CSSRule {
 	return gs.CSS(
 		mixins.MakeMotion(klass, keyframe, themes.Default.AnimationDurationBase),
@@ -21,16 +27,9 @@ func Fade(klass, keyframe string) gs.CSSRule {
 	)
 }
 
-const Klass = ".fade"
-const frameName = "antFade"
-
-func Motion() gs.CSSRule {
-	return Fade(Klass, frameName)
-}
-
 func KeyFrame() gs.CSSRule {
 	return gs.CSS(
-		gs.KeyFrame(frameName+"In",
+		gs.KeyFrame(FadeIn,
 			gs.Cond("0%",
 				gs.P("opacity", "0"),
 			),
@@ -38,7 +37,7 @@ func KeyFrame() gs.CSSRule {
 				gs.P("opacity", "1"),
 			),
 		),
-		gs.KeyFrame(frameName+"Out",
+		gs.KeyFrame(FadeOut,
 			gs.Cond("0%",
 				gs.P("opacity", "1"),
 			),

@@ -128,29 +128,22 @@ func (c Conditional) String() string {
 }
 
 func (c Conditional) Print(o io.Writer) (int64, error) {
-	var buf bytes.Buffer
 	var body bytes.Buffer
+	var buf bytes.Buffer
 	for _, v := range c.Rules {
-		switch v.(type) {
-		case SimpleRule:
-			_, err := v.Print(&body)
-			if err != nil {
-				return 0, err
-			}
-		default:
-			_, err := v.Print(&buf)
-			if err != nil {
-				return 0, err
-			}
+		_, err := v.Print(&body)
+		if err != nil {
+			return 0, err
 		}
+		body.WriteByte('\n')
 	}
 	if body.Len() > 0 {
 		buf.WriteString(c.Key + " {\n")
-		body.WriteTo(&buf)
-		buf.WriteString("}")
-
+		buf.WriteString(indent(body.String(), 2))
+		buf.WriteString("}\n")
+		return buf.WriteTo(o)
 	}
-	return buf.WriteTo(o)
+	return 0, nil
 }
 
 func (Conditional) isRule() {}

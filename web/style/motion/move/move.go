@@ -1,0 +1,131 @@
+package move
+
+import (
+	"github.com/gernest/gs"
+	"github.com/gernest/vected/web/mixins"
+	"github.com/gernest/vected/web/themes"
+)
+
+func Motion(klass, keyframe string) gs.CSSRule {
+	return gs.CSS(
+		mixins.MakeMotion(klass, keyframe, themes.Default.AnimationDurationBase),
+		gs.S(klass+"-enter",
+			gs.S("&,"+klass+"-appear",
+				gs.P("opacity", "0"),
+				gs.P("animation-timing-function", themes.Default.EaseOutCirc),
+			),
+		),
+		gs.S(klass+"-leave",
+			gs.P("animation-timing-function", themes.Default.EaseInCirc),
+		),
+	)
+}
+
+//keyframes
+const (
+	FrameDown  = "moveDown"
+	FrameUp    = "moveUp"
+	FrameLeft  = "moveLeft"
+	FrameRight = "moveRight"
+)
+
+func KeyFrames() gs.CSSRule {
+	return gs.CSS(
+		gs.KeyFrame(FrameDown+"In",
+			gs.Cond("0%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateY(100%)"),
+				gs.P("opacity", "0"),
+			),
+			gs.Cond("100%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateY(0%)"),
+				gs.P("opacity", "1"),
+			),
+		),
+		gs.KeyFrame(FrameDown+"Out",
+			gs.Cond("0%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateY(100%)"),
+				gs.P("opacity", "1"),
+			),
+			gs.Cond("100%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateY(0%)"),
+				gs.P("opacity", "0"),
+			),
+		),
+		gs.KeyFrame(FrameLeft+"In",
+			gs.Cond("0%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateX(-100%)"),
+				gs.P("opacity", "0"),
+			),
+			gs.Cond("100%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateX(0%)"),
+				gs.P("opacity", "1"),
+			),
+		),
+		gs.KeyFrame(FrameLeft+"Out",
+			gs.Cond("0%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateX(0%)"),
+				gs.P("opacity", "1"),
+			),
+			gs.Cond("100%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateX(-100%)"),
+				gs.P("opacity", "0"),
+			),
+		),
+		gs.KeyFrame(FrameRight+"In",
+			gs.Cond("0%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateX(100%)"),
+				gs.P("opacity", "0"),
+			),
+			gs.Cond("100%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateX(0%)"),
+				gs.P("opacity", "1"),
+			),
+		),
+		gs.KeyFrame(FrameRight+"Out",
+			gs.Cond("0%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateX(0%)"),
+				gs.P("opacity", "1"),
+			),
+			gs.Cond("100%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateX(100%)"),
+				gs.P("opacity", "0"),
+			),
+		),
+		gs.KeyFrame(FrameUp+"In",
+			gs.Cond("0%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateY(-100%)"),
+				gs.P("opacity", "0"),
+			),
+			gs.Cond("100%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateY(0%)"),
+				gs.P("opacity", "1"),
+			),
+		),
+		gs.KeyFrame(FrameUp+"Out",
+			gs.Cond("0%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateY(0%)"),
+				gs.P("opacity", "1"),
+			),
+			gs.Cond("100%",
+				gs.P("transform-origin", "0 0"),
+				gs.P("transform", "translateY(-100%)"),
+				gs.P("opacity", "0"),
+			),
+		),
+	)
+}

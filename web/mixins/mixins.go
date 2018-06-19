@@ -19,28 +19,28 @@ func CommonMotion(duration string) gs.CSSRule {
 	)
 }
 
-func MakeMotion(class, keyframe string, duration string) gs.CSSRule {
+func MakeMotion(klass, keyframe string, duration string) gs.CSSRule {
 	return gs.CSS(
-		gs.S(ToClass(class, enter),
-			gs.S("&,"+ToClass(class, appear),
+		gs.S(join(klass, enter),
+			gs.S(join("&,", klass, appear),
 				CommonMotion(duration),
 				gs.P("animation-play-state", "paused"),
 			)),
-		gs.S(ToClass(class, leave),
+		gs.S(join(klass, leave),
 			CommonMotion(duration),
 			gs.P("animation-play-state", "paused"),
 		),
 		gs.S(join(
-			ToClass(class, enter), ToClass(class, enter, "-active"),
+			join(klass, enter), join(klass, enter, "-active"),
 		),
 			gs.S(
-				join("&,", ToClass(class, enter), ToClass(class, appear, "-active")),
+				join(join("&,", klass, enter), join(klass, appear, "-active")),
 				gs.P("animation-name", join("~", keyframe, "In")),
 				gs.P("animation-play-state", "running"),
 			),
 		),
 		gs.S(join(
-			ToClass(class, leave), ToClass(class, leave, "active"),
+			join(klass, leave), join(klass, leave, "active"),
 		),
 			gs.P("animation-name", join("~", keyframe, "Out")),
 			gs.P("animation-play-state", "running"),
@@ -49,12 +49,7 @@ func MakeMotion(class, keyframe string, duration string) gs.CSSRule {
 	)
 }
 
-// ToClass joins v and  returns the result with prefix .
-func ToClass(s ...string) string {
-	v := []string{"."}
-	v = append(v, s...)
-	return join(v...)
-}
+// join joins v and  returns the result with prefix .
 
 func join(s ...string) string {
 	o := ""

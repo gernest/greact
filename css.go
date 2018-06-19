@@ -135,7 +135,6 @@ func (c Conditional) Print(o io.Writer) (int64, error) {
 		if err != nil {
 			return 0, err
 		}
-		body.WriteByte('\n')
 	}
 	if body.Len() > 0 {
 		buf.WriteString(c.Key + " {\n")
@@ -170,6 +169,10 @@ func FontFace(rules ...CSSRule) CSSRule {
 
 func Cond(cond string, rules ...CSSRule) CSSRule {
 	return Conditional{Key: cond, Rules: RuleList(rules)}
+}
+
+func KeyFrame(name string, rules ...CSSRule) CSSRule {
+	return Cond("@keyframes "+name, rules...)
 }
 
 type CSSRule interface {

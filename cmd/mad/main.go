@@ -481,7 +481,7 @@ var mainUnitTpl = `package main
 import(
 	{{range $k,$v:=.config.TestNames}}
 	"{{$k.ImportPath}}"
-	{{end}}
+	{{- end}}
 	"{{.wsImport}}"
 	"{{.madImport}}"
 	{{if .config.Cover}}

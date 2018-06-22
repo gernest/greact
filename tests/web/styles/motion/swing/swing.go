@@ -25,3 +25,30 @@ func TestMotion() mad.Test {
 		}
 	})
 }
+
+func TestKeyframe() mad.Test {
+	return mad.It("generate css for swing keyframes", func(t mad.T) {
+		css := gs.ToString(swing.KeyFrames())
+		expect := `@keyframes swingIn {
+  0%,
+  100% {
+    transform:translateX(0);
+  }
+  20% {
+    transform:translateX(-10px);
+  }
+  40% {
+    transform:translateX(10px);
+  }
+  60% {
+    transform:translateX(-5px);
+  }
+  80% {
+    transform:translateX(5px);
+  }
+}`
+		if css != expect {
+			t.Errorf("expected %s got %s", expect, css)
+		}
+	})
+}

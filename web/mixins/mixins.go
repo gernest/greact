@@ -101,8 +101,26 @@ func Square(size string) gs.CSSRule {
 	return Size(size, size)
 }
 
-// .iconfont-mixin
+//IconFontMixin .iconfont-mixin
+func IconFontMixin() gs.CSSRule {
+	return gs.CSS(
+		gs.P("display", "inline-block"),
+		gs.P("font-style", "normal"),
+		gs.P("vertical-align", "baseline"),
+		gs.P("text-align", "center"),
+		gs.P("text-transform:", "none"),
+		gs.P("line-height", "1"),
+		gs.P("text-rendering", "optimizeLegibility"),
+		gs.P("-webkit-font-smoothing", "antialiased"),
+		gs.P("-moz-osx-font-smoothing", "grayscale"),
+		gs.S("&:before",
+			gs.P("display", "block"),
+			gs.P("font-family", `"anticon" !important`),
+		),
+	)
+}
 
+// IconFontFont => .iconfont-font
 func IconFontFont(content string) gs.CSSRule {
 	return gs.CSS(
 		gs.P("font-family", "'anticon'"),

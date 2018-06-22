@@ -6,6 +6,7 @@ import (
 	"github.com/gernest/vected/web/themes"
 )
 
+// Motion returns styles for swing motion.
 func Motion(klass, keyframe string) gs.CSSRule {
 	return gs.CSS(
 		gs.S(klass+"-enter",

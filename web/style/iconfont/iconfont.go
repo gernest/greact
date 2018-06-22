@@ -1,56 +1,47 @@
-package icon
+package iconfont
 
 import (
+	"sort"
+
 	"github.com/gernest/gs"
+	"github.com/gernest/vected/web/mixins"
+	"github.com/gernest/vected/web/themes"
 )
 
-const Root = ".AntIcon"
-
-func join(v ...string) string {
-	o := ""
-	for _, s := range v {
-		o += s
-	}
-	return o
-}
-
-func Style1(iconName string) gs.CSSRule {
-	return gs.CSS(
-		gs.S(Root,
-			gs.P("display", "inline-block"),
-			gs.P("font-style", "normal"),
-			gs.P("vertical-align", "baseline"),
-			gs.P("text-align", "center"),
-			gs.P("text-transform", "none"),
-			gs.P("line-height", "1"),
-			gs.P("text-rendering", "optimizeLegibility"),
-			gs.P("-webkit-font-smoothing", "antialiased"),
-			gs.P("-moz-osx-font-smoothing", "grayscale"),
-			gs.S("&:before",
-				gs.P("display", "block"),
-				gs.P("font-family", `"anticon" !important`),
-			),
-		),
-		iconByName(iconName),
+func Font() gs.CSSRule {
+	return gs.S("."+themes.Default.IconFontPrefix,
+		mixins.IconFontMixin(),
 	)
 }
 
 func iconByName(name string) gs.CSSRule {
-	return gs.S(join(Root, "-", name),
+	return gs.S("."+themes.Default.IconFontPrefix+"-"+name,
 		gs.S("&:before",
 			gs.P("content", icons[name]),
 		),
 	)
 }
 
-func IconFontFont(content string) gs.CSSRule {
-	return gs.CSS(
-		gs.P("font-family", "'anticon'"),
-		gs.P("text-rendering", "optimizeLegibility"),
-		gs.P("-webkit-font-smoothing", "antialiased"),
-		gs.P("-moz-osx-font-smoothing", "grayscale"),
-		gs.P("content", content),
+func spin() gs.CSSRule {
+	return gs.S("."+themes.Default.IconFontPrefix+"-spin:before",
+		gs.P("display", "inline-block;"),
+		gs.P("animation", "loadingCircle 1s infinite linear"),
 	)
+}
+
+// FontStyles returns styles for all antd icons.
+func FontStyles() gs.CSSRule {
+	var list gs.RuleList
+	var keys []string
+	for k := range icons {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		list = append(list, iconByName(k))
+	}
+	list = append(list, spin())
+	return list
 }
 
 var icons = map[string]string{

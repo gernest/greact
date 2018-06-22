@@ -202,10 +202,6 @@ func executeInTab(ctx context.Context, cfg *config.Config, idx string, c *cdp.Cl
 			}
 		}(csLog)
 	}
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		}
-	}
+	<-ctx.Done()
+	return nil
 }

@@ -518,20 +518,13 @@ func startTest(){
 	}()
 }
 {{$n:=.config.TestDirName}}
-func start()mad.Test  {
-	return mad.Exec(
-		{{range .funcs.Unit -}}
-		{{$n}}.{{.}}(),
-		{{end -}}
-	)
-}
 func allTests()[]mad.Test  {
 	return []mad.Test{
-		{{range $k, $v:=.config.TestNames}}
-		{{range $v.Unit}}
+		{{- range $k, $v:=.config.TestNames}}
+		{{- range $v.Unit}}
 		mad.Describe("{{$k.Desc .}}",{{$k.FormatName .}}()),
-		{{end}}
-		{{end -}}
+		{{- end}}
+		{{- end}}
 	}
 }
 `

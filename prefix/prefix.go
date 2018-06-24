@@ -29,9 +29,17 @@ func UnPrefix(s string) string {
 
 // RulePrefixer this is an interface for processing css rules by adding the
 // prefix.
-//
-// must return  the rule with prefixes.
-type RulePrefixer func(gs.CSSRule) gs.CSSRule
+type RulePrefixer interface {
+	Name() []string
+}
+
+type Normal interface {
+	Normalize() string
+}
+
+type Setter interface {
+	Set(gs.CSSRule) gs.CSSRule
+}
 
 // FindPrefix returns vendor  prefix for the given css rule.
 func FindPrefix(b *Browser, rule gs.CSSRule) string {

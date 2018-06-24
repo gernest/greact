@@ -3,7 +3,6 @@ package prefix
 import (
 	"reflect"
 	"sort"
-	"strconv"
 
 	"github.com/gernest/gs/ciu/agents"
 
@@ -44,11 +43,6 @@ func TestUnPrefix() mad.Test {
 			}
 		}
 	})
-}
-
-func parseFloat(v string) float64 {
-	f, _ := strconv.ParseFloat(v, 64)
-	return f
 }
 
 func TestBrowser() mad.Test {

@@ -22,12 +22,12 @@ func Motion(klass, keyframe, duration string) gs.CSSRule {
 }
 
 const (
-	Zoom    = "zoom"
-	ZoomBig = "zoomBig"
-	ZoomUp  = "zoomUp"
-	Left    = "zoomLeft"
-	Right   = "zoomRight"
-	Down    = "zoomDown"
+	Zoom  = "zoom"
+	Big   = "zoomBig"
+	Up    = "zoomUp"
+	Left  = "zoomLeft"
+	Right = "zoomRight"
+	Down  = "zoomDown"
 )
 
 func KeyFrames() gs.CSSRule {
@@ -51,7 +51,7 @@ func KeyFrames() gs.CSSRule {
 				gs.P("transform", "scale(0.2)"),
 			),
 		),
-		gs.KeyFrame(ZoomBig+"In",
+		gs.KeyFrame(Big+"In",
 			gs.S("0%",
 				gs.P("opacity", "0"),
 				gs.P("transform", "scale(.8)"),
@@ -60,7 +60,7 @@ func KeyFrames() gs.CSSRule {
 				gs.P("transform", "scale(1)"),
 			),
 		),
-		gs.KeyFrame(ZoomBig+"Out",
+		gs.KeyFrame(Big+"Out",
 			gs.S("0%",
 				gs.P("transform", "scale(1)"),
 			),
@@ -69,7 +69,7 @@ func KeyFrames() gs.CSSRule {
 				gs.P("transform", "scale(.8)"),
 			),
 		),
-		gs.KeyFrame(ZoomUp+"In",
+		gs.KeyFrame(Up+"In",
 			gs.S("0%",
 				gs.P("opacity", "0"),
 				gs.P("transform-origin", "50% 0%"),
@@ -80,7 +80,7 @@ func KeyFrames() gs.CSSRule {
 				gs.P("transform", "scale(1)"),
 			),
 		),
-		gs.KeyFrame(ZoomUp+"Out",
+		gs.KeyFrame(Up+"Out",
 			gs.S("0%",
 				gs.P("transform-origin", "50% 0%"),
 				gs.P("transform", "scale(1)"),

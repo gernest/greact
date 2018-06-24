@@ -494,7 +494,7 @@ func New() *Theme {
 		BtnPrimaryColor:                color.New("#fff"),
 		BtnDefaultBG:                   color.New("#fff"),
 		IconFontPrefix:                 "anticon",
-		IconURL:                        `"https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i"`,
+		IconURL:                        "https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i",
 		LinkDecoration:                 "none",
 		LinkHoverDecoration:            "none",
 		EaseOut:                        "cubic-bezier(0.215, 0.61, 0.355, 1)",

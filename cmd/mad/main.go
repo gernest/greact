@@ -102,6 +102,13 @@ func runTestsCommand(ctx *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		q := make(url.Values)
+		q.Set("src", "main.js.map")
+		mainFIle := fmt.Sprintf("%s:%d%s?%s",
+			localhost, cfg.Port, resourcePath, q.Encode())
+		if err = addSourcemap(o, mainFIle); err != nil {
+			return err
+		}
 	}
 	for _, v := range cfg.Browsers {
 		switch v {
@@ -577,4 +584,19 @@ func buildPackage(ctx context.Context, out, pkg string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
 	return cmd.Run()
+}
+
+func addSourcemap(o string, srcMap string) error {
+	b, err := ioutil.ReadFile(o)
+	if err != nil {
+		return err
+	}
+	b = bytes.TrimSpace(b)
+	p := bytes.Split(b, []byte("\n"))
+	last := p[len(p)-1]
+	if bytes.HasPrefix(last, []byte("//# sourceMappingURL=")) {
+		p[len(p)-1] = []byte(fmt.Sprintf("//# sourceMappingURL=%s", srcMap))
+		return ioutil.WriteFile(o, bytes.Join(p, []byte("\n")), 0600)
+	}
+	return nil
 }

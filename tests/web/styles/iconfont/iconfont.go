@@ -998,6 +998,5 @@ func TestFontFace() mad.Test {
 		if css != expect {
 			t.Error("expected %s got %s", expect, css)
 		}
-		t.Error(css)
 	})
 }

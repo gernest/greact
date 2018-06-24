@@ -1,7 +1,6 @@
 package gs
 
 import (
-	"bytes"
 	"io"
 	"strings"
 )
@@ -12,20 +11,11 @@ type RuleList []CSSRule
 func (RuleList) isRule() {}
 
 func (r RuleList) String() string {
-	var buf bytes.Buffer
-	r.Print(&buf)
-	return buf.String()
-}
-
-func (r RuleList) Print(o io.Writer) (int64, error) {
-	var buf bytes.Buffer
+	s := ""
 	for _, v := range r {
-		_, err := v.Print(&buf)
-		if err != nil {
-			return 0, err
-		}
+		s += v.String()
 	}
-	return buf.WriteTo(o)
+	return s
 }
 
 // filter out nil values
@@ -77,37 +67,20 @@ type StyleRule struct {
 }
 
 func (s StyleRule) String() string {
-	var buf bytes.Buffer
-	s.Print(&buf)
-	return buf.String()
-}
-
-func (s StyleRule) Print(o io.Writer) (int64, error) {
 	if len(s.Rules) == 0 {
-		return 0, nil
+		return ""
 	}
-	var buf bytes.Buffer
-	var body bytes.Buffer
+	o := ""
+	b := ""
 	for _, v := range s.Rules {
 		switch v.(type) {
 		case SimpleRule:
-			if body.Len() == 0 {
-				body.WriteString(s.Selector + " {\n")
-			}
-			body.WriteString(indent(v.String(), 2))
+			b += indent(v.String(), 2)
 		default:
-			_, err := v.Print(&buf)
-			if err != nil {
-				return 0, err
-			}
+			o += v.String()
 		}
 	}
-	if body.Len() > 0 {
-		body.WriteString("}\n")
-		buf.WriteTo(&body)
-		return body.WriteTo(o)
-	}
-	return buf.WriteTo(o)
+	return s.Selector + " {\n" + b + "}\n" + o
 }
 
 func (StyleRule) isRule() {}
@@ -122,27 +95,14 @@ type Conditional struct {
 }
 
 func (c Conditional) String() string {
-	var buf bytes.Buffer
-	c.Print(&buf)
-	return buf.String()
-}
-
-func (c Conditional) Print(o io.Writer) (int64, error) {
-	var body bytes.Buffer
-	var buf bytes.Buffer
+	if len(c.Rules) == 0 {
+		return ""
+	}
+	b := ""
 	for _, v := range c.Rules {
-		_, err := v.Print(&body)
-		if err != nil {
-			return 0, err
-		}
+		b += v.String()
 	}
-	if body.Len() > 0 {
-		buf.WriteString(c.Key + " {\n")
-		buf.WriteString(indent(body.String(), 2))
-		buf.WriteString("}\n")
-		return buf.WriteTo(o)
-	}
-	return 0, nil
+	return c.Key + " {\n" + indent(b, 2) + "}\n"
 }
 
 func (Conditional) isRule() {}
@@ -150,17 +110,15 @@ func (Conditional) isRule() {}
 func indent(s string, by int) string {
 	s = strings.TrimSpace(s)
 	p := strings.Split(s, "\n")
-	var o bytes.Buffer
+	o := ""
 	idx := ""
 	for i := 0; i < by; i++ {
 		idx += " "
 	}
 	for _, v := range p {
-		o.WriteString(idx)
-		o.WriteString(v)
-		o.WriteString("\n")
+		o += idx + v + "\n"
 	}
-	return o.String()
+	return o
 }
 
 func FontFace(rules ...CSSRule) CSSRule {
@@ -177,7 +135,6 @@ func KeyFrame(name string, rules ...CSSRule) CSSRule {
 
 type CSSRule interface {
 	//we don't want users to implement this.
-	Print(io.Writer) (int64, error)
 	String() string
 	isRule()
 }
@@ -227,9 +184,7 @@ func replaceParent(parent, selector string) string {
 
 func ToString(rule CSSRule, ts ...Transformer) string {
 	rule = Process(rule, ts...)
-	var buf bytes.Buffer
-	rule.Print(&buf)
-	return strings.TrimSpace(buf.String())
+	return strings.TrimSpace(rule.String())
 }
 
 type Options struct {

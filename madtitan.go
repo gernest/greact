@@ -98,9 +98,10 @@ type SpecResult struct {
 
 // ExpectResult contains reults of executing expectation.
 type ExpectResult struct {
-	Desc     string        `json:"description"`
-	Duration time.Duration `json:"duration"`
-	Messages []string      `json:"error_messages"`
+	Desc       string        `json:"description"`
+	Duration   time.Duration `json:"duration"`
+	Messages   []string      `json:"error_messages"`
+	StackTrace string        `json:"stack_trace"`
 }
 
 type Suite struct {
@@ -235,6 +236,7 @@ type Expectation struct {
 	Func         func(T)
 	Passed       bool
 	FailMessages []string
+	StackTrace   string
 	Duration     time.Duration
 }
 
@@ -243,9 +245,10 @@ func (*Expectation) run() {}
 // Result returns *ExpectResult from executing the expectation.
 func (e *Expectation) Result() *ExpectResult {
 	return &ExpectResult{
-		Desc:     e.Desc,
-		Messages: e.FailMessages,
-		Duration: e.Duration,
+		Desc:       e.Desc,
+		Messages:   e.FailMessages,
+		StackTrace: e.StackTrace,
+		Duration:   e.Duration,
 	}
 }
 
@@ -256,8 +259,8 @@ func (e *Expectation) Exec() {
 	start := time.Now()
 	defer func() {
 		if ev := recover(); ev != nil {
-			stack := debug.Stack()
-			e.FailMessages = append(e.FailMessages, fmt.Sprintf("%v: %s", ev, string(stack)))
+			e.FailMessages = append(e.FailMessages, fmt.Sprint(ev))
+			e.StackTrace = string(debug.Stack())
 		}
 	}()
 	defer func() {

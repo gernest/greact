@@ -87,3 +87,18 @@ func TestRender() mad.Integration {
 		}),
 	)
 }
+
+func TestStackTrace() mad.Test {
+	return mad.It("generates stack trace when panics", func(t mad.T) {
+		v := mad.Exec(mad.Describe("Panics",
+			mad.It("must panic", func(t mad.T) {
+				panic("panic")
+			}),
+		))
+		s := v.(mad.List)[0].(*mad.Suite).Result().FailedExpectations[0]
+		if s.StackTrace == "" {
+			t.Error("expected stacktrace to be set")
+		}
+	})
+
+}

@@ -987,3 +987,17 @@ func TestFontStyles() mad.Test {
 		}
 	})
 }
+
+func TestFontFace() mad.Test {
+	return mad.It("generates css for icons fontface", func(t mad.T) {
+		css := gs.ToString(iconfont.FontFace())
+		expect := `@font-face {
+  font-family:'anticon';
+  src:url('https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i.woff')format('woff'),url('https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i.ttf')format('truetype'),url('https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i.iconfont')format('svg');
+}`
+		if css != expect {
+			t.Error("expected %s got %s", expect, css)
+		}
+		t.Error(css)
+	})
+}

@@ -8,6 +8,17 @@ import (
 	"github.com/gernest/vected/web/themes"
 )
 
+func FontFace() gs.CSSRule {
+	u := themes.Default.IconURL
+	s := "url('" + u + ".woff')format('woff')," +
+		"url('" + u + ".ttf')format('truetype')," +
+		"url('" + u + ".iconfont')format('svg')"
+	return gs.FontFace(
+		gs.P("font-family", `'anticon'`),
+		gs.P("src", s),
+	)
+}
+
 func Font() gs.CSSRule {
 	return gs.S("."+themes.Default.IconFontPrefix,
 		mixins.IconFontMixin(),

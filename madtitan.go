@@ -3,6 +3,7 @@ package mad
 import (
 	"errors"
 	"fmt"
+	"runtime/debug"
 	"strings"
 	"time"
 )
@@ -255,7 +256,8 @@ func (e *Expectation) Exec() {
 	start := time.Now()
 	defer func() {
 		if ev := recover(); ev != nil {
-			e.FailMessages = append(e.FailMessages, fmt.Sprint(ev))
+			stack := debug.Stack()
+			e.FailMessages = append(e.FailMessages, fmt.Sprintf("%v: %s", ev, string(stack)))
 		}
 	}()
 	defer func() {

@@ -80,7 +80,10 @@ func (s StyleRule) String() string {
 			o += v.String()
 		}
 	}
-	return s.Selector + " {\n" + b + "}\n" + o
+	if b != "" {
+		return s.Selector + " {\n" + b + "}\n" + o
+	}
+	return o
 }
 
 func (StyleRule) isRule() {}

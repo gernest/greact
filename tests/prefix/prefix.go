@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"sort"
 
+	"github.com/gernest/gs"
+
 	"github.com/gernest/gs/ciu/agents"
 
 	"github.com/gernest/gs/data"
@@ -179,4 +181,36 @@ func TestPrefixes() mad.Test {
 			}
 		}),
 	)
+}
+
+func TestFindPrefix() mad.Test {
+	b, _ := prefix.NewBrowser(agents.New())
+	return mad.List{
+		mad.It("finds in at rules", func(t mad.T) {
+			css := gs.Cond("@-ms-keyframes a",
+				gs.S("to"),
+			)
+			g := prefix.FindPrefix(b, css)
+			expect := "-ms-"
+			if g != expect {
+				t.Errorf("expected %s got %s", expect, g)
+			}
+		}),
+		mad.It("finds in selectors", func(t mad.T) {
+			css := gs.S(":-moz-full-screen")
+			expect := "-moz-"
+			g := prefix.FindPrefix(b, css)
+			if g != expect {
+				t.Errorf("expected %s got %s", expect, g)
+			}
+		}),
+		mad.It("finds only browsers prefixes", func(t mad.T) {
+			css := gs.Cond("@-dev-keyframes")
+			expect := ""
+			g := prefix.FindPrefix(b, css)
+			if g != expect {
+				t.Errorf("expected %s got %s", expect, g)
+			}
+		}),
+	}
 }

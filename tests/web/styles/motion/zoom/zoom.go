@@ -44,3 +44,137 @@ func TestMotion() mad.Test {
 		}
 	})
 }
+
+func TestKeyFrames() mad.Test {
+	return mad.It("generates @keyframe styles for zoom", func(t mad.T) {
+		css := gs.ToString(zoom.KeyFrames())
+		expect := `@keyframes zoomIn {
+  0% {
+    opacity:0;
+    transform:scale(0.2);
+  }
+  100% {
+    opacity:1;
+    transform:scale(1);
+  }
+}
+@keyframes zoomOut {
+  0% {
+    transform:scale(1);
+  }
+  100% {
+    opacity:0;
+    transform:scale(0.2);
+  }
+}
+@keyframes zoomBigIn {
+  0% {
+    opacity:0;
+    transform:scale(.8);
+  }
+  100% {
+    transform:scale(1);
+  }
+}
+@keyframes zoomBigOut {
+  0% {
+    transform:scale(1);
+  }
+  100% {
+    opacity:0;
+    transform:scale(.8);
+  }
+}
+@keyframes zoomUpIn {
+  0% {
+    opacity:0;
+    transform-origin:50% 0%;
+    transform:scale(.8);
+  }
+  100% {
+    transform-origin:50% 0%;
+    transform:scale(1);
+  }
+}
+@keyframes zoomUpOut {
+  0% {
+    transform-origin:50% 0%;
+    transform:scale(1);
+  }
+  100% {
+    opacity:0;
+    transform-origin:50% 0%;
+    transform:scale(.8);
+  }
+}
+@keyframes zoomLeftIn {
+  0% {
+    opacity:0;
+    transform-origin:0% 50%;
+    transform:scale(.8);
+  }
+  100% {
+    transform-origin:0% 50%;
+    transform:scale(1);
+  }
+}
+@keyframes zoomLeftOut {
+  0% {
+    transform-origin:0% 50%;
+    transform:scale(1);
+  }
+  100% {
+    opacity:0;
+    transform-origin:0% 50%;
+    transform:scale(.8);
+  }
+}
+@keyframes zoomRightIn {
+  0% {
+    opacity:0;
+    transform-origin:100% 50%;
+    transform:scale(.8);
+  }
+  100% {
+    transform-origin:100% 50%;
+    transform:scale(1);
+  }
+}
+@keyframes zoomRightOut {
+  0% {
+    transform-origin:100% 50%;
+    transform:scale(1);
+  }
+  100% {
+    opacity:0;
+    transform-origin:100% 50%;
+    transform:scale(.8);
+  }
+}
+@keyframes zoomDownIn {
+  0% {
+    opacity:0;
+    transform-origin:50% 100%;
+    transform:scale(.8);
+  }
+  100% {
+    transform-origin:50% 100%;
+    transform:scale(1);
+  }
+}
+@keyframes zoomDownOut {
+  0% {
+    transform-origin:50% 100%;
+    transform:scale(1);
+  }
+  100% {
+    opacity:0;
+    transform-origin:50% 100%;
+    transform:scale(.8);
+  }
+}`
+		if css != expect {
+			t.Errorf("expected %s got %s")
+		}
+	})
+}

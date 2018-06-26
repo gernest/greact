@@ -33,6 +33,17 @@ func (d Decl) Set(rule gs.CSSRule, prefix string) gs.CSSRule {
 	}
 }
 
+func UpdateValue(rule gs.CSSRule, value string) gs.CSSRule {
+	if value == "" {
+		return rule
+	}
+	if e, ok := rule.(gs.SimpleRule); ok {
+		e.Value = value
+		return e
+	}
+	return rule
+}
+
 type Declaration interface {
 	Check(gs.CSSRule) bool
 	Prefixed(prop, prefix string) string

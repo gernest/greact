@@ -73,6 +73,10 @@ type AlignItems struct {
 	decl.Decl
 }
 
+func (AlignItems) Names() []string {
+	return []string{"align-items", "flex-align", "ox-align"}
+}
+
 func (a *AlignItems) Prefixed(prop, prefix string) string {
 	spec, prefix := FlexSpec(prefix)
 	switch spec {

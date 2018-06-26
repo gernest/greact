@@ -5,18 +5,19 @@ import (
 	"github.com/gernest/gs/prefix/decl"
 )
 
-var _ decl.Declaration = (*AlignContent)(nil)
-var _ decl.Declaration = (*AlignItems)(nil)
+var _ decl.Declaration = AlignContent{}
+var _ decl.Declaration = AlignItems{}
+var _ decl.Declaration = AlignSelf{}
 
 type AlignContent struct {
 	decl.Decl
 }
 
-func (a *AlignContent) Names() []string {
+func (AlignContent) Names() []string {
 	return []string{"align-content", "flex-line-pack"}
 }
 
-func (a *AlignContent) Normalize(_ string) string {
+func (AlignContent) Normalize(_ string) string {
 	return "align-content"
 }
 
@@ -36,7 +37,7 @@ func FlexSpec(prefix string) (string, string) {
 	return spec, prefix
 }
 
-func (a *AlignContent) Prefixed(prop, prefix string) string {
+func (a AlignContent) Prefixed(prop, prefix string) string {
 	spec, pref := FlexSpec(prefix)
 	if spec == "2012" {
 		return prefix + "flex-line-pack"
@@ -44,7 +45,7 @@ func (a *AlignContent) Prefixed(prop, prefix string) string {
 	return a.Decl.Prefixed(prop, pref)
 }
 
-func (a *AlignContent) Set(rule gs.CSSRule, prefix string) gs.CSSRule {
+func (a AlignContent) Set(rule gs.CSSRule, prefix string) gs.CSSRule {
 	e, ok := rule.(gs.SimpleRule)
 	if !ok {
 		return e
@@ -77,7 +78,7 @@ func (AlignItems) Names() []string {
 	return []string{"align-items", "flex-align", "ox-align"}
 }
 
-func (a *AlignItems) Prefixed(prop, prefix string) string {
+func (a AlignItems) Prefixed(prop, prefix string) string {
 	spec, prefix := FlexSpec(prefix)
 	switch spec {
 	case "2009":
@@ -89,11 +90,11 @@ func (a *AlignItems) Prefixed(prop, prefix string) string {
 	}
 }
 
-func (a *AlignItems) Normalize(_ string) string {
+func (a AlignItems) Normalize(_ string) string {
 	return "align-items"
 }
 
-func (a *AlignItems) Set(css gs.CSSRule, prefix string) gs.CSSRule {
+func (a AlignItems) Set(css gs.CSSRule, prefix string) gs.CSSRule {
 	spec, _ := FlexSpec(prefix)
 	if spec == "2009" || spec == "2012" {
 		if e, ok := css.(gs.SimpleRule); ok {
@@ -117,7 +118,7 @@ func (AlignSelf) Names() []string {
 	return []string{"align-self", "flex-item-align"}
 }
 
-func (a *AlignSelf) Prefixed(prop, prefix string) string {
+func (a AlignSelf) Prefixed(prop, prefix string) string {
 	spec, prefix := FlexSpec(prefix)
 	if spec == "2012" {
 		return prefix + "flex-item-align"
@@ -125,11 +126,11 @@ func (a *AlignSelf) Prefixed(prop, prefix string) string {
 	return a.Decl.Prefixed(prop, prefix)
 }
 
-func (a *AlignSelf) Normalize(_ string) string {
+func (AlignSelf) Normalize(_ string) string {
 	return "align-self"
 }
 
-func (a *AlignSelf) Set(rule gs.CSSRule, prefix string) gs.CSSRule {
+func (a AlignSelf) Set(rule gs.CSSRule, prefix string) gs.CSSRule {
 	spec, _ := FlexSpec(prefix)
 	if spec == "2012" {
 		if e, ok := rule.(gs.SimpleRule); ok {

@@ -4,6 +4,8 @@ import (
 	"github.com/gernest/gs/prefix/decl"
 )
 
+var _ decl.Declaration = Appearance{}
+
 type Appearance struct {
 	decl.Decl
 }

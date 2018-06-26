@@ -4,6 +4,8 @@ import (
 	"github.com/gernest/gs"
 )
 
+var _ Declaration = Decl{}
+
 type Decl struct{}
 
 func (d Decl) Check(gs.CSSRule) bool {
@@ -29,4 +31,11 @@ func (d Decl) Set(rule gs.CSSRule, prefix string) gs.CSSRule {
 	default:
 		return e
 	}
+}
+
+type Declaration interface {
+	Check(gs.CSSRule) bool
+	Prefixed(prop, prefix string) string
+	Normalize(prop string) string
+	Set(rule gs.CSSRule, prefix string) gs.CSSRule
 }

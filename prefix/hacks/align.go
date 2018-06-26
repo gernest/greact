@@ -108,3 +108,42 @@ func (a *AlignItems) Set(css gs.CSSRule, prefix string) gs.CSSRule {
 	}
 	return a.Decl.Set(css, prefix)
 }
+
+type AlignSelf struct {
+	decl.Decl
+}
+
+func (AlignSelf) Names() []string {
+	return []string{"align-self", "flex-item-align"}
+}
+
+func (a *AlignSelf) Prefixed(prop, prefix string) string {
+	spec, prefix := FlexSpec(prefix)
+	if spec == "2012" {
+		return prefix + "flex-item-align"
+	}
+	return a.Decl.Prefixed(prop, prefix)
+}
+
+func (a *AlignSelf) Normalize(_ string) string {
+	return "align-self"
+}
+
+func (a *AlignSelf) Set(rule gs.CSSRule, prefix string) gs.CSSRule {
+	spec, _ := FlexSpec(prefix)
+	if spec == "2012" {
+		if e, ok := rule.(gs.SimpleRule); ok {
+			switch e.Value {
+			case "flex-end":
+				e.Value = "end"
+			case "flex-start":
+				e.Value = "start"
+			}
+			return a.Decl.Set(e, prefix)
+		}
+	}
+	if spec == "final" {
+		return a.Decl.Set(rule, prefix)
+	}
+	return rule
+}

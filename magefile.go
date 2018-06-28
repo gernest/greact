@@ -24,8 +24,14 @@ func Demo() {
 	sh.RunV("gopherjs", "build", "-o", "demo/main.js", pkg)
 }
 
+// installs ciu command.
 func Ciu() error {
 	return sh.RunV("go", "install", "./cmd/ciu/")
+}
+
+// generates can i use agents package.
+func CiuAgents() error {
+	return sh.RunV("ciu", "agents")
 }
 
 type Stats struct {

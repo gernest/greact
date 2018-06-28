@@ -19,6 +19,24 @@ type TestNames struct {
 	Unit        []string
 }
 
+func (t *TestNames) Filter(re *regexp.Regexp) {
+	var unit []string
+	for _, v := range t.Unit {
+		if re.MatchString(v) {
+			unit = append(unit, v)
+		}
+	}
+	var i []string
+	for _, v := range t.Integration {
+		if re.MatchString(v) {
+			i = append(i, v)
+		}
+	}
+	t.Unit = unit
+	t.Integration = i
+
+}
+
 // AddFileNumber this will add line number markers to the file's t.Error,
 // t.Errof, t.Fatal and t.Fatalf methods.
 func AddFileNumber(set *token.FileSet, file *ast.File) TestNames {

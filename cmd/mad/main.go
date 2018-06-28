@@ -223,6 +223,7 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 			return err
 		}
 	}
+	funcs.Filter(cfg.Run)
 	hasTests := len(funcs.Unit) > 0 || len(funcs.Integration) > 0
 	if hasTests {
 		cfg.TestNames[out] = funcs

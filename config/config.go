@@ -5,6 +5,7 @@ import (
 	"go/build"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/gernest/mad/tools"
@@ -98,6 +99,9 @@ type Config struct {
 	Browsers []string
 
 	JSON string
+
+	//Run is the regular expression used to filter test function to run.
+	Run *regexp.Regexp
 }
 
 // FLags returns configuration flags.
@@ -163,6 +167,11 @@ func FLags() []cli.Flag {
 			Name:  "json",
 			Usage: "writes test runner report as json in this file",
 		},
+		cli.StringFlag{
+			Name:  "run",
+			Usage: "regular expression for test functions to run",
+			Value: "Test.*",
+		},
 	}
 }
 
@@ -212,6 +221,11 @@ func Load(ctx *cli.Context) (*Config, error) {
 	if !i.IsDir() {
 		return nil, fmt.Errorf("%s is not a  directory %v", c.TestPath, err)
 	}
+	run, err := regexp.Compile(ctx.String("run"))
+	if err != nil {
+		return nil, err
+	}
+	c.Run = run
 	var testDirs []string
 	filepath.Walk(c.TestPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

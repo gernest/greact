@@ -50,7 +50,9 @@ func streamResponse(ctx context.Context, cfg *config.Config, browser launcher.Br
 			if !hasUnitTest {
 				hasUnitTest = true
 			}
-			tabs.Store(k.FormatName(fn), true)
+			if cfg.Run.MatchString(fn) {
+				tabs.Store(k.FormatName(fn), true)
+			}
 		}
 		for _, fn := range v.Integration {
 			tabs.Store(k.FormatName(fn), true)

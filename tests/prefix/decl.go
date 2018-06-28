@@ -12,7 +12,7 @@ func TestDecl() mad.Test {
 	var d decl.Decl
 	return mad.List{
 		mad.Describe("Set",
-			mad.It("sets prefixed of simple rule", func(t mad.T) {
+			mad.It("sets prefixes of simple rule", func(t mad.T) {
 				v := gs.SimpleRule{Key: "tab-size", Value: "4"}
 				g := d.Set(v, "-moz-").(gs.SimpleRule)
 				expect := "-moz-tab-size"

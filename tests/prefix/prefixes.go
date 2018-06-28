@@ -52,7 +52,7 @@ func TestPrefixes() mad.Test {
 					{key: "b", add: false, value: []string{"-ms-", "-moz-", "-webkit-"}},
 					{key: "c", add: false, value: []string{"-moz-"}},
 				}
-	
+
 				sel := fill.Select(tdata.prefixes)
 				for _, v := range sample {
 					var g []string
@@ -68,6 +68,6 @@ func TestPrefixes() mad.Test {
 					}
 				}
 			}),
-		)
+		),
 	}
 }

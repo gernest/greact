@@ -25,7 +25,7 @@ func TestDecl() mad.Test {
 			}),
 		),
 		mad.Describe("Insert",
-			mad.It("returns the ame rule if no prefix is given", func(t mad.T) {
+			mad.It("returns the same rule if no prefix is given", func(t mad.T) {
 				v := gs.SimpleRule{Key: "tab-size", Value: "4"}
 				g := d.Insert(v).(gs.SimpleRule)
 				if g != v {

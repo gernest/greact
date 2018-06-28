@@ -7,6 +7,8 @@ import (
 	"github.com/gernest/gs/prefix/decl"
 )
 
+var _ decl.Declaration = BreakProps{}
+
 type BreakProps struct {
 	decl.Decl
 }

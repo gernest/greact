@@ -3,9 +3,11 @@ package config
 import (
 	"fmt"
 	"go/build"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gernest/mad/tools"
@@ -261,6 +263,42 @@ func (c *Config) GetTestDirName() string {
 	return filepath.Join(c.Info.Dir, c.TestDirName)
 }
 
+func (c *Config) ResolvePackageConflict() {
+	m := make(map[string]*Info)
+	for _, v := range c.TestInfo {
+		if n, ok := m[v.Package.Name]; ok {
+			name := rename(v.Package.Name, n.ImportPath, v.ImportPath)
+			v.FixImport = name
+			m[name] = v
+			continue
+		}
+		m[v.Package.Name] = v
+	}
+}
+
+func rename(pkg, a, b string) string {
+	p1, p2 := strings.Split(a, "/"), strings.Split(b, "/")
+	last1, last2 := p1[len(p1)-1], p2[len(p2)-1]
+	limit := last2
+	if last1 != last2 {
+		if len(last2) > len(last1) {
+			limit = last2[:len(last1)]
+		}
+	} else {
+		r := rand.Intn(10)
+		return fmt.Sprintf("%s%d", pkg, r)
+	}
+	name := ""
+	for k, val := range limit {
+		e := last1[k]
+		if byte(val) != e {
+			name = string(val) + pkg
+			break
+		}
+	}
+	return name
+}
+
 // Info contains information about a generated test package.
 type Info struct {
 
@@ -275,10 +313,15 @@ type Info struct {
 
 	Package *build.Package
 
+	//This is an alterative import path when there is name conflict.
+	FixImport  string
 	ImportPath string
 }
 
 func (i *Info) Desc(n string) string {
+	if i.FixImport != "" {
+		return fmt.Sprintf("%s.%s", i.FixImport, n)
+	}
 	return fmt.Sprintf("%s.%s", i.Package.Name, n)
 }
 

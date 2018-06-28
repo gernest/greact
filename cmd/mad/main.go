@@ -151,6 +151,7 @@ func generateTestPackage(ctx context.Context, cfg *config.Config) error {
 			return err
 		}
 	}
+	cfg.ResolvePackageConflict()
 	wsImport := cfg.ImportMap[websocketImportPath]
 	if wsImport == "" {
 		wsImport = websocketImportPath
@@ -487,7 +488,7 @@ var mainUnitTpl = `package main
 
 import(
 	{{range $k,$v:=.config.TestNames}}
-	"{{$k.ImportPath}}"
+	{{with $k.FixImport}}{{.}}{{end}} "{{$k.ImportPath}}"
 	{{- end}}
 	"{{.wsImport}}"
 	"{{.madImport}}"

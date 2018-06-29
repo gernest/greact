@@ -90,17 +90,6 @@ func ResetComponent() gs.CSSRule {
 	)
 }
 
-func Size(height, width string) gs.CSSRule {
-	return gs.CSS(
-		gs.P("width", width),
-		gs.P("height", height),
-	)
-}
-
-func Square(size string) gs.CSSRule {
-	return Size(size, size)
-}
-
 //IconFontMixin .iconfont-mixin
 func IconFontMixin() gs.CSSRule {
 	return gs.CSS(

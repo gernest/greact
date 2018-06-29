@@ -13,7 +13,7 @@ import (
 // styles targeting irrelevant browsers while applying new styles.
 //
 // Normalize is licensed MIT. https://github.com/necolas/normalize.css
-
+//
 // http://stackoverflow.com/a/13611748/3040605
 func Base() gs.CSSRule {
 	return gs.CSS(

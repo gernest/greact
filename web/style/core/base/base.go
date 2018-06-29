@@ -22,5 +22,17 @@ func Base() gs.CSSRule {
 			gs.P("src", `local("Tahoma")`),
 			gs.P("unicode-range", "U+30-39"),
 		),
+		gs.FontFace(
+			gs.P("font-family", `"Monospaced Number"`),
+			gs.P("font-weight", "bold"),
+			gs.P("src", `local("Tahoma-Bold")`),
+			gs.P("unicode-range", "U+30-39"),
+		),
+		gs.FontFace(
+			gs.P("font-family", `"Chinese Quote"`),
+			gs.P("font-weight", "bold"),
+			gs.P("src", `local("PingFang SC"), local("SimSun")`),
+			gs.P("unicode-range", "U+2018, U+2019, U+201c, U+201d"),
+		),
 	)
 }

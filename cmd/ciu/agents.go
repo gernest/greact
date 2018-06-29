@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"go/format"
-	"html/template"
 	"io"
 	"io/ioutil"
 	"sort"
+	"text/template"
 
 	"github.com/urfave/cli"
 )

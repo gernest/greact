@@ -2,6 +2,7 @@ package base
 
 import (
 	"github.com/gernest/gs"
+	"github.com/gernest/vected/web/mixins"
 )
 
 // Base is a direct port of https://github.com/ant-design/ant-design/blob/master/components/style/core/base.less
@@ -33,6 +34,10 @@ func Base() gs.CSSRule {
 			gs.P("font-weight", "bold"),
 			gs.P("src", `local("PingFang SC"), local("SimSun")`),
 			gs.P("unicode-range", "U+2018, U+2019, U+201c, U+201d"),
+		),
+		// HTML & Body reset
+		gs.S("html", gs.S("body"),
+			mixins.Square("100%"),
 		),
 	)
 }

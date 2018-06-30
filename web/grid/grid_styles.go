@@ -25,8 +25,8 @@ func formatInt(v int64) string {
 
 var prefix = themes.Default.AntPrefix
 
-// Styles complete styles for antd grids
-func Styles() gs.CSSRule {
+// RowStyle complete styles for antd grid rows
+func RowStyle() gs.CSSRule {
 	return gs.CSS(
 		gs.S(prefix+"-row",
 			makeRow(themes.Default.GridGutterWidth),

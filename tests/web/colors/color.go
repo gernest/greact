@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gernest/mad"
-	"github.com/gernest/vected/web/color"
+	"github.com/gernest/vected/web/style/color"
 )
 
 func TestNew() mad.Test {

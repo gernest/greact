@@ -1,6 +1,6 @@
 package themes
 
-import "github.com/gernest/vected/web/color"
+import "github.com/gernest/vected/web/style/color"
 
 var palette = color.NewPalette()
 

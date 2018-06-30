@@ -8,6 +8,9 @@
 //
 // Also, this borrows from vue js. The templates are just normal go templates so
 // no need to learn a different syntax.
+//
+// The user intrface styles is ant design
+// see https://github.com/ant-design/ant-design to learn more about ant design.
 package vected
 
 import (

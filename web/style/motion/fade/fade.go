@@ -3,7 +3,7 @@ package fade
 import (
 	"github.com/gernest/gs"
 	"github.com/gernest/vected/web/mixins"
-	"github.com/gernest/vected/web/themes"
+	"github.com/gernest/vected/web/style/core/themes"
 )
 
 const (

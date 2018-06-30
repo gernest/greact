@@ -3,6 +3,7 @@ package base
 import (
 	"github.com/gernest/gs"
 	"github.com/gernest/vected/web/mixins"
+	"github.com/gernest/vected/web/themes"
 )
 
 // Base is a direct port of https://github.com/ant-design/ant-design/blob/master/components/style/core/base.less
@@ -66,6 +67,41 @@ func Base() gs.CSSRule {
 		// IE10+ doesn't honor `<meta name="viewport">` in some cases.
 		gs.Cond("@-ms-viewport ",
 			gs.P("width", "device-width"),
+		),
+		// Shim for "new" HTML5 structural elements to display correctly (IE10, older browsers)
+		gs.S("article", gs.S("&,aside", gs.S("&,dialog", gs.S("&,figcaption", gs.S("&,figure", gs.S("&,footer", gs.S("&,header", gs.S("&,hgroup", gs.S("&,main", gs.S("&,nav", gs.S("&,section",
+			gs.P("display", "block"),
+		))))))))))),
+		// Body
+		//
+		// 1. remove the margin in all browsers.
+		// 2. As a best practice, apply a default `body-background`.
+		gs.S("body",
+			gs.P("margin", "0"),
+			gs.P("font-family", themes.Default.FontFamily),
+			gs.P("font-size", themes.Default.FontSizeBase),
+			gs.P("line-height", themes.Default.LineHeightBase),
+			gs.P("color", themes.Default.TextColor.String()),
+			gs.P("background-color", themes.Default.BodyBackground.String()),
+		),
+		// Suppress the focus outline on elements that cannot be accessed via keyboard.
+		// This prevents an unwanted focus outline from appearing around elements that
+		// might still respond to pointer events.
+		//
+		// Credit: https://github.com/suitcss/base
+		gs.S(`[tabindex="-1"]`,
+			gs.S("&:focus",
+				gs.P("outline", `one !important`),
+			),
+		),
+		// Content grouping
+		//
+		// 1. Add the correct box sizing in Firefox.
+		// 2. Show the overflow in Edge and IE.
+		gs.S("hr",
+			gs.P("box-sizing", "content-box"),
+			gs.P("height", "0"),
+			gs.P("overflow", "visible"),
 		),
 	)
 }

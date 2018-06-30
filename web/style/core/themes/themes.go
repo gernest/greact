@@ -9,6 +9,8 @@ var Default = New()
 
 // Theme antd theme object. This defines variables that controls styles.
 type Theme struct {
+	// The prefix to use on all css classes from ant.
+	AntPrefix string
 	//colors
 	PrimaryColor    *color.Color
 	InfoColor       *color.Color
@@ -452,6 +454,7 @@ type Theme struct {
 // New returns a default theme.
 func New() *Theme {
 	t := &Theme{
+		AntPrefix:       ".ant",
 		PrimaryColor:    palette.Blue[5],
 		InfoColor:       palette.Blue[5],
 		SuccessColor:    palette.Green[5],

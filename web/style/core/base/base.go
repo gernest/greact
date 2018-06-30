@@ -2,8 +2,8 @@ package base
 
 import (
 	"github.com/gernest/gs"
-	"github.com/gernest/vected/web/mixins"
 	"github.com/gernest/vected/web/style/core/themes"
+	"github.com/gernest/vected/web/style/mixins"
 )
 
 // Base is a direct port of https://github.com/ant-design/ant-design/blob/master/components/style/core/base.less

@@ -4,8 +4,8 @@ import (
 	"sort"
 
 	"github.com/gernest/gs"
-	"github.com/gernest/vected/web/mixins"
 	"github.com/gernest/vected/web/style/core/themes"
+	"github.com/gernest/vected/web/style/mixins"
 )
 
 func FontFace() gs.CSSRule {

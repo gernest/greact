@@ -63,11 +63,11 @@ func ClearFix() gs.CSSRule {
 	return gs.CSS(
 		gs.P("zoom", "1"),
 		gs.S("&:before",
-			gs.P("content", " "),
+			gs.P("content", `""`),
 			gs.P("display", "table"),
 		),
 		gs.S("&:after",
-			gs.P("content", " "),
+			gs.P("content", `""`),
 			gs.P("display", "table"),
 			gs.P("clear", "both"),
 			gs.P("visibility", "hidden"),

@@ -103,5 +103,117 @@ func Base() gs.CSSRule {
 			gs.P("height", "0"),
 			gs.P("overflow", "visible"),
 		),
+		// Typography
+		//
+
+		// remove top margins from headings
+		//
+		// By default, `<h1>`-`<h6>` all receive top and bottom margins. We nuke the top
+		// margin for easier control within type scales as it avoids margin collapsing.
+		gs.S("h1", gs.S("&,h2", gs.S("&,h3", gs.S("&,h4", gs.S("&,h5",
+			gs.P("margin-top", "0"),
+			gs.P("margin-bottom:", ".5em"),
+			gs.P("color", themes.Default.HeadingColor.String()),
+			gs.P("font-weight", "500"),
+		))))),
+		// Reset margins on paragraphs
+		//
+		// Similarly, the top margin on `<p>`s get reset. However, we also reset the
+		// bottom margin to use `em` units instead of `em`.
+		gs.S("p",
+			gs.P("margin-top", "0"),
+			gs.P("margin-bottom", "1em"),
+		),
+		// Abbreviations
+		//
+		// 1. remove the bottom border in Firefox 39-.
+		// 2. Add the correct text decoration in Chrome, Edge, IE, Opera, and Safari.
+		// 3. Add explicit cursor to indicate changed behavior.
+		// 4. Duplicate behavior to the data-* attribute for our tooltip plugin
+		gs.S("abbr[title]",
+			gs.S("&,abbr[data-original-title]",
+				gs.P("text-decoration", "underline"),
+				gs.P("text-decoration", "underline dotted"),
+				gs.P("cursor", "help"),
+				gs.P("border-bottom", "0"),
+			),
+		),
+		gs.S("address",
+			gs.P("margin-bottom", "1em"),
+			gs.P("font-style", "normal"),
+			gs.P("line-height", "inherit"),
+		),
+		gs.S(`input[type="text"]`, gs.S(`&,input[type="password"]`, gs.S(`&,input[type="number"]`, gs.S("&,textarea",
+			gs.P("-webkit-appearance", "none"),
+		)))),
+		gs.S("ol", gs.S("&,ul", gs.S("&,dl",
+			gs.P(" margin-top", "0"),
+			gs.P("margin-bottom", "1em"),
+		))),
+		gs.S("ol ol", gs.S("&,ul ul", gs.S("&,ol ul", gs.S("&,ul ol",
+			gs.P("margin-bottom", "1em"),
+		)))),
+		gs.S("dt",
+			gs.P("font-weight", "500"),
+		),
+		gs.S("dd",
+			gs.P("margin-bottom", ".5em"),
+			gs.P("margin-left", "0"),
+		),
+		gs.S("blockquote",
+			gs.P("margin", " 0 1em"),
+		),
+		gs.S("dfn",
+			// Add the correct font style in Android 4.3-
+			gs.P("font-style", "italic"),
+		),
+		gs.S("b", gs.S("&,strong",
+			// Add the correct font weight in Chrome, Edge, and Safari
+			gs.P("font-weight", "bolder"),
+		)),
+		gs.S("small",
+			// Add the correct font size in all browsers
+			gs.P("font-size", "80%"),
+		),
+		//
+		// Prevent `sub` and `sup` elements from affecting the line height in
+		// all browsers.
+		//
+		gs.S("sub", gs.S("&,sup",
+			gs.P("position", "relative"),
+			gs.P("font-size", "75%"),
+			gs.P("line-height", "0"),
+			gs.P("vertical-align", "baseline"),
+		)),
+		gs.S("sub", gs.P("bottom", "-.25em")),
+		gs.S("sup", gs.P("top", "-.5em")),
+		//
+		// Links
+		//
+		gs.S("a",
+			gs.P("color", themes.Default.LinkColor.String()),
+			gs.P("background-color", "transparent"),
+			gs.P("text-decoration", themes.Default.LinkDecoration),
+			gs.P("outline", "none"),
+			gs.P("cursor", "pointer"),
+			gs.P("transition", "color .3s"),
+			// remove gaps in links underline in iOS 8+ and Safari 8+.
+			gs.P("-webkit-text-decoration-skip", "objects"),
+			gs.S("&:focus",
+				gs.P("text-decoration", "underline"),
+				gs.P("text-decoration-skip", "ink"),
+			),
+			gs.S("&:hover", gs.P("color", themes.Default.LinkHoverColor.Hex())),
+			gs.S("&:active", gs.P("color", themes.Default.LinkActiveColor.Hex())),
+			gs.S("&:active", gs.S("&,a:hover",
+				gs.P("outline", "0"),
+				gs.P("text-decoration", themes.Default.LinkHoverDecoration),
+			)),
+			gs.S("&[disabled]",
+				gs.P("color", themes.Default.DisabledColor.String()),
+				gs.P("cursor", "not-allowed"),
+				gs.P("pointer-events", "none"),
+			),
+		),
 	)
 }

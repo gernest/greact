@@ -215,5 +215,78 @@ func Base() gs.CSSRule {
 				gs.P("pointer-events", "none"),
 			),
 		),
+		//
+		// Code
+		//
+		gs.S("pre", gs.S("&,code", gs.S("&,kbd", gs.S("&,samp",
+			gs.P("font-family:", themes.Default.CodeFamily),
+			gs.P("font-size", "1em"),
+		)))),
+		gs.S("pre",
+			gs.P("margin-to", "0"),
+			gs.P("margin-bottom", "1em"),
+			gs.P("overflow", "auto"),
+		),
+		gs.S("figure",
+			gs.P("margin", "0 0 1em"),
+		),
+		gs.S("img",
+			gs.P("vertical-align", "middle"),
+			gs.P("border-style", "none"),
+		),
+		gs.S("svg:not(:root)", gs.P("overflow", "hidden")),
+		// Avoid 300ms click delay on touch devices that support the `touch-action` CSS property.
+		//
+		// In particular, unlike most other browsers, IE11+Edge on Windows 10 on touch devices and IE Mobile 10-11
+		// DON'T remove the click delay when `<meta name="viewport" content="width=device-width">` is present.
+		// However, they DO support emoving the click delay via `touch-action: manipulation`.
+		// See:
+		// * https://getbootstrap.com/docs/4.0/content/reboot/#click-delay-optimization-for-touch
+		// * http://caniuse.com/#feat=css-touch-action
+		// * https://patrickhlauke.github.io/touch/tests/results/#suppressing-300ms-delay
+		gs.S("a", gs.S("&,area", gs.S("&,button", gs.S(`&,[role="button"]`,
+			gs.S("&,input:not([type=range])", gs.S("&,label", gs.S("&,select", gs.S("&,summary", gs.S("&,textarea",
+				gs.P("touch-action", "manipulation"),
+			))))))))),
+		gs.S("table", gs.P("border-collapse", "collapse")),
+		gs.S("caption",
+			gs.P("padding-top", ".75em"),
+			gs.P("padding-bottom", ".3em"),
+			gs.P("color", themes.Default.TextColorSecondary.String()),
+			gs.P("text-align", "left"),
+			gs.P("caption-side", "bottom"),
+		),
+		gs.S("th",
+			// Matches default `<td>` alignment by inheriting from the `<body>`, or the
+			// closest parent with a set `text-align`.
+			gs.P("text-align", "inherit"),
+		),
+		//
+		// Forms
+		//
+		gs.S("input", gs.S("&,button", gs.S("&,select", gs.S("&,optgroup", gs.S("&,textarea",
+			gs.P("margin", "0"),
+			gs.P("font-family", "inherit"),
+			gs.P("font-size:", "inherit"),
+			gs.P("line-height", "inherit"),
+		))))),
+		gs.S("button", gs.S("&,input", gs.P("overflow", "visible"))),
+		gs.S("button", gs.S("&,select", gs.P("text-transform", "none"))),
+		// 1. Prevent a WebKit bug where (2) destroys native `audio` and `video`
+		//    controls in Android 4.
+		// 2. Correct the inability to style clickable types in iOS and Safari.
+		gs.S("button", gs.S(`&,html [type="button"]`, gs.S(`&,[type="reset"]`, gs.S(`&,[type="submit"]`,
+			gs.P("-webkit-appearance", "button"),
+		)))),
+		gs.S("button::-moz-focus-inner", gs.S(`&,[type="button"]::-moz-focus-inner`,
+			gs.S(`&,[type="reset"]::-moz-focus-inner`, gs.S(`&,[type="submit"]::-moz-focus-inner`,
+				gs.P("padding", "0"),
+				gs.P("border-style:", "none"),
+			)))),
+
+		gs.S(`input[type="radio"]`, gs.S(`&,input[type="checkbox"] `,
+			gs.P("box-sizing", "border-box"),
+			gs.P("padding", "0"),
+		)),
 	)
 }

@@ -2,7 +2,8 @@ package themes
 
 import "github.com/gernest/vected/web/style/color"
 
-var palette = color.NewPalette()
+// Palette is the default color palette.
+var Palette = color.NewPalette()
 
 // Default is the default Theme.
 var Default = New()
@@ -455,13 +456,13 @@ type Theme struct {
 func New() *Theme {
 	t := &Theme{
 		AntPrefix:       ".ant",
-		PrimaryColor:    palette.Blue[5],
-		InfoColor:       palette.Blue[5],
-		SuccessColor:    palette.Green[5],
-		ProcessingColor: palette.Blue[5],
-		ErrorColor:      palette.Red[5],
-		HighlightColor:  palette.Red[5],
-		WarningColor:    palette.Gold[5],
+		PrimaryColor:    Palette.Blue[5],
+		InfoColor:       Palette.Blue[5],
+		SuccessColor:    Palette.Green[5],
+		ProcessingColor: Palette.Blue[5],
+		ErrorColor:      Palette.Red[5],
+		HighlightColor:  Palette.Red[5],
+		WarningColor:    Palette.Gold[5],
 		NormalColor:     color.New("#d9d9d9"),
 
 		BodyBackground:      color.New("#fff"),
@@ -709,7 +710,7 @@ func New() *Theme {
 	t.TagFontSize = t.FontSizeSM
 	t.TimePIckerSelectedBG = t.BackgroundColorBase
 	t.BadgeFontSize = t.FontSizeSM
-	t.RateStarColor = palette.Yellow[5]
+	t.RateStarColor = Palette.Yellow[5]
 	t.RateStarBG = t.BorderColorSplit
 	t.CardHeadColor = t.HeadingColor
 	t.CardHeadBackground = t.ComponentBackground

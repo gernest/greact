@@ -288,5 +288,85 @@ func Base() gs.CSSRule {
 			gs.P("box-sizing", "border-box"),
 			gs.P("padding", "0"),
 		)),
+		gs.S(`input[type="date"]`, gs.S(`&,input[type="time"]`), gs.S(`&,input[type="datetime-local"]`, gs.S(`&,input[type="month"]`,
+			// remove the default appearance of temporal inputs to avoid a Mobile Safari
+			// bug where setting a custom line-height prevents text from being vertically
+			// centered within the input.
+			// See https://bugs.webkit.org/show_bug.cgi?id=139848
+			// and https://github.com/twbs/bootstrap/issues/11266
+			gs.P("-webkit-appearance", "listbox"),
+		))),
+		gs.S("textarea",
+			// remove the default vertical scrollbar in IE.
+			gs.P("overflow", "auto"),
+			// Textareas should really only resize vertically so they don't break their (horizontal) containers.
+			gs.P("resize", "vertical"),
+		),
+		gs.S("fieldset",
+			// Browsers set a default `min-width: min-content;` on fieldsets,
+			// unlike e.g. `<div>`s, which have `min-width: 0;` by default.
+			// So we reset that to ensure fieldsets behave more like a standard block element.
+			// See https://github.com/twbs/bootstrap/issues/12359
+			// and https://html.spec.whatwg.org/multipage/#the-fieldset-and-legend-elements
+			gs.P("min-width", "0"),
+			// Reset the default outline behavior of fieldsets so they don't affect page layout.
+			gs.P("padding", "0"),
+			gs.P("margin", "0"),
+			gs.P("border", "0"),
+		),
+		// 1. Correct the text wrapping in Edge and IE.
+		// 2. Correct the color inheritance from `fieldset` elements in IE
+		gs.S("legend",
+			gs.P("display", "block"),
+			gs.P("width", "100%"),
+			gs.P("max-width", "100%"),
+			gs.P("padding", "0"),
+			gs.P("margin-bottom", ".5em"),
+			gs.P("font-size", "1.5em"),
+			gs.P("line-height", "inherit"),
+			gs.P("white-space", "normal"),
+		),
+		gs.S("progress",
+			// Add the correct vertical alignment in Chrome, Firefox, and Opera.
+			gs.P("vertical-align", "baseline"),
+		),
+		// Correct the cursor style of incement and decement buttons in Chrome.
+		gs.S(`[type="number"]::-webkit-inner-spin-button`, gs.S(`&,[type="number"]::-webkit-outer-spin-button`,
+			gs.P("height", "auto"),
+		)),
+		gs.S(`[type="search"]`,
+			// This overrides the extra rounded corners on search inputs in iOS so that our
+			// `.form-control` class can properly style them. Note that this cannot simply
+			// be added to `.form-control` as it's not specific enough. For details, see
+			// https://github.com/twbs/bootstrap/issues/115	86.
+			gs.P("outline-offset", "-2px"),
+			gs.P("-webkit-appearance", "none"),
+		),
+		// remove the inner padding and cancel buttons in Chrome and Safari on macOS.
+		gs.S(`[type="search"]::-webkit-search-cancel-button`, gs.S(`&,[type="search"]::-webkit-search-decoration`,
+			gs.P("-webkit-appearance", "none"),
+		)),
+		// 1. Correct the inability to style clickable types in iOS and Safari.
+		// 2. Change font properties to `inherit` in Safari.
+		gs.S(`::-webkit-file-upload-button`,
+			gs.P("font", "inherit"),
+			gs.P("-webkit-appearance", "button"),
+		),
+		// Correct element displays
+		gs.S("output", gs.P("display", "inline-block")),
+		gs.S("summary", gs.P("display", "list-item")),
+		gs.S("template", gs.P("display", "none")),
+		// Always hide an element with the `hidden` HTML attribute (from PureCSS).
+		// Needed for proper display in IE 10-
+		gs.S("[hidden]", gs.P("display", "none !important")),
+		gs.S("mark",
+			gs.P("padding", ".2em"),
+			gs.P("background-color", themes.Palette.Yellow[0].String()),
+		),
+		gs.S("::selection",
+			gs.P("background", themes.Default.PrimaryColor.String()),
+			gs.P("color", "#fff"),
+		),
+		gs.S(".clearfix", mixins.ClearFix()),
 	)
 }

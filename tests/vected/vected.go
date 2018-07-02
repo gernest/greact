@@ -15,7 +15,7 @@ func (hello) ID() string {
 func (hello) Template() string {
 	return `<div>hello,world {.name}</div>`
 }
-func (hello) Render(ctx props.Props) props.Props {
+func (hello) Context(ctx props.Props) props.Props {
 	return props.Props{"name": "gernest"}
 }
 

@@ -25,7 +25,7 @@ import (
 type Component interface {
 	Identifier
 	Templater
-	Render(props.Props) props.Props
+	Context(props.Props) props.Props
 }
 
 // Templater is an interface for exposing component's tempates.
@@ -71,7 +71,7 @@ func compile(cmp Component) func(props.Props) (template.HTML, error) {
 		tpl := templateCache.Lookup(cmp.ID())
 		if tpl != nil {
 			var buf bytes.Buffer
-			err := tpl.Execute(&buf, cmp.Render(ctx))
+			err := tpl.Execute(&buf, cmp.Context(ctx))
 			if err != nil {
 				return "", err
 			}

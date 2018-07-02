@@ -14,8 +14,10 @@
 package vected
 
 import (
+	"bytes"
 	"html/template"
-	"io"
+
+	"github.com/gernest/vected/props"
 )
 
 // Component is an interface for reneding components. ctx is the data that will
@@ -23,7 +25,7 @@ import (
 type Component interface {
 	Identifier
 	Templater
-	Render(w io.Writer, ctx interface{}) error
+	Render(props.Props) props.Props
 }
 
 // Templater is an interface for exposing component's tempates.
@@ -38,6 +40,11 @@ type Identifier interface {
 
 var templateCache *template.Template
 
+func init() {
+	templateCache = template.New("VectedUI")
+	templateCache.Delims("{", "}")
+}
+
 // Register compiles the components templates and register them. This must be
 // called only once in the application life cycle.
 //
@@ -47,7 +54,7 @@ func Register(cmp ...Component) error {
 	for _, v := range cmp {
 		funcs[v.ID()] = compile(v)
 	}
-	tpl := template.New("Vected").Funcs(funcs)
+	tpl := templateCache.Funcs(funcs)
 	for _, v := range cmp {
 		id := v.ID()
 		e := tpl.New(id)
@@ -59,6 +66,34 @@ func Register(cmp ...Component) error {
 	return nil
 }
 
-func compile(cmp Component) func(...interface{}) template.HTML {
-	return nil
+func compile(cmp Component) func(props.Props) (template.HTML, error) {
+	return func(ctx props.Props) (template.HTML, error) {
+		tpl := templateCache.Lookup(cmp.ID())
+		if tpl != nil {
+			var buf bytes.Buffer
+			err := tpl.Execute(&buf, cmp.Render(ctx))
+			if err != nil {
+				return "", err
+			}
+			return template.HTML(buf.String()), nil
+		}
+		return "", nil
+	}
+}
+
+func RenderHTML(tpl string, ctx props.Props) (template.HTML, error) {
+	tree, err := templateCache.Clone()
+	if err != nil {
+		return "", err
+	}
+	t, err := tree.Parse(tpl)
+	if err != nil {
+		return "", err
+	}
+	var buf bytes.Buffer
+	err = t.Execute(&buf, ctx)
+	if err != nil {
+		return "", err
+	}
+	return template.HTML(buf.String()), nil
 }

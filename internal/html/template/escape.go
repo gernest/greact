@@ -9,8 +9,9 @@ import (
 	"fmt"
 	"html"
 	"io"
-	"text/template"
 	"text/template/parse"
+
+	"github.com/gernest/vected/internal/text/template"
 )
 
 // escapeTemplate rewrites the named template, which must be

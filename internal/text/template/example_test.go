@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 	"strings"
-	"text/template"
+	"github.com/gernest/vected/internal/text/template"
 )
 
 func ExampleTemplate() {

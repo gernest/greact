@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sync"
-	"text/template"
+	"github.com/gernest/vected/internal/text/template"
 	"text/template/parse"
 )
 

@@ -18,11 +18,11 @@ func (Col) ID() string {
 
 // Template returns go template for rendering grid Columns.
 func (Col) Template() string {
-	return `<div {{.others}} class={{.classes}}>{{.children}}</div>`
+	return `<div {.others} class="{.classes}">{.children}</div>`
 }
 
-// Render returns props needed to render this component's template.
-func (Col) Render(ctx props.Props) props.Props {
+// Context returns props needed to render this component's template.
+func (Col) Context(ctx props.Props) props.Props {
 	cfg := getColProps(ctx)
 	classes := cn.Join(
 		cn.Name{
@@ -46,9 +46,21 @@ func (Col) Render(ctx props.Props) props.Props {
 			Skip:  cfg.pull.IsNull,
 		},
 	)
+	others := ctx.Filter(otherColValues).Attr()
 	return props.Props{
 		"classes": classes,
+		"others":  others,
 	}
+}
+
+func otherColValues(k, v interface{}) bool {
+	if s, ok := k.(string); ok {
+		switch s {
+		case "span", "order", "offset", "push", "pull", "prefixClass":
+			return false
+		}
+	}
+	return true
 }
 
 type colProps struct {

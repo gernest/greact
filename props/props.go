@@ -2,6 +2,13 @@
 // properties are values that can be passed around to components.
 package props
 
+import (
+	"fmt"
+	"html/template"
+	"sort"
+	"strings"
+)
+
 // Props is a map of properties. These are used to pass values to components.
 type Props map[interface{}]interface{}
 
@@ -15,6 +22,45 @@ func Merge(a, b Props) Props {
 		m[k] = v
 	}
 	return m
+}
+
+// Filter returns a new Props with only values that the filter function fn
+// evaluates to true.
+func (p Props) Filter(fn func(k, v interface{}) bool) Props {
+	m := make(Props)
+	for k, v := range p {
+		if fn(k, v) {
+			m[k] = v
+		}
+	}
+	return m
+}
+
+// Attr returns a string for prop attributes. This only collect string keys. For
+// boolean values the attribute will not contain the value part. Other types of
+// kys/values are simply ignored.
+//
+// 	p["checked"]=true => checked
+// 	p["onClick"]="handleClick" => onClick="handleClick"
+func (p Props) Attr() template.HTMLAttr {
+	var keys []string
+	for k := range p {
+		if s, ok := k.(string); ok {
+			keys = append(keys, s)
+		}
+	}
+	sort.Strings(keys)
+	var o []string
+	for _, k := range keys {
+		v := p[k]
+		switch e := v.(type) {
+		case string:
+			o = append(o, fmt.Sprintf(`%v="%s"`, k, e))
+		case bool:
+			o = append(o, fmt.Sprint(k))
+		}
+	}
+	return template.HTMLAttr(strings.Join(o, " "))
 }
 
 // Int calls Int with p as first argument.

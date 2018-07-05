@@ -38,23 +38,26 @@ type Identifier interface {
 	ID() string
 }
 
-var templateCache *template.Template
+type ComponentCache struct {
+	*template.Template
+}
 
-func init() {
-	templateCache = template.New("VectedUI")
-	templateCache.Delims("{", "}")
+func NewComponentCache(name string) *ComponentCache {
+	return &ComponentCache{
+		Template: template.New(name).Delims("{", "}"),
+	}
 }
 
 // Register compiles the components templates and register them. This must be
 // called only once in the application life cycle.
 //
 // The component.ID is used to register a template func that can be used to in
-func Register(cmp ...Component) error {
+func (c *ComponentCache) Register(cmp ...Component) error {
 	funcs := make(template.FuncMap)
 	for _, v := range cmp {
-		funcs[v.ID()] = compile(v)
+		funcs[v.ID()] = c.compile(v)
 	}
-	tpl := templateCache.Funcs(funcs)
+	tpl := c.Funcs(funcs)
 	for _, v := range cmp {
 		id := v.ID()
 		e := tpl.New(id)
@@ -66,9 +69,9 @@ func Register(cmp ...Component) error {
 	return nil
 }
 
-func compile(cmp Component) func(props.Props) (template.HTML, error) {
+func (c *ComponentCache) compile(cmp Component) func(props.Props) (template.HTML, error) {
 	return func(ctx props.Props) (template.HTML, error) {
-		tpl := templateCache.Lookup(cmp.ID())
+		tpl := c.Lookup(cmp.ID())
 		if tpl != nil {
 			var buf bytes.Buffer
 			err := tpl.Execute(&buf, cmp.Context(ctx))
@@ -81,12 +84,8 @@ func compile(cmp Component) func(props.Props) (template.HTML, error) {
 	}
 }
 
-func RenderHTML(tpl string, ctx props.Props) (template.HTML, error) {
-	tree, err := templateCache.Clone()
-	if err != nil {
-		return "", err
-	}
-	t, err := tree.Parse(tpl)
+func (c *ComponentCache) RenderHTML(tpl string, ctx props.Props) (template.HTML, error) {
+	t, err := c.Parse(tpl)
 	if err != nil {
 		return "", err
 	}

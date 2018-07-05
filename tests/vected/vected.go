@@ -21,8 +21,12 @@ func (hello) Context(ctx props.Props) props.Props {
 
 func TestRenderHTML() mad.Test {
 	return mad.It("must render template ", func(t mad.T) {
-		vected.Register(hello{})
-		v, err := vected.RenderHTML(`{Hello .}`, nil)
+		r := vected.NewComponentCache("main")
+		err := r.Register(hello{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		v, err := r.RenderHTML(`{Hello .}`, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

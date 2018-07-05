@@ -15,7 +15,7 @@ func TestColStyle() mad.Test {
 func TestRenderCol() mad.Test {
 	return mad.List{
 		mad.It("must render spans with given context", func(t mad.T) {
-			r := vected.NewTemplateCache("ui")
+			r := vected.NewComponentCache("ui")
 			r.Register(grid.Col{})
 			v, err := r.RenderHTML(`{Col .}`, props.Props{
 				"span": 2,
@@ -30,7 +30,7 @@ func TestRenderCol() mad.Test {
 			}
 		}),
 		mad.It("renders column with extra attribute", func(t mad.T) {
-			r := vected.NewTemplateCache("ui")
+			r := vected.NewComponentCache("ui")
 			r.Register(grid.Col{})
 			v, err := r.RenderHTML(`{Col .}`, props.Props{
 				"span":    2,

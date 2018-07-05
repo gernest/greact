@@ -12,7 +12,8 @@ import (
 	"runtime"
 	"sort"
 	"strings"
-	"text/template/parse"
+
+	"github.com/gernest/vected/internal/text/template/parse"
 )
 
 // maxExecDepth specifies the maximum stack depth of templates within

@@ -11,7 +11,8 @@ import (
 	"io/ioutil"
 	"sync"
 	"testing"
-	"text/template/parse"
+
+	"github.com/gernest/vected/internal/text/template/parse"
 )
 
 func TestAddParseTree(t *testing.T) {

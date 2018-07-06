@@ -10,8 +10,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sync"
+
 	"github.com/gernest/vected/internal/text/template"
-	"text/template/parse"
+	"github.com/gernest/vected/internal/text/template/parse"
 )
 
 // Template is a specialized Template from "text/template" that produces a safe

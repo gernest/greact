@@ -6,7 +6,8 @@ package template
 
 import (
 	"fmt"
-	"text/template/parse"
+
+	"github.com/gernest/vected/internal/text/template/parse"
 )
 
 // Error describes a problem encountered during template Escaping.

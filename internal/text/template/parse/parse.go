@@ -230,7 +230,12 @@ func (t *Tree) stopParse() {
 func (t *Tree) Parse(text, leftDelim, rightDelim string, treeSet map[string]*Tree, funcs ...map[string]interface{}) (tree *Tree, err error) {
 	defer t.recover(&err)
 	t.ParseName = t.Name
-	t.startParse(funcs, lex(t.Name, text, leftDelim, rightDelim), treeSet)
+	t.startParse(funcs,
+		lex(t.Name, text, lexOpts{
+			leftDelim:  leftDelim,
+			rightDelim: rightDelim,
+		}),
+		treeSet)
 	t.text = text
 	t.parse()
 	t.add()

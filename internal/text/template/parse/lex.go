@@ -211,20 +211,17 @@ type lexOpts struct {
 }
 
 // lex creates a new scanner for the input string.
-func lex(name, input, left, right string) *lexer {
-	if left == "" {
-		left = leftDelim
+func lex(name, input string, opts lexOpts) *lexer {
+	if opts.leftDelim == "" {
+		opts.leftDelim = leftDelim
 	}
-	if right == "" {
-		right = rightDelim
+	if opts.rightDelim == "" {
+		opts.rightDelim = rightDelim
 	}
 	l := &lexer{
 		name:  name,
 		input: input,
-		opts: lexOpts{
-			leftDelim:  left,
-			rightDelim: right,
-		},
+		opts:  opts,
 		items: make(chan item),
 		line:  1,
 	}

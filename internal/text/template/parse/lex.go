@@ -110,10 +110,9 @@ type stateFn func(*lexer) stateFn
 
 // lexer holds the state of the scanner.
 type lexer struct {
-	name       string    // the name of the input; used only for error reports
-	input      string    // the string being scanned
-	leftDelim  string    // start of action
-	rightDelim string    // end of action
+	name       string // the name of the input; used only for error reports
+	input      string // the string being scanned
+	opts       lexOpts
 	pos        Pos       // current position in the input
 	start      Pos       // start position of this item
 	width      Pos       // width of last rune read from input
@@ -206,6 +205,11 @@ func (l *lexer) drain() {
 	}
 }
 
+type lexOpts struct {
+	leftDelim  string // start of action
+	rightDelim string // end of action
+}
+
 // lex creates a new scanner for the input string.
 func lex(name, input, left, right string) *lexer {
 	if left == "" {
@@ -215,12 +219,14 @@ func lex(name, input, left, right string) *lexer {
 		right = rightDelim
 	}
 	l := &lexer{
-		name:       name,
-		input:      input,
-		leftDelim:  left,
-		rightDelim: right,
-		items:      make(chan item),
-		line:       1,
+		name:  name,
+		input: input,
+		opts: lexOpts{
+			leftDelim:  left,
+			rightDelim: right,
+		},
+		items: make(chan item),
+		line:  1,
 	}
 	go l.run()
 	return l
@@ -246,8 +252,8 @@ const (
 // lexText scans until an opening action delimiter, "{{".
 func lexText(l *lexer) stateFn {
 	l.width = 0
-	if x := strings.Index(l.input[l.pos:], l.leftDelim); x >= 0 {
-		ldn := Pos(len(l.leftDelim))
+	if x := strings.Index(l.input[l.pos:], l.opts.leftDelim); x >= 0 {
+		ldn := Pos(len(l.opts.leftDelim))
 		l.pos += Pos(x)
 		trimLength := Pos(0)
 		if strings.HasPrefix(l.input[l.pos+ldn:], leftTrimMarker) {
@@ -278,12 +284,12 @@ func rightTrimLength(s string) Pos {
 
 // atRightDelim reports whether the lexer is at a right delimiter, possibly preceded by a trim marker.
 func (l *lexer) atRightDelim() (delim, trimSpaces bool) {
-	if strings.HasPrefix(l.input[l.pos:], l.rightDelim) {
+	if strings.HasPrefix(l.input[l.pos:], l.opts.rightDelim) {
 		return true, false
 	}
 	// The right delim might have the marker before.
 	if strings.HasPrefix(l.input[l.pos:], rightTrimMarker) &&
-		strings.HasPrefix(l.input[l.pos+trimMarkerLen:], l.rightDelim) {
+		strings.HasPrefix(l.input[l.pos+trimMarkerLen:], l.opts.rightDelim) {
 		return true, true
 	}
 	return false, false
@@ -296,7 +302,7 @@ func leftTrimLength(s string) Pos {
 
 // lexLeftDelim scans the left delimiter, which is known to be present, possibly with a trim marker.
 func lexLeftDelim(l *lexer) stateFn {
-	l.pos += Pos(len(l.leftDelim))
+	l.pos += Pos(len(l.opts.leftDelim))
 	trimSpace := strings.HasPrefix(l.input[l.pos:], leftTrimMarker)
 	afterMarker := Pos(0)
 	if trimSpace {
@@ -329,7 +335,7 @@ func lexComment(l *lexer) stateFn {
 	if trimSpace {
 		l.pos += trimMarkerLen
 	}
-	l.pos += Pos(len(l.rightDelim))
+	l.pos += Pos(len(l.opts.rightDelim))
 	if trimSpace {
 		l.pos += leftTrimLength(l.input[l.pos:])
 	}
@@ -344,7 +350,7 @@ func lexRightDelim(l *lexer) stateFn {
 		l.pos += trimMarkerLen
 		l.ignore()
 	}
-	l.pos += Pos(len(l.rightDelim))
+	l.pos += Pos(len(l.opts.rightDelim))
 	l.emit(itemRightDelim)
 	if trimSpace {
 		l.pos += leftTrimLength(l.input[l.pos:])
@@ -515,7 +521,7 @@ func (l *lexer) atTerminator() bool {
 	// Does r start the delimiter? This can be ambiguous (with delim=="//", $x/2 will
 	// succeed but should fail) but only in extremely rare cases caused by willfully
 	// bad choice of delimiter.
-	if rd, _ := utf8.DecodeRuneInString(l.rightDelim); rd == r {
+	if rd, _ := utf8.DecodeRuneInString(l.opts.rightDelim); rd == r {
 		return true
 	}
 	return false

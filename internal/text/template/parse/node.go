@@ -66,6 +66,7 @@ const (
 	NodePipe                       // A pipeline of commands.
 	NodeRange                      // A range action.
 	NodeString                     // A string constant.
+	NodeTag                        // html  tag.
 	NodeTemplate                   // A template invocation action.
 	NodeVariable                   // A $ variable.
 	NodeWith                       // A with action.

@@ -1,9 +1,9 @@
 package integration
 
 import (
-	"github.com/gernest/mad"
-	"github.com/gernest/mad/cover"
-	"github.com/gernest/mad/ws"
+	"github.com/gernest/vected/lib/mad"
+	"github.com/gernest/vected/tools/mad/cover"
+	"github.com/gernest/vected/tools/mad/ws"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"
 )

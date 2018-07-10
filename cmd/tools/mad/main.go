@@ -38,7 +38,7 @@ const (
 	serviceName        = "madtitan"
 
 	// hardcoded import paths
-	madImportPath         = "github.com/gernest/mad"
+	madImportPath         = "github.com/gernest/vected/lib/mad"
 	integrationImportPath = "github.com/gernest/vected/tools/mad/integration"
 	coverImportPath       = "github.com/gernest/vected/tools/mad/cover"
 	websocketImportPath   = "github.com/gernest/vected/tools/mad/ws"
@@ -540,7 +540,7 @@ func allTests()[]mad.Test  {
 
 var mainIntegrationTpl = `package main
 import (
-	"{{.info.ImportPath}}"
+	{{with .info.FixImport}}{{.}}{{end}} "{{.info.ImportPath}}"
 	"{{.interImport}}"
 	"{{.madImport}}"
 	"github.com/gopherjs/vecty"

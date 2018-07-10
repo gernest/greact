@@ -5,7 +5,7 @@ import (
 	"net"
 	"net/url"
 
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/websocket"
 )

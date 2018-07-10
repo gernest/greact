@@ -3,7 +3,7 @@ package text
 import (
 	"encoding/json"
 
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 )
 
 func JSON(rs mad.Test, pkg, id string) {

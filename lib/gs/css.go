@@ -1,3 +1,4 @@
+// Package gs allows describing css using go functions.
 package gs
 
 import (

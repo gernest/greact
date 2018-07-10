@@ -1,0 +1,76 @@
+.Col {
+   position : relative;
+   display : block;
+   min-height : 1px;
+   padding-left : 0;
+   padding-right : 0;
+   float : left;
+   flex : 0 0 auto;
+   box-sizing : border-box;
+   width : 100%;
+}
+.Pull {
+   right : 100%;
+}
+.Push {
+   left : 100%;
+}
+.Offset {
+   margin-left : 100%;
+}
+.Order {
+   order : 24;
+}
+@media (min-width:576px) {
+  .Col {
+     position : relative;
+     display : block;
+     min-height : 1px;
+     padding-left : 0;
+     padding-right : 0;
+     float : left;
+     flex : 0 0 auto;
+     box-sizing : border-box;
+     width : 100%;
+  }
+  .Pull {
+     right : 100%;
+  }
+  .Push {
+     left : 100%;
+  }
+  .Offset {
+     margin-left : 100%;
+  }
+  .Order {
+     order : 24;
+  }
+  
+
+}@media (min-width:992px) {
+  .Col {
+     position : relative;
+     display : block;
+     min-height : 1px;
+     padding-left : 0;
+     padding-right : 0;
+     float : left;
+     flex : 0 0 auto;
+     box-sizing : border-box;
+     width : 100%;
+  }
+  .Pull {
+     right : 100%;
+  }
+  .Push {
+     left : 100%;
+  }
+  .Offset {
+     margin-left : 100%;
+  }
+  .Order {
+     order : 24;
+  }
+  
+
+}

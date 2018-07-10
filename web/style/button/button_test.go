@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/gernest/gs"
+	"github.com/gernest/vected/lib/gs"
 )
 
 func TestButton(t *testing.T) {

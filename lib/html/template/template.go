@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/gernest/vected/internal/text/template"
-	"github.com/gernest/vected/internal/text/template/parse"
+	"github.com/gernest/vected/lib/text/template"
+	"github.com/gernest/vected/lib/text/template/parse"
 )
 
 // Template is a specialized Template from "text/template" that produces a safe

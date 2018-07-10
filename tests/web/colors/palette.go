@@ -3,7 +3,7 @@ package color
 import (
 	"math"
 
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 	"github.com/gernest/vected/web/style/color"
 )
 

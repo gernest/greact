@@ -7,7 +7,7 @@ import (
 	"github.com/gernest/gs/ciu/agents"
 	"github.com/gernest/gs/data"
 	"github.com/gernest/gs/prefix"
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 )
 
 func TestPrefixes() mad.Test {

@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gernest/vected/internal/html/template"
+	"github.com/gernest/vected/lib/html/template"
 )
 
 // Props is a map of properties. These are used to pass values to components.

@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/vecty"
 	"github.com/gopherjs/vecty/elem"

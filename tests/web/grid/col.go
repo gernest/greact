@@ -1,8 +1,8 @@
 package grid
 
 import (
-	"github.com/gernest/mad"
 	"github.com/gernest/vected"
+	"github.com/gernest/vected/lib/mad"
 	"github.com/gernest/vected/props"
 	"github.com/gernest/vected/web/grid"
 )

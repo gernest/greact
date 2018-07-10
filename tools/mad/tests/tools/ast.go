@@ -7,7 +7,7 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 
 	"github.com/gernest/mad/tools"
 )
@@ -15,7 +15,7 @@ import (
 const sample = `
 package sample
 
-import "github.com/gernest/mad"
+import "github.com/gernest/vected/lib/mad"
 
 func TestwithWrongNaming() mad.Test { return mad.List{} }
 func TestWithWrongNaming() mad.Test { return mad.List{} }
@@ -69,7 +69,7 @@ func TestAddLine() mad.Test {
 const sample2 = `
 package sample
 
-import "github.com/gernest/mad"
+import "github.com/gernest/vected/lib/mad"
 
 
 func TestAddLine() mad.Test {

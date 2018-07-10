@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 	"github.com/gernest/vected/web/style/color"
 )
 

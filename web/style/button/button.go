@@ -1,7 +1,7 @@
 package button
 
 import (
-	"github.com/gernest/gs"
+	"github.com/gernest/vected/lib/gs"
 	"github.com/gernest/vected/style/themes"
 )
 

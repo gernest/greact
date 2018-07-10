@@ -6,7 +6,7 @@ import (
 
 	"github.com/gernest/vected/web/style/core/themes"
 
-	"github.com/gernest/gs"
+	"github.com/gernest/vected/lib/gs"
 	"github.com/gernest/vected/web/style/mixins"
 )
 

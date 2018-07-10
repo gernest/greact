@@ -1,7 +1,7 @@
 package media
 
 import (
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 	"github.com/gernest/vected/web/media"
 )
 

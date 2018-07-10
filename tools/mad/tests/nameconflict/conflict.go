@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 )
 
 func TestConfilct() mad.Test {

@@ -3,12 +3,12 @@ package prefix
 import (
 	"reflect"
 
-	"github.com/gernest/gs"
+	"github.com/gernest/vected/lib/gs"
 
 	"github.com/gernest/gs/ciu/agents"
 
 	"github.com/gernest/gs/prefix"
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 )
 
 func TestPrefix() mad.Test {

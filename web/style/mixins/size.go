@@ -1,6 +1,6 @@
 package mixins
 
-import "github.com/gernest/gs"
+import "github.com/gernest/vected/lib/gs"
 
 func Size(height, width string) gs.CSSRule {
 	return gs.CSS(

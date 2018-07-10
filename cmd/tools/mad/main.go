@@ -191,7 +191,14 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 				return err
 			}
 		}
-		if cfg.Info.ImportPath == madImportPath {
+
+		// The integration package is only added in the generated output. When we are
+		// instrumenting code coverage, we must instrument the integration package as
+		// well.
+		//
+		// This only happens if we are running tests for the mad package.
+		_, ok := cfg.ImportMap[madImportPath]
+		if cfg.Info.ImportPath == madImportPath || ok {
 			//WORKAROUND : when we testing the mad package
 			imports := []string{
 				integrationImportPath,

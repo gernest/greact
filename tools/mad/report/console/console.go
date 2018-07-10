@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 )
 
 // Report pretty prints the spec results to stdout.

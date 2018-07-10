@@ -8,11 +8,11 @@ import (
 	"net/url"
 	"path/filepath"
 
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 	"github.com/gorilla/websocket"
 
 	"github.com/gernest/alien"
-	"github.com/gernest/mad/config"
+	"github.com/gernest/vected/tools/mad/config"
 )
 
 var upgrade = websocket.Upgrader{}

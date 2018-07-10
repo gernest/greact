@@ -18,14 +18,14 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/gernest/mad"
+	"github.com/gernest/vected/lib/mad"
 	"golang.org/x/tools/go/ast/astutil"
 
-	"github.com/gernest/mad/annotate"
-	"github.com/gernest/mad/config"
-	"github.com/gernest/mad/launcher/chrome"
-	"github.com/gernest/mad/report/console"
-	"github.com/gernest/mad/tools"
+	"github.com/gernest/vected/tools/mad/annotate"
+	"github.com/gernest/vected/tools/mad/config"
+	"github.com/gernest/vected/tools/mad/launcher/chrome"
+	"github.com/gernest/vected/tools/mad/report/console"
+	"github.com/gernest/vected/tools/mad/tools"
 	"github.com/urfave/cli"
 )
 
@@ -39,9 +39,9 @@ const (
 
 	// hardcoded import paths
 	madImportPath         = "github.com/gernest/mad"
-	integrationImportPath = "github.com/gernest/mad/integration"
-	coverImportPath       = "github.com/gernest/mad/cover"
-	websocketImportPath   = "github.com/gernest/mad/ws"
+	integrationImportPath = "github.com/gernest/vected/tools/mad/integration"
+	coverImportPath       = "github.com/gernest/vected/tools/mad/cover"
+	websocketImportPath   = "github.com/gernest/vected/tools/mad/ws"
 )
 
 // precompile templates
@@ -234,7 +234,7 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 const coverTpl = `
 package {{.pkgName}}
 import(
-	"github.com/gernest/mad/cover"
+	"github.com/gernest/vected/tools/mad/cover"
 )
 
 func coverage()[]cover.Profile  {
@@ -494,7 +494,7 @@ import(
 	"{{.wsImport}}"
 	"{{.madImport}}"
 	{{if .config.Cover}}
-	"github.com/gernest/mad/cover"
+	"github.com/gernest/vected/tools/mad/cover"
 	{{end}}
 )
 

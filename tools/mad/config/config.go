@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gernest/mad/tools"
+	"github.com/gernest/vected/tools/mad/tools"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/urfave/cli"

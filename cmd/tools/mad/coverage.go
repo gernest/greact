@@ -10,7 +10,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/gernest/mad/cover"
+	"github.com/gernest/vected/tools/mad/cover"
 	"github.com/urfave/cli"
 )
 

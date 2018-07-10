@@ -14,9 +14,9 @@ import (
 	"github.com/mafredri/cdp/protocol/target"
 	"github.com/mafredri/cdp/session"
 
-	"github.com/gernest/mad/config"
-	"github.com/gernest/mad/cover"
-	"github.com/gernest/mad/launcher"
+	"github.com/gernest/vected/tools/mad/config"
+	"github.com/gernest/vected/tools/mad/cover"
+	"github.com/gernest/vected/tools/mad/launcher"
 	"github.com/mafredri/cdp"
 	"github.com/mafredri/cdp/devtool"
 	"github.com/mafredri/cdp/rpcc"

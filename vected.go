@@ -16,7 +16,7 @@ package vected
 import (
 	"bytes"
 
-	"github.com/gernest/vected/internal/html/template"
+	"github.com/gernest/vected/lib/html/template"
 
 	"github.com/gernest/vected/props"
 )

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gernest/gs/browserlist"
-	"github.com/gernest/gs/ciu/agents"
+	"github.com/gernest/vected/lib/browserlist"
+	"github.com/gernest/vected/lib/ciu/agents"
 )
 
 type Browser struct {

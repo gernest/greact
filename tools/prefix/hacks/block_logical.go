@@ -3,7 +3,7 @@ package hacks
 import (
 	"strings"
 
-	"github.com/gernest/gs/prefix/decl"
+	"github.com/gernest/vected/tools/prefix/decl"
 )
 
 var _ decl.Declaration = BlockLogical{}

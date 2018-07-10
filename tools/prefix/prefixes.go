@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gernest/gs/data"
+	"github.com/gernest/vected/tools/prefix/data"
 )
 
 type SelectedOptions struct {

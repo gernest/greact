@@ -1,7 +1,7 @@
 package prefix
 
 import (
-	"github.com/gernest/gs"
+	"github.com/gernest/vected/lib/gs"
 )
 
 func addPrefix(b *Browser, prefixes []string, rule gs.CSSRule) gs.CSSRule {

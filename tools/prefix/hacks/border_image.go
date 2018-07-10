@@ -3,8 +3,8 @@ package hacks
 import (
 	"regexp"
 
-	"github.com/gernest/gs"
-	"github.com/gernest/gs/prefix/decl"
+	"github.com/gernest/vected/lib/gs"
+	"github.com/gernest/vected/tools/prefix/decl"
 )
 
 type BorderImage struct {

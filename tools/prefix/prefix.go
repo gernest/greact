@@ -3,7 +3,7 @@ package prefix
 import (
 	"regexp"
 
-	"github.com/gernest/gs"
+	"github.com/gernest/vected/lib/gs"
 )
 
 var re = regexp.MustCompile(`^(-\w+-)`)

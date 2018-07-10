@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gernest/gs/ciu/agents"
-	"github.com/gernest/gs/e2c"
+	"github.com/gernest/vected/lib/ciu/agents"
+	"github.com/gernest/vected/lib/e2c"
 )
 
 var browserAlias = map[string]string{

@@ -18,7 +18,7 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-const pkg = "github.com/gernest/gs/demo"
+const pkg = "github.com/gernest/vected/lib/gs/demo"
 
 func Demo() {
 	sh.RunV("gopherjs", "build", "-o", "demo/main.js", pkg)

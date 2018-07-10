@@ -1,6 +1,6 @@
 package hacks
 
-import "github.com/gernest/gs/prefix/decl"
+import "github.com/gernest/vected/tools/prefix/decl"
 
 var _ decl.Declaration = ColorAdjust{}
 

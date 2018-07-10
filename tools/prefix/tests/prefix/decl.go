@@ -3,9 +3,9 @@ package prefix
 import (
 	"reflect"
 
+	"github.com/gernest/vected/tools/prefix/decl"
 	"github.com/gernest/vected/lib/gs"
 	"github.com/gernest/vected/lib/mad"
-	"github.com/gernest/vected/tools/prefix/decl"
 )
 
 func TestDecl() mad.Test {

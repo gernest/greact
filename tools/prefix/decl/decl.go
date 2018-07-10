@@ -1,7 +1,7 @@
 package decl
 
 import (
-	"github.com/gernest/gs"
+	"github.com/gernest/vected/lib/gs"
 )
 
 var _ Declaration = Decl{}

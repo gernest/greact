@@ -1,9 +1,9 @@
 package prefix
 
 import (
+	"github.com/gernest/vected/tools/prefix/hacks"
 	"github.com/gernest/vected/lib/gs"
 	"github.com/gernest/vected/lib/mad"
-	"github.com/gernest/vected/tools/prefix/hacks"
 )
 
 func TestBorderImage() mad.Test {

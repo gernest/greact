@@ -3,7 +3,7 @@ package grid
 import (
 	"fmt"
 
-	cn "github.com/gernest/classnames"
+	"github.com/gernest/vected/lib/cn"
 	"github.com/gernest/vected/props"
 )
 
@@ -26,24 +26,24 @@ func (Col) Context(ctx props.Props) props.Props {
 	cfg := getColProps(ctx)
 	classes := cn.Join(
 		cn.Name{
-			Class: fmt.Sprintf("%s-%d", cfg.prefixClass.Value, cfg.span.Value),
-			Skip:  cfg.span.IsNull,
+			C: fmt.Sprintf("%s-%d", cfg.prefixClass.Value, cfg.span.Value),
+			S: cfg.span.IsNull,
 		},
 		cn.Name{
-			Class: fmt.Sprintf("%s-order-%d", cfg.prefixClass.Value, cfg.order.Value),
-			Skip:  cfg.order.IsNull,
+			C: fmt.Sprintf("%s-order-%d", cfg.prefixClass.Value, cfg.order.Value),
+			S: cfg.order.IsNull,
 		},
 		cn.Name{
-			Class: fmt.Sprintf("%s-order-%d", cfg.prefixClass.Value, cfg.offset.Value),
-			Skip:  cfg.offset.IsNull,
+			C: fmt.Sprintf("%s-order-%d", cfg.prefixClass.Value, cfg.offset.Value),
+			S: cfg.offset.IsNull,
 		},
 		cn.Name{
-			Class: fmt.Sprintf("%s-push-%d", cfg.prefixClass.Value, cfg.push.Value),
-			Skip:  cfg.push.IsNull,
+			C: fmt.Sprintf("%s-push-%d", cfg.prefixClass.Value, cfg.push.Value),
+			S: cfg.push.IsNull,
 		},
 		cn.Name{
-			Class: fmt.Sprintf("%s-pull-%d", cfg.prefixClass.Value, cfg.pull.Value),
-			Skip:  cfg.pull.IsNull,
+			C: fmt.Sprintf("%s-pull-%d", cfg.prefixClass.Value, cfg.pull.Value),
+			S: cfg.pull.IsNull,
 		},
 	)
 	others := ctx.Filter(otherColValues).Attr()

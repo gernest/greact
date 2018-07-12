@@ -1,3 +1,21 @@
+// Package mad is a library for defining and executing tests. There are two
+// types of tests supported by this library.
+//
+// Unit tests
+//
+// These are tests which are on a functional basis. They are not supposed to be
+// interacting with the dom.
+//
+// Unit tests are defined in a composition way using the Describe and It functions.
+//
+// Integration tests
+//
+// These are tests which involves dom interaction. For now the vecty framework
+// is the only supported framework for defining and executing these kind of
+// tests.
+//
+// Please see the mad commandline tool, which is the application responsible for
+// running the tests defined by this library.
 package mad
 
 import (
@@ -178,7 +196,7 @@ func (s *Suite) Exec() {
 	}
 }
 
-// Exec Executes the tests and returls a List of executed tests.
+// Exec Executes one or more tests.
 func Exec(ts ...Test) Test {
 	ls := List(ts)
 	ls.Exec()

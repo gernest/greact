@@ -15,6 +15,7 @@ package vected
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/gernest/vected/lib/html/template"
 
@@ -96,4 +97,9 @@ func (c *ComponentCache) RenderHTML(tpl string, ctx props.Props) (template.HTML,
 		return "", err
 	}
 	return template.HTML(buf.String()), nil
+}
+
+// Takes a component and returns a template definition.
+func toTemplate(cmp Component) string {
+	return fmt.Sprint(`{{define "%s" }}%s{{end}}`, cmp.ID(), cmp.Template())
 }

@@ -18,8 +18,7 @@ import (
 	"fmt"
 
 	"github.com/gernest/vected/lib/html/template"
-
-	"github.com/gernest/vected/props"
+	"github.com/gernest/vected/lib/props"
 )
 
 // Component is an interface for reneding components. ctx is the data that will

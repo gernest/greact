@@ -3,7 +3,7 @@ package vected
 import (
 	"github.com/gernest/vected"
 	"github.com/gernest/vected/lib/mad"
-	"github.com/gernest/vected/props"
+	"github.com/gernest/vected/lib/props"
 )
 
 type hello struct {

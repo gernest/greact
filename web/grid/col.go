@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gernest/vected/lib/cn"
-	"github.com/gernest/vected/props"
+	"github.com/gernest/vected/lib/props"
 )
 
 // Col implements vected.Component

@@ -61,6 +61,16 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:   "data",
+			Action: DataCMD,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "data-file",
+					Value: "lib/ciu/data/data.go",
+				},
+			},
+		},
 	}
 	if err := a.Run(os.Args); err != nil {
 		fmt.Println(err)
@@ -236,4 +246,8 @@ func AgentCMD(ctx *cli.Context) error {
 		return err
 	}
 	return ioutil.WriteFile(ctx.String("agents-file"), b, 0600)
+}
+
+func DataCMD(ctx *cli.Context) error {
+	return Gen(ctx.String("data-file"))
 }

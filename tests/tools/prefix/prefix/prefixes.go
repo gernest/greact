@@ -5,9 +5,9 @@ import (
 	"sort"
 
 	"github.com/gernest/vected/lib/ciu/agents"
+	"github.com/gernest/vected/lib/ciu/data"
 	"github.com/gernest/vected/lib/mad"
 	"github.com/gernest/vected/tools/prefix"
-	"github.com/gernest/vected/tools/prefix/data"
 )
 
 func TestPrefixes() mad.Test {

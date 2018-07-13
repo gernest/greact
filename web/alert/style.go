@@ -1,9 +1,11 @@
-package anchor
+package alert
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gernest/vected/lib/gs"
+	"github.com/gernest/vected/web/style/color"
 	"github.com/gernest/vected/web/style/core/themes"
 	"github.com/gernest/vected/web/style/mixins"
 )
@@ -13,10 +15,23 @@ var msgColor = themes.Default.HeadingColor
 var textColor = themes.Default.TextColor
 var closeColor = themes.Default.TextColor
 
+// Style returns antd styles for alerts.
 func Style() gs.CSSRule {
 	a := themes.Default.FontSizeBase.Value()
 	b := themes.Default.LineHeightBase.Value()
-	c := (8 + a) * ((b / 2) - (a / 2) + 1)
+	c := 8 + a*b/2 - a/2 + 1
+	successColor := color.Generate(themes.Default.SuccessColor)
+	successBorder := fmt.Sprintf("%v %v %v", themes.Default.BorderWithBase,
+		themes.Default.BorderStyleBase, successColor[2].Hex())
+	infoColor := color.Generate(themes.Default.InfoColor)
+	infoBorder := fmt.Sprintf("%v %v %v", themes.Default.BorderWithBase,
+		themes.Default.BorderStyleBase, infoColor[2].Hex())
+	warningColor := color.Generate(themes.Default.WarningColor)
+	warningBorder := fmt.Sprintf("%v %v %v", themes.Default.BorderWithBase,
+		themes.Default.BorderStyleBase, warningColor[2].Hex())
+	errorColor := color.Generate(themes.Default.ErrorColor)
+	errorBorder := fmt.Sprintf("%v %v %v", themes.Default.BorderWithBase,
+		themes.Default.BorderStyleBase, errorColor[2].Hex())
 	return gs.CSS(
 		gs.S(klass,
 			mixins.ResetComponent(),
@@ -26,7 +41,7 @@ func Style() gs.CSSRule {
 			gs.S("&&-no-icon",
 				gs.P("padding", "8px 15px"),
 			),
-			gs.S("&&-icon",
+			gs.S("&-icon",
 				gs.P("top", formatFloat(c)+"px"),
 				gs.P("left", "16px"),
 				gs.P("position", "absolute"),
@@ -36,10 +51,38 @@ func Style() gs.CSSRule {
 				gs.P("line-height", "22px"),
 				gs.P("display", "none"),
 			),
+			gs.S("&-success",
+				gs.P("border", successBorder),
+				gs.P("background-color", successColor[0].Hex()),
+				gs.S("& "+klass+"-icon",
+					gs.P("color", themes.Default.SuccessColor.Hex()),
+				),
+			),
+			gs.S("&-info",
+				gs.P("border", infoBorder),
+				gs.P("background-color", infoColor[0].Hex()),
+				gs.S("& "+klass+"-icon",
+					gs.P("color", themes.Default.InfoColor.Hex()),
+				),
+			),
+			gs.S("&-warning",
+				gs.P("border", warningBorder),
+				gs.P("background-color", warningColor[0].Hex()),
+				gs.S("& "+klass+"-icon",
+					gs.P("color", themes.Default.WarningColor.Hex()),
+				),
+			),
+			gs.S("&-error",
+				gs.P("border", errorBorder),
+				gs.P("background-color", errorColor[0].Hex()),
+				gs.S("& "+klass+"-icon",
+					gs.P("color", themes.Default.ErrorColor.Hex()),
+				),
+			),
 		),
 	)
 }
 
 func formatFloat(v float64) string {
-	return strconv.FormatFloat(v, 'f', 8, 64)
+	return strconv.FormatFloat(v, 'f', 1, 64)
 }

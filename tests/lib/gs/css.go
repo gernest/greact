@@ -1,4 +1,4 @@
-package tests
+package gs
 
 import (
 	"github.com/gernest/vected/lib/gs"

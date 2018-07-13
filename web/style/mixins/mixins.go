@@ -80,8 +80,8 @@ func ClearFix() gs.CSSRule {
 func ResetComponent() gs.CSSRule {
 	return gs.CSS(
 		gs.P("font-family", themes.Default.FontFamily),
-		gs.P("font-size", themes.Default.FontSizeBase),
-		gs.P("line-height", themes.Default.LineHeightBase),
+		gs.P("font-size", themes.Default.FontSizeBase.String()),
+		gs.P("line-height", themes.Default.LineHeightBase.String()),
 		gs.P("color", themes.Default.TextColor.Hex()),
 		gs.P("ox-sizing", "border-box"),
 		gs.P("margin", "0"),

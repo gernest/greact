@@ -1,6 +1,9 @@
 package themes
 
-import "github.com/gernest/vected/web/style/color"
+import (
+	"github.com/gernest/vected/lib/gs"
+	"github.com/gernest/vected/web/style/color"
+)
 
 // Palette is the default color palette.
 var Palette = color.NewPalette()
@@ -40,22 +43,22 @@ type Theme struct {
 	HeadingColorDark       *color.Color
 	TextColorDark          *color.Color
 	TextColorSecondaryDark *color.Color
-	FontSizeBase           string
-	FontSizeLG             string
-	FontSizeSM             string
-	LineHeightBase         string
-	BorderRadiusBase       string
-	BorderRadiusSM         string
+	FontSizeBase           gs.U
+	FontSizeLG             gs.U
+	FontSizeSM             gs.U
+	LineHeightBase         gs.U
+	BorderRadiusBase       gs.U
+	BorderRadiusSM         gs.U
 
 	//vertical padding
-	PaddingLG string
-	PaddingMD string
-	PaddingSM string
-	PaddingXS string
+	PaddingLG gs.U
+	PaddingMD gs.U
+	PaddingSM gs.U
+	PaddingXS gs.U
 
 	// vertical padding for all form controls
-	ControlPaddingHorizontal   string
-	ControlPaddingHorizontalSM string
+	ControlPaddingHorizontal   gs.U
+	ControlPaddingHorizontalSM gs.U
 
 	// The background colors for active and hover states for things like
 	// list items or table cells.
@@ -244,7 +247,7 @@ type Theme struct {
 	InputHeightBase            string
 	InputHeightLG              string
 	InputHeightSM              string
-	InputPaddingHorizontal     string
+	InputPaddingHorizontal     gs.U
 	InputPaddingHorizontalBase string
 	InputPaddingHorizontalSM   string
 	InputPaddingHorizontalLG   string
@@ -326,7 +329,7 @@ type Theme struct {
 	// --
 	TagDefaultBG    *color.Color
 	TagDefaultColor *color.Color
-	TagFontSize     string
+	TagFontSize     gs.U
 
 	// TimePicker
 	// ---
@@ -344,7 +347,7 @@ type Theme struct {
 	// ---
 	BadgeHeight     string
 	BadgeDotSize    string
-	BadgeFontSize   string
+	BadgeFontSize   gs.U
 	BadgeFontWeight string
 	BadgeStatusSize string
 
@@ -369,9 +372,9 @@ type Theme struct {
 	TabsCardHeadBackground *color.Color
 	TabsCardHeight         string
 	TabsCardActiveColor    *color.Color
-	TabsTitleFontSize      string
-	TabsTitleFontSizeLG    string
-	TabsTitleFontSizeSM    string
+	TabsTitleFontSize      gs.U
+	TabsTitleFontSizeLG    gs.U
+	TabsTitleFontSizeSM    gs.U
 	TabsInkBarBGColor      *color.Color
 	TabBarMargin           string
 	TabHorizontalMargin    string
@@ -399,7 +402,7 @@ type Theme struct {
 	AvatarFontSizeSM   string
 	AvatarBG           *color.Color
 	AvatarColor        *color.Color
-	AvatarBorderRadius string
+	AvatarBorderRadius gs.U
 
 	// Switch
 	// ---
@@ -420,8 +423,8 @@ type Theme struct {
 	// ---
 	BreadcrumbBaseColor       *color.Color
 	BreadcrumbLastItemColor   *color.Color
-	BreadcrumbFontSize        string
-	BreadcrumbIconFontSize    string
+	BreadcrumbFontSize        gs.U
+	BreadcrumbIconFontSize    gs.U
 	BreadcrumbLinkColor       *color.Color
 	BreadcrumbLinkColorHover  *color.Color
 	BreadcrumbSeparatorColor  *color.Color
@@ -448,7 +451,7 @@ type Theme struct {
 	// ---
 	CollapseHeaderPadding  string
 	CollapseHeaderBG       *color.Color
-	CollapseContentPadding string
+	CollapseContentPadding gs.U
 	CollapseContentBG      *color.Color
 }
 
@@ -735,7 +738,7 @@ func New() *Theme {
 	t.BreadcrumbLinkColor = t.TextColorSecondary
 	t.BreadcrumbLinkColorHover = t.Primary[4]
 	t.BreadcrumbSeparatorColor = t.TextColorSecondary
-	t.BreadcrumbSeparatorMargin = "0 " + t.PaddingXS
+	t.BreadcrumbSeparatorMargin = "0 " + t.PaddingXS.String()
 	t.SliderRailBackgroundColor = t.BackgroundColorBase
 	t.SliderTrackBackgroundColor = t.Primary[2]
 	t.SliderTrackBackgroundColorHover = t.Primary[3]

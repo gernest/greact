@@ -6,7 +6,6 @@ package parse
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -289,7 +288,6 @@ func lexRightDelimAttr(l *lexer) stateFn {
 		l.pos += leftTrimLength(l.input[l.pos:])
 		l.ignore()
 	}
-	log.Println(l.input[l.pos:])
 	return lexTagIn
 }
 

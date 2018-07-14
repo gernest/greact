@@ -14,6 +14,8 @@ func main() {
 	a.Usage = "provides various commands that generate code for vected project"
 	a.Commands = []cli.Command{
 		gen.Include(),
+		gen.AgentsCommand(),
+		gen.DataCommand(),
 	}
 	if err := a.Run(os.Args); err != nil {
 		fmt.Println(err)

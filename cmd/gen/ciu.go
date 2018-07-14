@@ -1,13 +1,11 @@
-package main
+package gen
 
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"go/format"
 	"io"
 	"io/ioutil"
-	"os"
 	"sort"
 
 	"github.com/gernest/vected/lib/html/template"
@@ -40,41 +38,37 @@ type Data struct {
 	Features map[string]Feature `json:"data"`
 }
 
-func main() {
-	a := cli.NewApp()
-	a.Commands = []cli.Command{
-		{
-			Name:   "agents",
-			Action: AgentCMD,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "full",
-					Value: "caniuse/fulldata-json//data-2.0.json",
-				},
-				cli.StringFlag{
-					Name:  "data",
-					Value: "caniuse/data.json",
-				},
-				cli.StringFlag{
-					Name:  "agents-file",
-					Value: "lib/ciu/agents/agents.go",
-				},
+func AgentsCommand() cli.Command {
+	return cli.Command{
+		Name:   "agents",
+		Action: AgentCMD,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "full",
+				Value: "caniuse/fulldata-json//data-2.0.json",
 			},
-		},
-		{
-			Name:   "data",
-			Action: DataCMD,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "data-file",
-					Value: "lib/ciu/data/data.go",
-				},
+			cli.StringFlag{
+				Name:  "data",
+				Value: "caniuse/data.json",
+			},
+			cli.StringFlag{
+				Name:  "agents-file",
+				Value: "lib/ciu/agents/agents.go",
 			},
 		},
 	}
-	if err := a.Run(os.Args); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+}
+
+func DataCommand() cli.Command {
+	return cli.Command{
+		Name:   "data",
+		Action: DataCMD,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "data-file",
+				Value: "lib/ciu/data/data.go",
+			},
+		},
 	}
 }
 

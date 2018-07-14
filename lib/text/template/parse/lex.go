@@ -57,8 +57,12 @@ const (
 	itemString     // quoted string (includes quotes)
 	itemText       // plain text
 	itemVariable   // variable starting with '$', such as '$' or  '$1' or '$hello'
+
 	// Keywords appear after all the rest.
 	itemKeyword  // used only to delimit the keywords
+	itemTagLeft  // <
+	itemTagRight // >
+	itemTagClose // </
 	itemBlock    // block keyword
 	itemBreak    // break keyword
 	itemContinue // continue keyword
@@ -74,6 +78,9 @@ const (
 )
 
 var key = map[string]itemType{
+	"<":        itemTagLeft,
+	">":        itemTagRight,
+	"</":       itemTagClose,
 	".":        itemDot,
 	"block":    itemBlock,
 	"break":    itemBreak,
@@ -246,7 +253,49 @@ const (
 	rightComment = "*/"
 )
 
-// lexText scans until an opening action delimiter, "{{".
+func lexTagOpen(l *lexer) stateFn {
+	l.next()
+	l.emit(itemTagLeft)
+	return lexTagIn
+}
+
+func lexTagIn(l *lexer) stateFn {
+	switch r := l.peek(); {
+	case r == '>':
+		l.next()
+		l.emit(itemTagRight)
+		return lexText
+	case isSpace(r):
+		for isSpace(l.peek()) {
+			l.next()
+		}
+		l.emit(itemSpace)
+	}
+	return lexTagName
+}
+
+func isTagNameTerminator(ch rune) bool {
+	return ch == '>'
+}
+
+func lexTagName(l *lexer) stateFn {
+Loop:
+	for {
+		switch r := l.next(); {
+		case isAlphaNumeric(r):
+			// absorb.
+		default:
+			l.backup()
+			if !isTagNameTerminator(r) {
+				return l.errorf("bad character %#U", r)
+			}
+			l.emit(itemIdentifier)
+			break Loop
+		}
+	}
+	return lexTagIn
+}
+
 func lexText(l *lexer) stateFn {
 	l.width = 0
 	if x := strings.Index(l.input[l.pos:], l.opts.leftDelim); x >= 0 {
@@ -263,9 +312,16 @@ func lexText(l *lexer) stateFn {
 		l.pos += trimLength
 		l.ignore()
 		return lexLeftDelim
-	} else {
-		l.pos = Pos(len(l.input))
 	}
+	if y := strings.Index(l.input[l.pos:], "<"); y >= 0 {
+		// log.Fatal(y)
+		l.pos += Pos(y)
+		if l.pos > l.start {
+			l.emit(itemText)
+		}
+		return lexTagOpen
+	}
+	l.pos = Pos(len(l.input))
 	// Correctly reached EOF.
 	if l.pos > l.start {
 		l.emit(itemText)

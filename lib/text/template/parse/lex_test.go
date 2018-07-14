@@ -546,3 +546,25 @@ func (t *Tree) parseLexer(lex *lexer) (tree *Tree, err error) {
 	t.stopParse()
 	return t, nil
 }
+
+var lexTagTests = []lexTest{
+	{
+		name:  "opening ",
+		input: "<div>",
+		items: []item{
+			{itemTagLeft, 0, "<", 1},
+			{itemIdentifier, 1, "div", 1},
+			{itemTagRight, 4, ">", 1},
+			{itemEOF, 5, "", 1},
+		},
+	},
+}
+
+func TestTags(t *testing.T) {
+	for _, test := range lexTagTests {
+		items := collect(&test, "{{", "}}")
+		if !equal(items, test.items, true) {
+			t.Errorf("%s: got\n\t%v\nexpected\n\t%v", test.name, items, test.items)
+		}
+	}
+}

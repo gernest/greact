@@ -275,7 +275,7 @@ func lexTagIn(l *lexer) stateFn {
 }
 
 func isTagNameTerminator(ch rune) bool {
-	return ch == '>'
+	return ch == '>' || isSpace(ch) || ch == '='
 }
 
 func lexTagName(l *lexer) stateFn {

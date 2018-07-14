@@ -59,28 +59,30 @@ const (
 	itemVariable   // variable starting with '$', such as '$' or  '$1' or '$hello'
 
 	// Keywords appear after all the rest.
-	itemKeyword  // used only to delimit the keywords
-	itemTagLeft  // <
-	itemTagRight // >
-	itemTagClose // </
-	itemBlock    // block keyword
-	itemBreak    // break keyword
-	itemContinue // continue keyword
-	itemDot      // the cursor, spelled '.'
-	itemDefine   // define keyword
-	itemElse     // else keyword
-	itemEnd      // end keyword
-	itemIf       // if keyword
-	itemNil      // the untyped nil constant, easiest to treat as a keyword
-	itemRange    // range keyword
-	itemTemplate // template keyword
-	itemWith     // with keyword
+	itemKeyword         // used only to delimit the keywords
+	itemTagLeft         // <
+	itemTagRight        // >
+	itemTagClose        // </
+	itemAttributeAssign // =
+	itemBlock           // block keyword
+	itemBreak           // break keyword
+	itemContinue        // continue keyword
+	itemDot             // the cursor, spelled '.'
+	itemDefine          // define keyword
+	itemElse            // else keyword
+	itemEnd             // end keyword
+	itemIf              // if keyword
+	itemNil             // the untyped nil constant, easiest to treat as a keyword
+	itemRange           // range keyword
+	itemTemplate        // template keyword
+	itemWith            // with keyword
 )
 
 var key = map[string]itemType{
 	"<":        itemTagLeft,
 	">":        itemTagRight,
 	"</":       itemTagClose,
+	"=":        itemAttributeAssign,
 	".":        itemDot,
 	"block":    itemBlock,
 	"break":    itemBreak,
@@ -259,12 +261,110 @@ func lexTagOpen(l *lexer) stateFn {
 	return lexTagIn
 }
 
+func lexAttrAssign(l *lexer) stateFn {
+	if isSpace(l.peek()) {
+		for isSpace(l.peek()) {
+			l.next()
+		}
+		l.emit(itemSpace)
+	}
+	if x := strings.Index(l.input[l.pos:], l.opts.leftDelim); x == 0 {
+		l.pos += Pos(len(l.opts.leftDelim))
+		l.emit(itemLeftDelim)
+		return lexRightDelimAttr
+	}
+	return l.errorf("attribute values can only be passed though context")
+}
+
+func lexRightDelimAttr(l *lexer) stateFn {
+	trimSpace := strings.HasPrefix(l.input[l.pos:], rightTrimMarker)
+	if trimSpace {
+		l.pos += trimMarkerLen
+		l.ignore()
+	}
+	l.pos += Pos(len(l.opts.rightDelim))
+	l.emit(itemRightDelim)
+	if trimSpace {
+		l.pos += leftTrimLength(l.input[l.pos:])
+		l.ignore()
+	}
+	return lexInsideAttributeAction
+}
+
+func lexInsideAttributeAction(l *lexer) stateFn {
+	// Either number, quoted string, or identifier.
+	// Spaces separate arguments; runs of spaces turn into itemSpace.
+	// Pipe symbols separate and are emitted.
+	delim, _ := l.atRightDelim()
+	if delim {
+		if l.parenDepth == 0 {
+			return lexRightDelimAttr
+		}
+		return l.errorf("unclosed left paren")
+	}
+	switch r := l.next(); {
+	case r == eof || isEndOfLine(r):
+		return l.errorf("unclosed action")
+	case isSpace(r):
+		return lexSpace
+	case r == ':':
+		if l.next() != '=' {
+			return l.errorf("expected :=")
+		}
+		l.emit(itemColonEquals)
+	case r == '|':
+		l.emit(itemPipe)
+	case r == '"':
+		return lexQuote
+	case r == '`':
+		return lexRawQuote
+	case r == '$':
+		return lexVariable
+	case r == '\'':
+		return lexChar
+	case r == '.':
+		// special look-ahead for ".field" so we don't break l.backup().
+		if l.pos < Pos(len(l.input)) {
+			r := l.input[l.pos]
+			if r < '0' || '9' < r {
+				return lexField
+			}
+		}
+		fallthrough // '.' can start a number.
+	case r == '+' || r == '-' || ('0' <= r && r <= '9'):
+		l.backup()
+		return lexNumber
+	case isAlphaNumeric(r):
+		l.backup()
+		return lexIdentifier
+	case r == '(':
+		l.emit(itemLeftParen)
+		l.parenDepth++
+	case r == ')':
+		l.emit(itemRightParen)
+		l.parenDepth--
+		if l.parenDepth < 0 {
+			return l.errorf("unexpected right paren %#U", r)
+		}
+	case r <= unicode.MaxASCII && unicode.IsPrint(r):
+		l.emit(itemChar)
+		return lexInsideAttributeAction
+	default:
+		return l.errorf("unrecognized character in action: %#U", r)
+	}
+	return lexInsideAttributeAction
+}
+
 func lexTagIn(l *lexer) stateFn {
 	switch r := l.peek(); {
 	case r == '>':
 		l.next()
 		l.emit(itemTagRight)
 		return lexText
+	case r == '=':
+		l.next()
+		l.emit(itemAttributeAssign)
+		return lexAttrAssign
 	case isSpace(r):
 		for isSpace(l.peek()) {
 			l.next()
@@ -299,6 +399,15 @@ Loop:
 func lexText(l *lexer) stateFn {
 	l.width = 0
 	if x := strings.Index(l.input[l.pos:], l.opts.leftDelim); x >= 0 {
+		if y := strings.Index(l.input[l.pos:], "<"); y >= 0 {
+			if y < x {
+				l.pos += Pos(y)
+				if l.pos > l.start {
+					l.emit(itemText)
+				}
+				return lexTagOpen
+			}
+		}
 		ldn := Pos(len(l.opts.leftDelim))
 		l.pos += Pos(x)
 		trimLength := Pos(0)
@@ -314,7 +423,6 @@ func lexText(l *lexer) stateFn {
 		return lexLeftDelim
 	}
 	if y := strings.Index(l.input[l.pos:], "<"); y >= 0 {
-		// log.Fatal(y)
 		l.pos += Pos(y)
 		if l.pos > l.start {
 			l.emit(itemText)

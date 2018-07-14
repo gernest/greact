@@ -7,6 +7,8 @@ package parse
 import (
 	"fmt"
 	"testing"
+
+	"github.com/kr/pretty"
 )
 
 // Make the types prettyprint.
@@ -558,12 +560,52 @@ var lexTagTests = []lexTest{
 			{itemEOF, 5, "", 1},
 		},
 	},
+	{
+		name:  "tag with attribute",
+		input: "<div enabled>",
+		items: []item{
+			{itemTagLeft, 0, "<", 1},
+			{itemIdentifier, 1, "div", 1},
+			{itemSpace, 4, " ", 1},
+			{itemIdentifier, 5, "enabled", 1},
+			{itemTagRight, 12, ">", 1},
+			{itemEOF, 13, "", 1},
+		},
+	},
+	{
+		name:  "tag with attribute value",
+		input: "<div enabled=>",
+		items: []item{
+			{itemTagLeft, 0, "<", 1},
+			{itemIdentifier, 1, "div", 1},
+			{itemSpace, 4, " ", 1},
+			{itemIdentifier, 5, "enabled", 1},
+			{itemAttributeAssign, 12, "=", 1},
+			{itemError, 13, "attribute values can only be passed though context", 1},
+		},
+	},
+	{
+		name:  "tag with attribute value",
+		input: `{{ "true" }}`,
+		items: []item{
+			{itemTagLeft, 0, "<", 1},
+			{itemIdentifier, 1, "div", 1},
+			{itemSpace, 4, " ", 1},
+			{itemIdentifier, 5, "enabled", 1},
+			{itemAttributeAssign, 12, "=", 1},
+			{itemLeftDelim, 12, "{{", 1},
+			{itemLeftDelim, 12, "{{", 1},
+		},
+	},
 }
 
 func TestTags(t *testing.T) {
 	for _, test := range lexTagTests {
 		items := collect(&test, "{{", "}}")
 		if !equal(items, test.items, true) {
+			for _, v := range items {
+				pretty.Println(v)
+			}
 			t.Errorf("%s: got\n\t%v\nexpected\n\t%v", test.name, items, test.items)
 		}
 	}

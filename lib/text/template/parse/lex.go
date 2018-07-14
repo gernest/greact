@@ -6,6 +6,7 @@ package parse
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -271,7 +272,7 @@ func lexAttrAssign(l *lexer) stateFn {
 	if x := strings.Index(l.input[l.pos:], l.opts.leftDelim); x == 0 {
 		l.pos += Pos(len(l.opts.leftDelim))
 		l.emit(itemLeftDelim)
-		return lexRightDelimAttr
+		return lexInsideAttributeAction
 	}
 	return l.errorf("attribute values can only be passed though context")
 }
@@ -288,7 +289,8 @@ func lexRightDelimAttr(l *lexer) stateFn {
 		l.pos += leftTrimLength(l.input[l.pos:])
 		l.ignore()
 	}
-	return lexInsideAttributeAction
+	log.Println(l.input[l.pos:])
+	return lexTagIn
 }
 
 func lexInsideAttributeAction(l *lexer) stateFn {

@@ -586,7 +586,7 @@ var lexTagTests = []lexTest{
 	},
 	{
 		name:  "tag with attribute value",
-		input: `{{ "true" }}`,
+		input: `<div enabled={{"true"}}>`,
 		items: []item{
 			{itemTagLeft, 0, "<", 1},
 			{itemIdentifier, 1, "div", 1},

@@ -14,91 +14,19 @@
 package vected
 
 import (
-	"bytes"
-	"fmt"
-
-	"github.com/gernest/vected/lib/html/template"
 	"github.com/gernest/vected/lib/props"
 )
 
-// Component is an interface for reneding components. ctx is the data that will
-// be passed to the component as context.
+// Component is an interface which defines a unit of user interface.
 type Component interface {
-	Identifier
-	Templater
-	Context(props.Props) props.Props
-}
-
-// Templater is an interface for exposing component's tempates.
-type Templater interface {
-	Template() string
-}
-
-// Identifier is an interface for component identification.
-type Identifier interface {
+	New(props.Props) Component
 	ID() string
+	Template() string
+
+	// all components must embed the Core struct to satisfy this interface.xw
+	core()
 }
 
-type ComponentCache struct {
-	*template.Template
-}
+type Core struct{}
 
-func NewComponentCache(name string) *ComponentCache {
-	return &ComponentCache{
-		Template: template.New(name).Delims("{", "}"),
-	}
-}
-
-// Register compiles the components templates and register them. This must be
-// called only once in the application life cycle.
-//
-// The component.ID is used to register a template func that can be used to in
-func (c *ComponentCache) Register(cmp ...Component) error {
-	funcs := make(template.FuncMap)
-	for _, v := range cmp {
-		funcs[v.ID()] = c.compile(v)
-	}
-	tpl := c.Funcs(funcs)
-	for _, v := range cmp {
-		id := v.ID()
-		e := tpl.New(id)
-		_, err := e.Parse(v.Template())
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *ComponentCache) compile(cmp Component) func(props.Props) (template.HTML, error) {
-	return func(ctx props.Props) (template.HTML, error) {
-		tpl := c.Lookup(cmp.ID())
-		if tpl != nil {
-			var buf bytes.Buffer
-			err := tpl.Execute(&buf, cmp.Context(ctx))
-			if err != nil {
-				return "", err
-			}
-			return template.HTML(buf.String()), nil
-		}
-		return "", nil
-	}
-}
-
-func (c *ComponentCache) RenderHTML(tpl string, ctx props.Props) (template.HTML, error) {
-	t, err := c.Parse(tpl)
-	if err != nil {
-		return "", err
-	}
-	var buf bytes.Buffer
-	err = t.Execute(&buf, ctx)
-	if err != nil {
-		return "", err
-	}
-	return template.HTML(buf.String()), nil
-}
-
-// Takes a component and returns a template definition.
-func toTemplate(cmp Component) string {
-	return fmt.Sprint(`{{define "%s" }}%s{{end}}`, cmp.ID(), cmp.Template())
-}
+func (c *Core) core() {}

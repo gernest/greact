@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	includeSrc    = "lib/include/include.js"
-	includeOutput = "lib/include/include.gen.go"
+	includeSrc    = "lib/runtimejs/include.js"
+	includeOutput = "lib/runtimejs/include.gen.go"
 )
 
 // GenerateInclude creates lib/include.gen.go file that contains both minified
@@ -31,12 +31,12 @@ func GenerateInclude(ctx *cli.Context) error {
 	if err := m.Minify("text/javascript", &buf, bytes.NewReader(f)); err != nil {
 		return err
 	}
-	tplTxt := `package include 
+	tplTxt := `package runtime 
 	// Plain is a plain include.js content as string
-	var Plain ={{.plain}}
+	var IncludeMin ={{.plain}}
 
-	// Minified is a minified include.js content as string
-	var Minified={{.minified}}
+	// IncludeMin is a minified include.js content as string
+	var IncludeMin={{.minified}}
 	`
 	tpl, err := template.New("include").Parse(tplTxt)
 	if err != nil {

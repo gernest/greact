@@ -19,8 +19,14 @@ import (
 
 // Component is an interface which defines a unit of user interface.
 type Component interface {
-	New(props.Props) Component
-	ID() string
+
+	// New must return an initialized component. This acts as a constructor, the
+	// props passed to the component from the parent are passed as arguments,
+	//
+	// Initializing state should happen here.
+	New(props.Props) (Component, error)
+
+	// Template this is the vected template that is rendered by the component.
 	Template() string
 
 	// all components must embed the Core struct to satisfy this interface.xw

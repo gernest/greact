@@ -13,7 +13,7 @@ func main() {
 	a.Name = "vected_gen"
 	a.Usage = "provides various commands that generate code for vected project"
 	a.Commands = []cli.Command{
-		gen.Include(),
+		gen.RuntimeCMD(),
 		gen.AgentsCommand(),
 		gen.DataCommand(),
 	}

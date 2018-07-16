@@ -1,7 +1,7 @@
-package runtime
+package runtimejs
 
-// Plain is a plain include.js content as string
-var IncludeMin = `/**
+// includePlain is a plain lib/runtimejs/js/include.js content as string
+var includePlain = `/**
 The MIT License (MIT)
 Copyright (c) 2011-2016 : Jérémy Barbe and other contributors
 Copyright (c) 3018 : Geofrey Ernest and other contributors
@@ -356,8 +356,8 @@ Source https://github.com/CapMousse/include.js
 
 })(this);`
 
-// IncludeMin is a minified include.js content as string
-var IncludeMin = `(function(environment){var modules={};var waitingModules=[];var scriptCounter=1;var baseElement=document.getElementsByTagName('base')[0];var head=document.getElementsByTagName('head')[0];function Include(name,deps,module){var self=this;if(typeof name!=="string"){module=deps;deps=name;name=null;}
+// includeMin is a minified lib/runtimejs/js/include.js content as string
+var includeMin = `(function(environment){var modules={};var waitingModules=[];var scriptCounter=1;var baseElement=document.getElementsByTagName('base')[0];var head=document.getElementsByTagName('head')[0];function Include(name,deps,module){var self=this;if(typeof name!=="string"){module=deps;deps=name;name=null;}
 if(deps.constructor!==[].constructor){module=deps;deps=[];}
 waitingModules.unshift([name,deps,module]);self.uid=Math.random().toString(36).replace(/[^a-z0-9]+/g,'').substr(0,10);self.checkModuleLoaded();if(deps.length){self.each(deps,self.parseFiles);}};Include.prototype.each=function(array,callback){var self=this,i;for(i=0;i<array.length;i++){if(array[i]!==undefined&&callback.call(self,array[i],i,array)===false){break;}}}
 Include.prototype.getId=function(name,clean){return(clean?'':this.uid+'-')+name.replace(/[^a-z0-9]+/g,'');}

@@ -11,6 +11,11 @@ type Name struct {
 	S bool
 }
 
+// N retruns Name struct with klass value as C and skip value as S.
+func N(klass string, skip bool) Name {
+	return Name{C: klass, S: skip}
+}
+
 // Join joins the names to form css classes.
 func Join(names ...interface{}) string {
 	c := &class{}

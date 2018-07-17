@@ -66,7 +66,7 @@ func (p Props) Attr() template.HTMLAttr {
 
 // Int calls Int with p as first argument.
 func (p Props) Int(key interface{}) NullInt {
-	return Int(key, p)
+	return Int(p, key)
 }
 
 // StringV calls StringV with p as first argument.
@@ -77,7 +77,7 @@ func (p Props) StringV(key interface{}, value string) NullString {
 // Int looks for property value with key, and tries to cast it to an int. This
 // will set NullInt.IsNull to true if the key is missing or the value is not of
 // type it.
-func Int(key interface{}, p Props) NullInt {
+func Int(p Props, key interface{}) NullInt {
 	if v, ok := p[key]; ok {
 		if vi, ok := v.(int); ok {
 			return NullInt{Value: vi}
@@ -97,4 +97,34 @@ func StringV(ctx Props, key interface{}, value string) NullString {
 		return NullString{IsNull: true}
 	}
 	return NullString{Value: value}
+}
+
+// String tries to return the value stored by key as a string.
+func (p Props) String(key interface{}) NullString {
+	return String(p, key)
+}
+
+// String finds key's value in p and casts it as a string.
+func String(p Props, key interface{}) NullString {
+	if v, ok := p[key]; ok {
+		if vi, ok := v.(string); ok {
+			return NullString{Value: vi}
+		}
+	}
+	return NullString{IsNull: true}
+}
+
+// Bool tries to find key's value in p and casts it to bool if found.
+func (p Props) Bool(key interface{}) NullBool {
+	return Bool(p, key)
+}
+
+// Bool finds key's value in p and casts it as a bool.
+func Bool(p Props, key interface{}) NullBool {
+	if v, ok := p[key]; ok {
+		if vi, ok := v.(bool); ok {
+			return NullBool{Value: vi}
+		}
+	}
+	return NullBool{IsNull: true}
 }

@@ -88,23 +88,7 @@ func Runtime(ctx *cli.Context) error {
 			return err
 		}
 	}
-	pre := "package runtimejs \n var Prelude="
-	preMin := " \n var PreludeMin="
-	for k, v := range names {
-		if k == 0 {
-			pre += v + "Plain"
-			preMin += v + "Min"
-			continue
-		}
-		pre += "+" + v + "Plain"
-		preMin += "+" + v + "Min"
-	}
-	b, err := format.Source([]byte(pre + preMin))
-	if err != nil {
-		return err
-	}
-	o := filepath.Join(runtimeOut, fmt.Sprintf("%s.gen.go", "runtimejs"))
-	return ioutil.WriteFile(o, b, 0600)
+	return nil
 }
 
 // RuntimeCMD returns a command for generating include package.

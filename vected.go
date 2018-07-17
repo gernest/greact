@@ -29,6 +29,12 @@ type Component interface {
 	// Template this is the vected template that is rendered by the component.
 	Template() string
 
+	// This method will be called with propes athat will be passed down the
+	// component's template to be rendered.
+	//
+	// The returned props is used as context for rendering the component's
+	// template.
+	Context(props.Props) props.Props
 	// all components must embed the Core struct to satisfy this interface.xw
 	core()
 }

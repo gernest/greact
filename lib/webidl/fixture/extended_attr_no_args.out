@@ -1,0 +1,14 @@
+&ast.File{
+    Position: ast.Position{},
+    Fragment: {
+        &ast.ExtendedAttributeList{
+            Position: ast.Position{StartPos:1, EndPos:0},
+            List:     {
+                &ast.ExtendedAttributeNoArgs{
+                    Position: ast.Position{StartPos:2, EndPos:0},
+                    Name:     "Replaceable",
+                },
+            },
+        },
+    },
+}

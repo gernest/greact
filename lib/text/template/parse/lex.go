@@ -57,32 +57,27 @@ const (
 	itemString     // quoted string (includes quotes)
 	itemText       // plain text
 	itemVariable   // variable starting with '$', such as '$' or  '$1' or '$hello'
-
+	itemLeftTag    //<
+	itemRightTag   //>
+	itemSlash      // /
+	itemAssign     // =
 	// Keywords appear after all the rest.
-	itemKeyword         // used only to delimit the keywords
-	itemTagLeft         // <
-	itemTagRight        // >
-	itemTagClose        // </
-	itemAttributeAssign // =
-	itemBlock           // block keyword
-	itemBreak           // break keyword
-	itemContinue        // continue keyword
-	itemDot             // the cursor, spelled '.'
-	itemDefine          // define keyword
-	itemElse            // else keyword
-	itemEnd             // end keyword
-	itemIf              // if keyword
-	itemNil             // the untyped nil constant, easiest to treat as a keyword
-	itemRange           // range keyword
-	itemTemplate        // template keyword
-	itemWith            // with keyword
+	itemKeyword  // used only to delimit the keywords
+	itemBlock    // block keyword
+	itemBreak    // break keyword
+	itemContinue // continue keyword
+	itemDot      // the cursor, spelled '.'
+	itemDefine   // define keyword
+	itemElse     // else keyword
+	itemEnd      // end keyword
+	itemIf       // if keyword
+	itemNil      // the untyped nil constant, easiest to treat as a keyword
+	itemRange    // range keyword
+	itemTemplate // template keyword
+	itemWith     // with keyword
 )
 
 var key = map[string]itemType{
-	"<":        itemTagLeft,
-	">":        itemTagRight,
-	"</":       itemTagClose,
-	"=":        itemAttributeAssign,
 	".":        itemDot,
 	"block":    itemBlock,
 	"break":    itemBreak,
@@ -255,26 +250,20 @@ const (
 	rightComment = "*/"
 )
 
-func lexTagOpen(l *lexer) stateFn {
-	l.next()
-	l.emit(itemTagLeft)
-	return lexTagIn
-}
-
-func lexAttrAssign(l *lexer) stateFn {
-	if isSpace(l.peek()) {
-		for isSpace(l.peek()) {
-			l.next()
-		}
-		l.emit(itemSpace)
-	}
-	if x := strings.Index(l.input[l.pos:], l.opts.leftDelim); x == 0 {
-		l.pos += Pos(len(l.opts.leftDelim))
-		l.emit(itemLeftDelim)
-		return lexInsideAttributeAction
-	}
-	return l.errorf("attribute values can only be passed though context")
-}
+// func lexAttrAssign(l *lexer) stateFn {
+// 	if isSpace(l.peek()) {
+// 		for isSpace(l.peek()) {
+// 			l.next()
+// 		}
+// 		l.emit(itemSpace)
+// 	}
+// 	if x := strings.Index(l.input[l.pos:], l.opts.leftDelim); x == 0 {
+// 		l.pos += Pos(len(l.opts.leftDelim))
+// 		l.emit(itemLeftDelim)
+// 		return lexInsideAttributeAction
+// 	}
+// 	return l.errorf("attribute values can only be passed though context")
+// }
 
 func lexRightDelimAttr(l *lexer) stateFn {
 	trimSpace := strings.HasPrefix(l.input[l.pos:], rightTrimMarker)
@@ -359,17 +348,35 @@ func lexTagIn(l *lexer) stateFn {
 	switch r := l.peek(); {
 	case r == '>':
 		l.next()
-		l.emit(itemTagRight)
+		l.emit(itemRightTag)
 		return lexText
 	case r == '=':
 		l.next()
-		l.emit(itemAttributeAssign)
-		return lexAttrAssign
+		l.emit(itemAssign)
+		if isSpace(l.peek()) {
+			for isSpace(l.peek()) {
+				l.next()
+			}
+			l.emit(itemSpace)
+		}
+		if x := strings.Index(l.input[l.pos:], l.opts.leftDelim); x == 0 {
+			l.pos += Pos(len(l.opts.leftDelim))
+			l.emit(itemLeftDelim)
+			return lexInsideAttributeAction
+		}
+		return l.errorf("attribute values can only be passed though context")
 	case isSpace(r):
 		for isSpace(l.peek()) {
 			l.next()
 		}
 		l.emit(itemSpace)
+		return lexTagIn
+	default:
+		if x := strings.Index(l.input[l.pos:], l.opts.leftDelim); x == 0 {
+			l.pos += Pos(len(l.opts.leftDelim))
+			l.emit(itemLeftDelim)
+			return lexInsideAttributeAction
+		}
 	}
 	return lexTagName
 }
@@ -405,7 +412,9 @@ func lexText(l *lexer) stateFn {
 				if l.pos > l.start {
 					l.emit(itemText)
 				}
-				return lexTagOpen
+				l.next()
+				l.emit(itemLeftTag)
+				return lexTagIn
 			}
 		}
 		ldn := Pos(len(l.opts.leftDelim))
@@ -427,7 +436,9 @@ func lexText(l *lexer) stateFn {
 		if l.pos > l.start {
 			l.emit(itemText)
 		}
-		return lexTagOpen
+		l.next()
+		l.emit(itemLeftTag)
+		return lexTagIn
 	}
 	l.pos = Pos(len(l.input))
 	// Correctly reached EOF.

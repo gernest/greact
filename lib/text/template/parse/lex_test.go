@@ -7,8 +7,6 @@ package parse
 import (
 	"fmt"
 	"testing"
-
-	"github.com/kr/pretty"
 )
 
 // Make the types prettyprint.
@@ -31,7 +29,12 @@ var itemName = map[itemType]string{
 	itemRightParen:   ")",
 	itemSpace:        "space",
 	itemString:       "string",
+	itemText:         "text",
 	itemVariable:     "variable",
+	itemLeftTag:      "left tag",
+	itemRightTag:     "right tag",
+	itemSlash:        "slash",
+	itemAssign:       "assign",
 
 	// keywords
 	itemDot:      ".",
@@ -554,9 +557,9 @@ var lexTagTests = []lexTest{
 		name:  "opening ",
 		input: "<div>",
 		items: []item{
-			{itemTagLeft, 0, "<", 1},
+			{itemLeftTag, 0, "<", 1},
 			{itemIdentifier, 1, "div", 1},
-			{itemTagRight, 4, ">", 1},
+			{itemRightTag, 4, ">", 1},
 			{itemEOF, 5, "", 1},
 		},
 	},
@@ -564,11 +567,11 @@ var lexTagTests = []lexTest{
 		name:  "tag with attribute",
 		input: "<div enabled>",
 		items: []item{
-			{itemTagLeft, 0, "<", 1},
+			{itemLeftTag, 0, "<", 1},
 			{itemIdentifier, 1, "div", 1},
 			{itemSpace, 4, " ", 1},
 			{itemIdentifier, 5, "enabled", 1},
-			{itemTagRight, 12, ">", 1},
+			{itemRightTag, 12, ">", 1},
 			{itemEOF, 13, "", 1},
 		},
 	},
@@ -576,25 +579,28 @@ var lexTagTests = []lexTest{
 		name:  "tag with attribute value",
 		input: "<div enabled=>",
 		items: []item{
-			{itemTagLeft, 0, "<", 1},
+			{itemLeftTag, 0, "<", 1},
 			{itemIdentifier, 1, "div", 1},
 			{itemSpace, 4, " ", 1},
 			{itemIdentifier, 5, "enabled", 1},
-			{itemAttributeAssign, 12, "=", 1},
+			{itemAssign, 12, "=", 1},
 			{itemError, 13, "attribute values can only be passed though context", 1},
 		},
 	},
 	{
 		name:  "tag with attribute value",
-		input: `<div enabled={{"true"}}>`,
+		input: `<div enabled={{true}}>`,
 		items: []item{
-			{itemTagLeft, 0, "<", 1},
+			{itemLeftTag, 0, "<", 1},
 			{itemIdentifier, 1, "div", 1},
 			{itemSpace, 4, " ", 1},
 			{itemIdentifier, 5, "enabled", 1},
-			{itemAttributeAssign, 12, "=", 1},
-			{itemLeftDelim, 12, "{{", 1},
-			{itemLeftDelim, 12, "{{", 1},
+			{itemAssign, 12, "=", 1},
+			{itemLeftDelim, 13, "{{", 1},
+			{itemBool, 15, "true", 1},
+			{itemRightDelim, 19, "}}", 1},
+			{itemRightTag, 21, ">", 1},
+			{itemEOF, 22, "", 1},
 		},
 	},
 }
@@ -604,7 +610,7 @@ func TestTags(t *testing.T) {
 		items := collect(&test, "{{", "}}")
 		if !equal(items, test.items, true) {
 			for _, v := range items {
-				pretty.Println(v)
+				fmt.Println(v.typ, v)
 			}
 			t.Errorf("%s: got\n\t%v\nexpected\n\t%v", test.name, items, test.items)
 		}

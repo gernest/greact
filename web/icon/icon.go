@@ -63,7 +63,7 @@ func (c *Icon) Context(p props.Props) props.Props {
 	opts := options(p)
 	klass := cn.Join(
 		cn.N("anticon", true),
-		cn.N("anticon-spin", !opts.Spin.Value || opts.Type.Value == "loading"),
+		cn.N("anticon-spin", opts.Spin.Value || opts.Type.Value == "loading"),
 		cn.N(fmt.Sprintf("anticon-%s", opts.Type.Value), true),
 		opts.ClassName.Value,
 	)

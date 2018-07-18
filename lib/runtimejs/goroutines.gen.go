@@ -1,7 +1,7 @@
 package runtimejs
 
 // goroutinesPlain is a plain lib/runtimejs/js/goroutines.js content as string
-var goroutinesPlain = `(function (env) {
+const goroutinesPlain = `(function (env) {
 
     var $stackDepthOffset = 0;
     var $getStackDepth = function () {
@@ -392,7 +392,7 @@ var goroutinesPlain = `(function (env) {
 `
 
 // goroutinesMin is a minified lib/runtimejs/js/goroutines.js content as string
-var goroutinesMin = `(function(env){var $stackDepthOffset=0;var $getStackDepth=function(){var err=new Error();if(err.stack===undefined){return undefined;}
+const goroutinesMin = `(function(env){var $stackDepthOffset=0;var $getStackDepth=function(){var err=new Error();if(err.stack===undefined){return undefined;}
 return $stackDepthOffset+err.stack.split("\n").length;};var $panicStackDepth=null,$panicValue;var $callDeferred=function(deferred,jsErr,fromPanic){if(!fromPanic&&deferred!==null&&deferred.index>=$curGoroutine.deferStack.length){throw jsErr;}
 if(jsErr!==null){var newErr=null;try{$curGoroutine.deferStack.push(deferred);$panic(new $jsErrorPtr(jsErr));}catch(err){newErr=err;}
 $curGoroutine.deferStack.pop();$callDeferred(deferred,newErr);return;}

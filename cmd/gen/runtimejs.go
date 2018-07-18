@@ -49,10 +49,10 @@ func Runtime(ctx *cli.Context) error {
 	sort.Strings(files)
 	tplTxt := `package runtimejs 
 	// {{.name}}Plain is a plain {{.file}} content as string
-	var {{.name}}Plain ={{.plain}}
+	const {{.name}}Plain ={{.plain}}
 
 	// {{.name}}Min is a minified {{.file}} content as string
-	var {{.name}}Min={{.minified}}
+	const {{.name}}Min={{.minified}}
 	`
 	tpl, err := template.New("runtimejs").Parse(tplTxt)
 	if err != nil {

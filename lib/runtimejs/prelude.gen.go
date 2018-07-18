@@ -1,7 +1,7 @@
 package runtimejs
 
 // preludePlain is a plain lib/runtimejs/js/prelude.js content as string
-var preludePlain = `Error.stackTraceLimit = Infinity;
+const preludePlain = `Error.stackTraceLimit = Infinity;
 var environment;
 if (typeof window !== "undefined") { /* web page */
     environment = window;
@@ -458,7 +458,7 @@ if (typeof window !== "undefined") { /* web page */
 `
 
 // preludeMin is a minified lib/runtimejs/js/prelude.js content as string
-var preludeMin = `Error.stackTraceLimit=Infinity;var environment;if(typeof window!=="undefined"){environment=window;}else if(typeof self!=="undefined"){environment=self;}
+const preludeMin = `Error.stackTraceLimit=Infinity;var environment;if(typeof window!=="undefined"){environment=window;}else if(typeof self!=="undefined"){environment=self;}
 (function(env){var $global=env,$module;if($global===undefined||$global.Array===undefined){throw new Error("no global object found");}
 if(typeof module!=="undefined"){$module=module;}
 var $idCounter=0;var $keys=function(m){return m?Object.keys(m):[];};var $flushConsole=function(){};var $throwRuntimeError;var $throwNilPointerError=function(){$throwRuntimeError("invalid memory address or nil pointer dereference");};var $call=function(fn,rcvr,args){return fn.apply(rcvr,args);};var $makeFunc=function(fn){return function(){return $externalize(fn(this,new($sliceType($jsObjectPtr))($global.Array.prototype.slice.call(arguments,[]))),$emptyInterface);};};var $unused=function(v){};var $mapArray=function(array,f){var newArray=new array.constructor(array.length);for(var i=0;i<array.length;i++){newArray[i]=f(array[i]);}

@@ -1,7 +1,7 @@
 package runtimejs
 
 // jsmappingPlain is a plain lib/runtimejs/js/jsmapping.js content as string
-var jsmappingPlain = `(function (env) {
+const jsmappingPlain = `(function (env) {
     var $jsObjectPtr, $jsErrorPtr;
 
     var $needsExternalization = function (t) {
@@ -398,7 +398,7 @@ var jsmappingPlain = `(function (env) {
 })(window);`
 
 // jsmappingMin is a minified lib/runtimejs/js/jsmapping.js content as string
-var jsmappingMin = `(function(env){var $jsObjectPtr,$jsErrorPtr;var $needsExternalization=function(t){switch(t.kind){case $kindBool:case $kindInt:case $kindInt8:case $kindInt16:case $kindInt32:case $kindUint:case $kindUint8:case $kindUint16:case $kindUint32:case $kindUintptr:case $kindFloat32:case $kindFloat64:return false;default:return t!==$jsObjectPtr;}};var $externalize=function(v,t){if(t===$jsObjectPtr){return v;}
+const jsmappingMin = `(function(env){var $jsObjectPtr,$jsErrorPtr;var $needsExternalization=function(t){switch(t.kind){case $kindBool:case $kindInt:case $kindInt8:case $kindInt16:case $kindInt32:case $kindUint:case $kindUint8:case $kindUint16:case $kindUint32:case $kindUintptr:case $kindFloat32:case $kindFloat64:return false;default:return t!==$jsObjectPtr;}};var $externalize=function(v,t){if(t===$jsObjectPtr){return v;}
 switch(t.kind){case $kindBool:case $kindInt:case $kindInt8:case $kindInt16:case $kindInt32:case $kindUint:case $kindUint8:case $kindUint16:case $kindUint32:case $kindUintptr:case $kindFloat32:case $kindFloat64:return v;case $kindInt64:case $kindUint64:return $flatten64(v);case $kindArray:if($needsExternalization(t.elem)){return $mapArray(v,function(e){return $externalize(e,t.elem);});}
 return v;case $kindFunc:return $externalizeFunction(v,t,false);case $kindInterface:if(v===$ifaceNil){return null;}
 if(v.constructor===$jsObjectPtr){return v.$val.object;}

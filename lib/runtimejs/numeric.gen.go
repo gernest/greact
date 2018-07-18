@@ -1,7 +1,7 @@
 package runtimejs
 
 // numericPlain is a plain lib/runtimejs/js/numeric.js content as string
-var numericPlain = `(function (env) {
+const numericPlain = `(function (env) {
     var $min = Math.min;
     var $mod = function (x, y) { return x % y; };
     var $parseInt = parseInt;
@@ -223,7 +223,7 @@ var numericPlain = `(function (env) {
 `
 
 // numericMin is a minified lib/runtimejs/js/numeric.js content as string
-var numericMin = `(function(env){var $min=Math.min;var $mod=function(x,y){return x%y;};var $parseInt=parseInt;var $parseFloat=function(f){if(f!==undefined&&f!==null&&f.constructor===Number){return f;}
+const numericMin = `(function(env){var $min=Math.min;var $mod=function(x,y){return x%y;};var $parseInt=parseInt;var $parseFloat=function(f){if(f!==undefined&&f!==null&&f.constructor===Number){return f;}
 return parseFloat(f);};var $froundBuf=new Float32Array(1);var $fround=Math.fround||function(f){$froundBuf[0]=f;return $froundBuf[0];};var $imul=Math.imul||function(a,b){var ah=(a>>>16)&0xffff;var al=a&0xffff;var bh=(b>>>16)&0xffff;var bl=b&0xffff;return((al*bl)+(((ah*bl+al*bh)<<16)>>>0)>>0);};var $floatKey=function(f){if(f!==f){$idCounter++;return "NaN$"+$idCounter;}
 return String(f);};var $flatten64=function(x){return x.$high*4294967296+x.$low;};var $shiftLeft64=function(x,y){if(y===0){return x;}
 if(y<32){return new x.constructor(x.$high<<y|x.$low>>>(32-y),(x.$low<<y)>>>0);}

@@ -74,9 +74,6 @@ defaultValue =
 	| string_lit
 	| "[" "]" .
 
-inheritance =
-	 ":" identifier
-	| empty .
 
 extension =
      "extends" identifier
@@ -434,15 +431,21 @@ optionalLong =
      | empty .
      
 promiseType = "Promise" "<" returnType ">" .
-null_ = "?" | empty .
-returnType = type | "void" .
-identifierList = identifier identifiers .
+
+null_ =
+	"?" 
+	| empty .
+
+returnType =
+	type 
+	| "void" .
+
+
 identifiers = "," identifier identifiers | empty .
+
 extendedAttributeNoArgs = identifier .
-extendedAttributeArgList = identifier "(" argumentList ")" .
-extendedAttributeIdent =  identifier "=" identifier .
-extendedAttributeIdentList = identifier "=" "(" identifierList ")" .
-extendedAttributeNamedArgList =  identifier "=" identifier "(" argumentList ")" .
+
+
 
 newline        = /* the Unicode code point U+000A */ .
 unicode_char   = /* an arbitrary Unicode code point except newline */ .

@@ -12,7 +12,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gernest/vected/internal/text/template/parse"
+	"github.com/gernest/vected/lib/text/template/parse"
 )
 
 func TestAddParseTree(t *testing.T) {

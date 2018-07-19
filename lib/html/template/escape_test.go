@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gernest/vected/internal/text/template"
-	"github.com/gernest/vected/internal/text/template/parse"
+	"github.com/gernest/vected/lib/text/template"
+	"github.com/gernest/vected/lib/text/template/parse"
 )
 
 type badMarshaler struct{}

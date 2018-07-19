@@ -13,7 +13,11 @@ func TestGrammar(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	_, err = ebnf.Parse("grammer", f)
+	g, err := ebnf.Parse("grammer", f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ebnf.Verify(g, "definitions")
 	if err != nil {
 		t.Fatal(err)
 	}

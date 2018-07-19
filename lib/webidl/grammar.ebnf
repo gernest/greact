@@ -254,9 +254,11 @@ readWriteMaplike =
 readWriteSetlike =
 	 setlikeRest .
 
-
 maplikeRest =
 	 "maplike" "<" type "," type ">" ";" .
+
+setlikeRest =
+	 "setlike" "<" type ">" ";" .
 
 extendedAttributeList =
 	 "[" extendedAttribute extendedAttributes "]"

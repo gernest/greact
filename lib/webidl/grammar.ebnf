@@ -74,6 +74,10 @@ defaultValue =
 	| string_lit
 	| "[" "]" .
 
+inheritance =
+	 ":" identifier
+	| empty .
+
 
 extension =
      "extends" identifier

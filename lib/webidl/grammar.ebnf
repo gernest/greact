@@ -476,7 +476,6 @@ exponent  = ( "e" | "E" ) [ "+" | "-" ] decimals .
 
 imaginary_lit = (decimals | float_lit) "i" .
 
-rune_lit         = "'" ( unicode_value | byte_value ) "'" .
 unicode_value    = unicode_char | little_u_value | big_u_value | escaped_char .
 byte_value       = octal_byte_value | hex_byte_value .
 octal_byte_value = `\` octal_digit octal_digit octal_digit .

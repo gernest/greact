@@ -355,28 +355,3 @@ Source https://github.com/CapMousse/include.js
     };
 
 })(this);`
-
-// includeMin is a minified lib/runtimejs/js/include.js content as string
-const includeMin = `(function(environment){var modules={};var waitingModules=[];var scriptCounter=1;var baseElement=document.getElementsByTagName('base')[0];var head=document.getElementsByTagName('head')[0];function Include(name,deps,module){var self=this;if(typeof name!=="string"){module=deps;deps=name;name=null;}
-if(deps.constructor!==[].constructor){module=deps;deps=[];}
-waitingModules.unshift([name,deps,module]);self.uid=Math.random().toString(36).replace(/[^a-z0-9]+/g,'').substr(0,10);self.checkModuleLoaded();if(deps.length){self.each(deps,self.parseFiles);}};Include.prototype.each=function(array,callback){var self=this,i;for(i=0;i<array.length;i++){if(array[i]!==undefined&&callback.call(self,array[i],i,array)===false){break;}}}
-Include.prototype.getId=function(name,clean){return(clean?'':this.uid+'-')+name.replace(/[^a-z0-9]+/g,'');}
-Include.prototype.getFileName=function(){var scripts=document.querySelectorAll('script'),currentScript=scripts[scripts.length-1],currentPath=document.location.href.split('/'),path=currentScript.src;currentPath.pop();currentPath=currentPath.join('/');return path.replace(currentPath,'').substring(1);};Include.prototype.checkModuleLoaded=function(){var self=this;self.each(waitingModules,function(module,i){var name=module[0],dependencies=module[1],exec=module[2],args=[];self.each(dependencies,function(dependencie,n,t){n=dependencie.push?dependencie[0]:dependencie;t=document.querySelector('[data-id*="'+self.getId(n,1)+'"]');if(t&&t.nodeName=="LINK"){args.push(null);return;}
-if(modules[n]!==undefined){args.push(modules[n]);}});if(dependencies.length===args.length||dependencies.length===0){if(name===null&&i+1===waitingModules.length){waitingModules=[];scriptCounter=1;}
-exec=typeof exec=='function'?exec.apply(this,args):exec;modules[name||self.getFileName()]=exec;}});}
-Include.prototype.onModuleLoaded=function(name,index){var self=this;if(index>waitingModules.length){scriptCounter--;modules[name]=modules[name]||scriptCounter;}else if(waitingModules[0][0]===null){waitingModules[0][0]=name;}
-self.checkModuleLoaded();}
-Include.prototype.onLoad=function(event,caller){var self=this,target=(event.currentTarget||event.srcElement);if(event.type!=="load"&&target.readyState!="complete"){return;}
-target.setAttribute('data-loaded',true);self.onModuleLoaded(target.getAttribute('data-module'),target.getAttribute('data-count'));if(target.attachEvent){target.detachEvent('onreadystatechange',caller);}else{target.removeEventListener('load',caller);}}
-Include.prototype.watchCss=function(elem){var self=this,sheets=document.styleSheets,i=sheets.length,href=elem.href.split('//').pop();while(i--){if(sheets[i].href.indexOf(href)!=-1){elem.setAttribute('data-loaded',true);self.onModuleLoaded(elem.getAttribute('data-module'),elem.getAttribute('data-count'));return;}}
-setTimeout(function(){self.watchCss.call(self,elem);});}
-Include.prototype.attachEvents=function(elem,isJs){var self=this,cb=function(){var args=Array.prototype.slice.call(arguments);args.push(cb);self.onLoad.apply(self,args);};if(isJs){if(elem.attachEvent){elem.attachEvent('onreadystatechange',cb);}else{elem.addEventListener('load',cb,true);}}else{self.watchCss(elem);}}
-Include.prototype.checkExists=function(moduleName,isJs){var exists=false;this.each(document.getElementsByTagName(isJs?'script':'link'),function(elem){if(elem.getAttribute('data-module')&&elem.getAttribute('data-module')===moduleName){exists=elem;return false;}});return exists;}
-Include.prototype.create=function(moduleName,moduleFile,isJs){var self=this;setTimeout(function(){var elem=self.checkExists.call(self,moduleName,isJs);if(elem){return;}
-scriptCounter++;elem=document.createElement(isJs?'script':'link');if(isJs){elem.async=true;elem.type="text/javascript";elem.src=moduleFile;}else{elem.media="all";elem.href=moduleFile;elem.rel="stylesheet"}
-elem.setAttribute('data-id',self.getId(moduleName));elem.setAttribute('data-module',moduleName);elem.setAttribute('data-count',scriptCounter);elem.setAttribute('data-loaded',false);if(baseElement){baseElement.parentNode.insertBefore(elem,baseElement);}else{head.appendChild(elem);}
-self.attachEvents.call(self,elem,isJs);},0);}
-Include.prototype.parseFiles=function(file){var moduleName=file.push?file[0]:file,moduleFile=file.push?file[1]:file,ext;if(modules[moduleName]){this.checkModuleLoaded();return;}
-if(moduleFile.indexOf('//')==-1&&!/\.js/.test(moduleFile)&&!/^http/.test(moduleFile)){moduleFile=moduleFile.replace(/\./g,'/');moduleFile=moduleFile+'.js';}
-ext=moduleFile.split('.').pop()=='js';this.create.call(this,moduleName,moduleFile,ext);}
-environment['include']=environment['require']=environment['define']=function(name,deps,module){return new Include(name,deps,module);};})(this);`

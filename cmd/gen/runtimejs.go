@@ -11,8 +11,6 @@ import (
 
 	"text/template"
 
-	"github.com/tdewolff/minify"
-	"github.com/tdewolff/minify/js"
 	"github.com/urfave/cli"
 )
 
@@ -21,18 +19,9 @@ const (
 	runtimeOut = "lib/runtimejs"
 )
 
-type jsSrc struct {
-	Name     string
-	OutPath  string
-	Plain    string
-	Minified string
-}
-
 // Runtime creates lib/include.gen.go file that contains both minified
 // an un minified source for include.js library found in lib/include/include.js.
 func Runtime(ctx *cli.Context) error {
-	m := minify.New()
-	m.AddFunc("text/javascript", js.Minify)
 	info, err := ioutil.ReadDir(runtimeSrc)
 	if err != nil {
 		return err
@@ -50,9 +39,6 @@ func Runtime(ctx *cli.Context) error {
 	tplTxt := `package runtimejs 
 	// {{.name}}Plain is a plain {{.file}} content as string
 	const {{.name}}Plain ={{.plain}}
-
-	// {{.name}}Min is a minified {{.file}} content as string
-	const {{.name}}Min={{.minified}}
 	`
 	tpl, err := template.New("runtimejs").Parse(tplTxt)
 	if err != nil {
@@ -66,17 +52,11 @@ func Runtime(ctx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		var buf bytes.Buffer
-		if err := m.Minify("text/javascript", &buf, bytes.NewReader(f)); err != nil {
-			return err
-		}
-
 		var out bytes.Buffer
 		err = tpl.Execute(&out, map[string]string{
-			"file":     v,
-			"name":     name,
-			"plain":    fmt.Sprintf("`%s`", string(f)),
-			"minified": fmt.Sprintf("`%s`", buf.String()),
+			"file":  v,
+			"name":  name,
+			"plain": fmt.Sprintf("`%s`", string(f)),
 		})
 		b, err := format.Source(out.Bytes())
 		if err != nil {

@@ -186,9 +186,6 @@ attributeName =
 attributeNameKeyword =
 	 "required" .
 
-inherit =
-	"inherit"
-	| empty .
 
 readOnly =
 	 "readonly"

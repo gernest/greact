@@ -444,10 +444,6 @@ returnType =
 
 identifiers = "," identifier identifiers | empty .
 
-extendedAttributeNoArgs = identifier .
-
-
-
 newline        = /* the Unicode code point U+000A */ .
 unicode_char   = /* an arbitrary Unicode code point except newline */ .
 unicode_letter = /* a Unicode code point classified as "Letter" */ .

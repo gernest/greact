@@ -39,13 +39,15 @@ type Component interface {
 	core()
 }
 
-type Core struct {
-	state map[string]interface{}
-}
+type Core struct{}
 
 func (c *Core) core() {}
 
-// InitState initializes the component's state with state map.
-func (c *Core) InitState(state map[string]interface{}) {
-	c.state = state
+// InitState is an interface for exposing initial state. The returned map state
+// will available to the component through Core.GetState.
+//
+// Component should implement this interface if they want to set initial state
+// when the component is first created before being rendered.
+type InitState interface {
+	InitState(props.Props) map[string]interface{}
 }

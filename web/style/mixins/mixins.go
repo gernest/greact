@@ -83,7 +83,7 @@ func ResetComponent() gs.CSSRule {
 		gs.P("font-size", themes.Default.FontSizeBase.String()),
 		gs.P("line-height", themes.Default.LineHeightBase.String()),
 		gs.P("color", themes.Default.TextColor.String()),
-		gs.P("ox-sizing", "border-box"),
+		gs.P("box-sizing", "border-box"),
 		gs.P("margin", "0"),
 		gs.P("padding", "0"),
 		gs.P("list-style", "none"),

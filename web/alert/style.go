@@ -62,6 +62,10 @@ func Style() gs.CSSRule {
 				gs.P("border", infoBorder),
 				gs.P("background-color", infoColor[0].Hex()),
 				gs.S("& "+klass+"-icon",
+					// For some reason that I have no clue. This gives a different value from
+					// the one on antd.
+					//
+					// Here we are getting #178fff; while antd has #1890ff
 					gs.P("color", themes.Default.InfoColor.Hex()),
 				),
 			),

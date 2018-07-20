@@ -39,6 +39,13 @@ type Component interface {
 	core()
 }
 
-type Core struct{}
+type Core struct {
+	state map[string]interface{}
+}
 
 func (c *Core) core() {}
+
+// InitState initializes the component's state with state map.
+func (c *Core) InitState(state map[string]interface{}) {
+	c.state = state
+}

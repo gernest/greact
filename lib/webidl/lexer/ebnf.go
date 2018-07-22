@@ -43,6 +43,12 @@ func isNewLine(ch rune) bool {
 	return ch == '\u000A'
 }
 
+func (e *ebnfLexer) consumeWhiteSpace() {
+	for unicode.IsSpace(e.peek()) {
+		e.read()
+	}
+}
+
 func (e *ebnfLexer) match(name string, expr ebnf.Expression, out *bytes.Buffer) bool { // nolint: gocyclo
 	panicf := func(format string, args ...interface{}) { e.panicf(name+": "+format, args...) }
 	switch n := expr.(type) {

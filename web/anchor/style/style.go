@@ -10,8 +10,8 @@ var prefix = themes.Default.AntPrefix
 
 const borderWidth = "2px"
 
-// Style returns css style for antd anchor.
-func Style() gs.CSSRule {
+// Anchor returns css style for antd anchor.
+func Anchor() gs.CSSRule {
 	return gs.CSS(
 		gs.S(prefix+"-anchor",
 			mixins.ResetComponent(),

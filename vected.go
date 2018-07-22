@@ -36,13 +36,17 @@ type Core struct{}
 
 func (c *Core) core() {}
 
-// InitState is an interface for exposing initial state. The returned map state
-// will available to the component through Core.GetState.
-//
+// InitState is an interface for exposing initial state.
 // Component should implement this interface if they want to set initial state
 // when the component is first created before being rendered.
 type InitState interface {
-	InitState(props.Props) map[string]interface{}
+	InitState() state.State
+}
+
+// InitProps is an interface for exposing default props. This will be merged
+// with other props before being sent to render.
+type InitProps interface {
+	InitProps() props.Props
 }
 
 // WillMount is an interface defining a callback which is invoked before the

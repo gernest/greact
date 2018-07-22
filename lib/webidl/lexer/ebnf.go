@@ -87,6 +87,8 @@ func (e *ebnfLexer) match(name string, expr ebnf.Expression, out *bytes.Buffer) 
 			e.read()
 			out.WriteRune(x)
 			return true
+		case "empty":
+			return true
 		}
 		return e.match(name, e.def.grammar[n.String].Expr, out)
 

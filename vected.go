@@ -15,6 +15,7 @@ package vected
 
 import (
 	"github.com/gernest/vected/lib/props"
+	"github.com/gernest/vected/lib/state"
 )
 
 // Component is an interface which defines a unit of user interface.
@@ -28,14 +29,6 @@ type Component interface {
 
 	// Template this is the vected template that is rendered by the component.
 	Template() string
-
-	// This method will be called with propes athat will be passed down the
-	// component's template to be rendered.
-	//
-	// The returned props is used as context for rendering the component's
-	// template.
-	Context(props.Props) props.Props
-	// all components must embed the Core struct to satisfy this interface.xw
 	core()
 }
 
@@ -50,4 +43,55 @@ func (c *Core) core() {}
 // when the component is first created before being rendered.
 type InitState interface {
 	InitState(props.Props) map[string]interface{}
+}
+
+// WillMount is an interface defining a callback which is invoked before the
+// component is mounted on the dom.
+type WillMount interface {
+	ComponentWillMount(UpdateOptions)
+}
+
+// DidMount is an interface defining a callback that is invoked after the
+// component has been mounted to the dom.
+type DidMount interface {
+	ComponentDidMount(UpdateOptions)
+}
+
+// WillUnmount is an interface defining a callback that is invoked prior to
+// removal of the rendered component from the dom.
+type WillUnmount interface {
+	ComponentWillUnmount(UpdateOptions)
+}
+
+// WillReceiveProps is an interface defining a callback that will be called with
+// the new props before they are accepted and passed to be rendered.
+type WillReceiveProps interface {
+	ComponentWillReceiveProps(UpdateOptions)
+}
+
+// UpdateOptions these are options passed to lifecycle hooks.
+type UpdateOptions struct {
+	State     state.State
+	NextState state.State
+	Props     props.Props
+	NextProps props.Props
+}
+
+// ShouldUpdate is an interface defining callback that is called before render
+// determine if re render is necessary.
+type ShouldUpdate interface {
+	// If this returns false then re rendering for the component is skipped.
+	ShouldComponentUpdate(UpdateOptions) bool
+}
+
+// WillUpdate is an interface defining a callback that is called before rendering
+type WillUpdate interface {
+	// If returned props are not nil, then it will be merged with nextprops then
+	// passed to render for rendering.
+	ComponentWillUpdate(UpdateOptions) props.Props
+}
+
+// DidUpdate defines a callback that is invoked after rendering.
+type DidUpdate interface {
+	ComponentDidUpdate()
 }

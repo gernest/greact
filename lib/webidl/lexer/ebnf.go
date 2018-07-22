@@ -249,9 +249,12 @@ func EBNF(grammar string) (Definition, error) {
 	// Optimize and export public productions.
 	productions := ebnf.Grammar{}
 	for symbol, production := range ast {
-		symbols[symbol] = rn
-		productions[symbol] = production
-		rn--
+		ch := symbol[0:1]
+		if strings.ToUpper(ch) == ch {
+			symbols[symbol] = rn
+			productions[symbol] = production
+			rn--
+		}
 	}
 	def := &ebnfLexerDefinition{
 		grammar:     ast,

@@ -1,4 +1,4 @@
-package grid
+package style
 
 import (
 	"fmt"

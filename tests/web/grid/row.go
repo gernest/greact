@@ -3,14 +3,14 @@ package grid
 import (
 	"github.com/gernest/vected/lib/gs"
 	"github.com/gernest/vected/lib/mad"
-	"github.com/gernest/vected/web/grid"
+	"github.com/gernest/vected/web/grid/style"
 )
 
 func TestGrid() mad.Test {
 	return mad.List{
 		mad.Describe("RowStyle",
 			mad.It("generates all the styles for grid rows", func(t mad.T) {
-				css := gs.ToString(grid.RowStyle())
+				css := gs.ToString(style.RowStyle())
 				if css != expectRowStyle {
 					t.Errorf("expected %s got %s", expectRowStyle, css)
 				}

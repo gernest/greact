@@ -1,4 +1,4 @@
-definitions =extendedAttributeList definition definitions | empty .
+definitions = {extendedAttributeList definition}  | empty .
 definition =
 	 callbackOrInterface
 	| partial

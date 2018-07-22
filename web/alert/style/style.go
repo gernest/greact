@@ -15,8 +15,8 @@ var msgColor = themes.Default.HeadingColor
 var textColor = themes.Default.TextColor
 var closeColor = themes.Default.TextColor
 
-// Style returns antd styles for alerts.
-func Style() gs.CSSRule {
+// Alert returns antd styles for alerts.
+func Alert() gs.CSSRule {
 	a := themes.Default.FontSizeBase.Value()
 	b := themes.Default.LineHeightBase.Value()
 	c := 8 + a*b/2 - a/2 + 1

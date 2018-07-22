@@ -8,7 +8,7 @@ import (
 
 func TestStyle() mad.Test {
 	return mad.It("returns antd alert style", func(t mad.T) {
-		css := gs.ToString(style.Style())
+		css := gs.ToString(style.Alert())
 		if css != expect {
 			t.Error("got wrong styles")
 		}

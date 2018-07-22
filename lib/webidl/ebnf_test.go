@@ -1,9 +1,9 @@
 package webidl
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
 
@@ -12,12 +12,11 @@ import (
 )
 
 func TestGrammar(t *testing.T) {
-	f, err := os.Open("grammar.ebnf")
+	f, err := ioutil.ReadFile("grammar.ebnf")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
-	g, err := ebnf.Parse("grammer", f)
+	g, err := ebnf.Parse("grammer", bytes.NewReader(f))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,8 +24,7 @@ func TestGrammar(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, _ := ioutil.ReadAll(f)
-	def, err := lexer.EBNF(string(b))
+	def, err := lexer.EBNF(string(f))
 	if err != nil {
 		t.Fatal(err)
 	}

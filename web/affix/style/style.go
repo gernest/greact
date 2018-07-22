@@ -1,4 +1,4 @@
-package affix
+package style
 
 import (
 	"github.com/gernest/vected/lib/gs"

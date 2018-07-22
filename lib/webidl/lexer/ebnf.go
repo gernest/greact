@@ -39,6 +39,10 @@ func (e *ebnfLexer) Next() Token {
 	return Token{}
 }
 
+func isNewLine(ch rune) bool {
+	return ch == '\u000A'
+}
+
 func (e *ebnfLexer) match(name string, expr ebnf.Expression, out *bytes.Buffer) bool { // nolint: gocyclo
 	panicf := func(format string, args ...interface{}) { e.panicf(name+": "+format, args...) }
 	switch n := expr.(type) {
@@ -57,7 +61,7 @@ func (e *ebnfLexer) match(name string, expr ebnf.Expression, out *bytes.Buffer) 
 		switch n.String {
 		case "newline":
 			x := e.peek()
-			if x != '\u000A' {
+			if !isNewLine(x) {
 				return false
 			}
 			e.read()
@@ -65,7 +69,7 @@ func (e *ebnfLexer) match(name string, expr ebnf.Expression, out *bytes.Buffer) 
 			return true
 		case "unicode_char":
 			x := e.peek()
-			if x == '\u000A' {
+			if isNewLine(x) {
 				return false
 			}
 			e.read()

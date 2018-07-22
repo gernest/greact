@@ -481,3 +481,5 @@ string_lit             = raw_string_lit | interpreted_string_lit .
 raw_string_lit         = "`" { unicode_char | newline } "`" .
 interpreted_string_lit = `"` { unicode_value | byte_value } `"` .
 
+Single_line_comment = "/" "/" {unicode_char} ["\n" | "\r"] .
+

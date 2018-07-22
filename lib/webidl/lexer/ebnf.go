@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 	"text/scanner"
+	"unicode"
 	"unicode/utf8"
 
 	"golang.org/x/exp/ebnf"
@@ -40,7 +41,6 @@ func (e *ebnfLexer) Next() Token {
 
 func (e *ebnfLexer) match(name string, expr ebnf.Expression, out *bytes.Buffer) bool { // nolint: gocyclo
 	panicf := func(format string, args ...interface{}) { e.panicf(name+": "+format, args...) }
-
 	switch n := expr.(type) {
 	case ebnf.Alternative:
 		for _, an := range n {
@@ -54,6 +54,40 @@ func (e *ebnfLexer) match(name string, expr ebnf.Expression, out *bytes.Buffer) 
 		return e.match(name, n.Body, out)
 
 	case *ebnf.Name:
+		switch n.String {
+		case "newline":
+			x := e.peek()
+			if x != '\u000A' {
+				return false
+			}
+			e.read()
+			out.WriteRune(x)
+			return true
+		case "unicode_char":
+			x := e.peek()
+			if x == '\u000A' {
+				return false
+			}
+			e.read()
+			out.WriteRune(x)
+			return true
+		case "unicode_letter":
+			x := e.peek()
+			if !unicode.IsLetter(x) {
+				return false
+			}
+			e.read()
+			out.WriteRune(x)
+			return true
+		case "unicode_digit":
+			x := e.peek()
+			if !unicode.IsDigit(x) {
+				return false
+			}
+			e.read()
+			out.WriteRune(x)
+			return true
+		}
 		return e.match(name, e.def.grammar[n.String].Expr, out)
 
 	case *ebnf.Option:

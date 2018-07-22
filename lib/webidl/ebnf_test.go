@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/alecthomas/participle/lexer"
+	"github.com/gernest/vected/lib/webidl/lexer"
 	"golang.org/x/exp/ebnf"
 )
 

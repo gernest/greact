@@ -163,7 +163,7 @@ sup {
   top:-.5em;
 }
 a {
-  color:rgb(23,143,255);
+  color:rgb(24,144,255);
   background-color:transparent;
   text-decoration:none;
   outline:none;
@@ -334,7 +334,7 @@ mark {
   background-color:rgb(254,255,230);
 }
 ::selection {
-  background:rgb(23,143,255);
+  background:rgb(24,144,255);
   color:#fff;
 }
 .clearfix {

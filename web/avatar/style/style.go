@@ -1,4 +1,4 @@
-package Style
+package style
 
 import (
 	"github.com/gernest/vected/lib/gs"
@@ -13,10 +13,11 @@ func size(asize, font string) gs.CSSRule {
 		gs.P("width", asize),
 		gs.P("height", asize),
 		gs.P("line-height", asize),
+		gs.P("border-radius", "50%"),
 		gs.S("& > *",
 			gs.P("line-height", asize),
 		),
-		gs.S(avatarPrefix+"-icon",
+		gs.S("&"+avatarPrefix+"-icon",
 			gs.P("font-size", font),
 		),
 	)

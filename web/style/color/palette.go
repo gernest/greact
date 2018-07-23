@@ -57,7 +57,11 @@ func NewPalette() *Palette {
 func Generate(base *Color) [10]*Color {
 	var c [10]*Color
 	for i := 0; i < 10; i++ {
-		c[i] = GenerateColor(base, i+1)
+		if i == 5 {
+			c[i] = base
+		} else {
+			c[i] = GenerateColor(base, i+1)
+		}
 	}
 	return c
 }

@@ -98,7 +98,7 @@ func TestPalette2() mad.Test {
 	return mad.Describe("Generates correct color pellete", cases...)
 }
 
-func TestGenerate() mad.Test {
+func TestGenerateColor() mad.Test {
 	return mad.It("generates colors", func(t mad.T) {
 		base := color.New("#f5222d")
 		c := color.GenerateColor(base, 9)
@@ -112,5 +112,19 @@ func TestGenerate() mad.Test {
 			t.Errorf("expected %s got %s", e, h)
 		}
 	})
+}
 
+func TestGenerate_bug_blue_pallete() mad.Test {
+	base := color.New("#1890ff")
+	pallete := color.Generate(base)
+	return mad.List{
+		mad.It("must contain the base color", func(t mad.T) {
+			i := pallete[5]
+			bx := base.Hex()
+			ix := i.Hex()
+			if ix != bx {
+				t.Errorf("expected %s got %s", bx, ix)
+			}
+		}),
+	}
 }

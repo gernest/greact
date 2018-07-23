@@ -53,7 +53,7 @@ const expect = `.ant-alert {
   background-color:#e6f7ff;
 }
 .ant-alert-info .ant-alert-icon {
-  color:#178fff;
+  color:#1890ff;
 }
 .ant-alert-warning {
   border:1px solid #ffe58f;

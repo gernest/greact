@@ -137,6 +137,10 @@ func KeyFrame(name string, rules ...CSSRule) CSSRule {
 	return Cond("@keyframes "+name, rules...)
 }
 
+func Media(name string, rules ...CSSRule) CSSRule {
+	return Cond("@media "+name, rules...)
+}
+
 type CSSRule interface {
 	//we don't want users to implement this.
 	String() string

@@ -1,4 +1,4 @@
-package avatar
+package Style
 
 import (
 	"github.com/gernest/vected/lib/gs"

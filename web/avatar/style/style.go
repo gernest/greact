@@ -22,8 +22,8 @@ func size(asize, font string) gs.CSSRule {
 	)
 }
 
-// Style returns css for antd Avatar component.
-func Style() gs.CSSRule {
+// Avatar returns css for antd Avatar component.
+func Avatar() gs.CSSRule {
 	return gs.S(avatarPrefix,
 		mixins.ResetComponent(),
 		gs.P("display", "inline-block"),

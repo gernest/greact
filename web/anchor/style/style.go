@@ -1,4 +1,4 @@
-package anchor
+package style
 
 import (
 	"github.com/gernest/vected/lib/gs"
@@ -29,7 +29,7 @@ func Anchor() gs.CSSRule {
 				gs.P("left", "0"),
 				gs.P("top", "0"),
 				gs.S("&:before",
-					gs.P("content", "' "),
+					gs.P("content", "' '"),
 					gs.P("position", "relative"),
 					gs.P("width", borderWidth),
 					gs.P("height", "100%"),
@@ -41,6 +41,7 @@ func Anchor() gs.CSSRule {
 			gs.S("&-ball",
 				gs.P("display", "none"),
 				gs.P("position", "absolute"),
+				gs.P("width", "8px"),
 				gs.P("height", "8px"),
 				gs.P("border-radius", "8px"),
 				gs.P("border", "2px solid "+themes.Default.PrimaryColor.Hex()),
@@ -62,7 +63,7 @@ func Anchor() gs.CSSRule {
 					gs.P("display", "block"),
 					gs.P("position", "relative"),
 					gs.P("transition", "all .3s"),
-					gs.P("color", themes.Default.TextColor.Hex()),
+					gs.P("color", themes.Default.TextColor.String()),
 					gs.P("white-space", "nowrap"),
 					gs.P("overflow", "hidden"),
 					gs.P("text-overflow", "ellipsis"),

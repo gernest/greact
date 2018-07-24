@@ -10,7 +10,8 @@ func TestBase() mad.Test {
 	return mad.It("generates normalize css", func(t mad.T) {
 		css := gs.ToString(base.Base())
 		if css != expectedBaseStyle {
-			t.Errorf("expected %s got %s", expectedBaseStyle, css)
+			// t.Errorf("expected %s got %s", expectedBaseStyle, css)
+			t.Error(css)
 		}
 	})
 }

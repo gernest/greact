@@ -2,6 +2,7 @@
 package gs
 
 import (
+	"fmt"
 	"io"
 	"strings"
 )
@@ -184,10 +185,13 @@ func flattern(parent string, rule CSSRule) RuleList {
 }
 
 func replaceParent(parent, selector string) string {
-	if strings.Contains(selector, "&,") {
-		return strings.Replace(selector, "&,", parent+",\n", -1)
+	if parent == "" {
+		return selector
 	}
-	return strings.Replace(selector, "&", parent, -1)
+	if strings.Contains(selector, "&") {
+		return strings.Replace(selector, "&", parent, -1)
+	}
+	return fmt.Sprintf("%s,\n%s", parent, selector)
 }
 
 func ToString(rule CSSRule, ts ...Transformer) string {

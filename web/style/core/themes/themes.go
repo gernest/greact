@@ -346,7 +346,7 @@ type Theme struct {
 	// Badge
 	// ---
 	BadgeHeight     gs.U
-	BadgeDotSize    string
+	BadgeDotSize    gs.U
 	BadgeFontSize   gs.U
 	BadgeFontWeight string
 	BadgeStatusSize string

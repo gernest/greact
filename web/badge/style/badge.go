@@ -9,6 +9,7 @@ import (
 var prefix = themes.Default.AntPrefix + "-badge"
 var numberPrefix = themes.Default.AntPrefix + "-scroll-number"
 var height = themes.Default.BadgeHeight
+var dot = themes.Default.BadgeDotSize
 
 // Badge returns stylesheet for antd badge.
 func Badge() gs.CSSRule {
@@ -35,6 +36,24 @@ func Badge() gs.CSSRule {
 				gs.P("font-weight", themes.Default.BadgeFontWeight),
 				gs.P("white-space", "nowrap"),
 				gs.P("transform-origin", "-10% center"),
+				gs.P("box-shadow", "0 0 0 1px #fff"),
+				gs.S("a,\n a:hover",
+					gs.P("color", "#fff"),
+				),
+			),
+			gs.S("&-multiple-words",
+				gs.P("padding", "0 8px"),
+			),
+			gs.S("&-dot",
+				gs.P("position", "absolute"),
+				gs.P("transform", "translateX(-50%)"),
+				gs.P("transform-origin", "0 center"),
+				gs.P("top", dot.Div(gs.U("2")).String()),
+				gs.P("height", dot.String()),
+				gs.P("width", dot.String()),
+				gs.P("border-radius", "100%"),
+				gs.P("background", themes.Default.HighlightColor.Hex()),
+				gs.P("z-index", "10"),
 				gs.P("box-shadow", "0 0 0 1px #fff"),
 			),
 		),

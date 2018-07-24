@@ -128,3 +128,8 @@ func Bool(p Props, key interface{}) NullBool {
 	}
 	return NullBool{IsNull: true}
 }
+
+// Eval tries to find the value v in p.
+func (p Props) Eval(v string) string {
+	return ""
+}

@@ -6,7 +6,7 @@ import (
 	"github.com/gernest/vected/web/style/motion/slide"
 )
 
-func TestKeyFrame() mad.Test {
+func TestSlideStyle() mad.Test {
 	return mad.It("generates css for slide @keyframes", func(t mad.T) {
 		css := gs.ToString(slide.KeyFrames())
 		expect := `@keyframes slideUpIn {
@@ -106,7 +106,8 @@ func TestKeyFrame() mad.Test {
   }
 }`
 		if css != expect {
-			t.Errorf("expected %s got %s", expect, css)
+			t.Error(css)
+			// t.Errorf("expected %s got %s", expect, css)
 		}
 	})
 }

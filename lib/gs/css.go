@@ -104,8 +104,12 @@ func (c Conditional) String() string {
 		return ""
 	}
 	b := ""
+
 	for _, v := range c.Rules {
 		b += v.String()
+		if _, ok := v.(SimpleRule); ok {
+			b += "\n"
+		}
 	}
 	return c.Key + " {\n" + indent(b, 2) + "}\n"
 }
@@ -171,9 +175,6 @@ func flattern(parent string, rule CSSRule) RuleList {
 		})
 	case Conditional:
 		key := e.Key
-		if parent != "" {
-			key = replaceParent(parent, key)
-		}
 		o = append(o, Conditional{
 			Key:   key,
 			Rules: flattern(key, e.Rules),

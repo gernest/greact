@@ -174,7 +174,7 @@ func TestKeyFrames() mad.Test {
   }
 }`
 		if css != expect {
-			t.Errorf("expected %s got %s")
+			t.Error("wrong styles")
 		}
 	})
 }

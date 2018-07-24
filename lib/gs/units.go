@@ -1,6 +1,10 @@
 package gs
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+	"unicode"
+)
 
 //U wraps strings to allow basic operations on css units.
 type U string
@@ -25,14 +29,9 @@ func (u U) Unit() string {
 	if size == 0 {
 		return ""
 	}
-	if u[size-1] == '%' {
-		return "%"
-	}
-	if len(u) > 2 {
-		v := u[size-2:]
-		if supportedUnits[string(v)] {
-			return string(v)
-		}
+	v := u.Measure()
+	if supportedUnits[string(v)] {
+		return string(v)
 	}
 	return ""
 }
@@ -57,4 +56,34 @@ func (u U) Value() float64 {
 
 func (u U) String() string {
 	return string(u)
+}
+
+// Measure returns measurement of the unit.
+func (u U) Measure() string {
+	for k, v := range u {
+		if v == '%' {
+			return "%"
+		}
+		if unicode.IsLetter(v) {
+			return string(u[k:])
+		}
+	}
+	return ""
+}
+
+// Div performs division between two units.
+func (u U) Div(n U) U {
+	a, au := u.Value(), u.Unit()
+	b, bu := n.Value(), n.Unit()
+	switch {
+	case au == bu:
+		return U(format(a/b, au))
+	case au == "" && bu != "":
+		return U(format(a/b, bu))
+	}
+	return U("")
+}
+
+func format(value float64, unit string) string {
+	return fmt.Sprintf("%f%s", value, unit)
 }

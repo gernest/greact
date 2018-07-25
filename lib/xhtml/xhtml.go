@@ -62,11 +62,11 @@ func makeNode(n *Node) *ast.UnaryExpr {
 						Value: fmt.Sprintf("%q", n.Namespace),
 					},
 				}),
-				ifExpr(n.Attr != nil, &ast.KeyValueExpr{
+				ifExpr(len(n.Attr) != 0, &ast.KeyValueExpr{
 					Key:   &ast.Ident{Name: "Attr"},
 					Value: mkAttr(n.Attr),
 				}),
-				ifExpr(n.Children != nil, &ast.KeyValueExpr{
+				ifExpr(len(n.Children) != 0, &ast.KeyValueExpr{
 					Key:   &ast.Ident{Name: "Children"},
 					Value: makeChildren(n.Children),
 				}),

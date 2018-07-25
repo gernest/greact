@@ -69,13 +69,16 @@ func makeNode(n *Node) *ast.UnaryExpr {
 					},
 				},
 				&ast.KeyValueExpr{
+					Key:   &ast.Ident{Name: "Attr"},
+					Value: mkAttr(n.Attr),
+				},
+				&ast.KeyValueExpr{
 					Key:   &ast.Ident{Name: "Children"},
 					Value: makeChildren(n.Children),
 				},
 			},
 		},
 	}
-
 }
 
 func makeDataAtomField(a atom.Atom) *ast.KeyValueExpr {
@@ -127,21 +130,77 @@ func mkArrayElems(n []*Node) []*ast.UnaryExpr {
 	return ls
 }
 
-const fnTpl = `package {{.package}}
+func mkAttr(a []html.Attribute) *ast.CompositeLit {
+	ls := []ast.Expr{}
+	for _, v := range a {
+		ls = append(ls, mkAttrItem(v))
+	}
+	return &ast.CompositeLit{
+		Type: &ast.ArrayType{
+			Elt: &ast.SelectorExpr{
+				X: &ast.Ident{
+					Name: "html",
+				},
+				Sel: &ast.Ident{
+					Name: "Attribute",
+				},
+			},
+		},
+		Elts: ls,
+	}
+}
+
+func mkAttrItem(a html.Attribute) *ast.CompositeLit {
+	return &ast.CompositeLit{
+		Elts: []ast.Expr{
+			&ast.KeyValueExpr{
+				Key: &ast.Ident{Name: "Namespace"},
+				Value: &ast.BasicLit{
+					Kind:  token.STRING,
+					Value: fmt.Sprintf("%q", a.Namespace),
+				},
+			},
+			&ast.KeyValueExpr{
+				Key: &ast.Ident{Name: "Key"},
+				Value: &ast.BasicLit{
+					Kind:  token.STRING,
+					Value: fmt.Sprintf("%q", a.Key),
+				},
+			},
+			&ast.KeyValueExpr{
+				Key: &ast.Ident{Name: "Val"},
+				Value: &ast.BasicLit{
+					Kind:  token.STRING,
+					Value: fmt.Sprintf("%q", a.Val),
+				},
+			},
+		},
+	}
+}
+
+const fnTpl = `package {{.ctx.Package}}
 
 import (
 	"github.com/gernest/vected/lib/xhtml"
 	"golang.org/x/net/html/atom"
 )
 
-func ({{.recv}} {{.struct}})Render()*xhtml.Node{
+func ({{.ctx.Recv}} {{.ctx.StructName}})Render()*xhtml.Node{
 	return {{.node}}
 }
 `
 
 var tpl = template.Must(template.New("n").Parse(fnTpl))
 
-func generatePackage(n *Node) ([]byte, error) {
+type Context struct {
+	Package    string
+	Recv       string
+	StructName string
+}
+
+// GenerateRenderMethod using the given context, this returns a new go file with
+// the Render method attached to the struct defined in ctx.
+func GenerateRenderMethod(n *Node, ctx *Context) ([]byte, error) {
 	var buf bytes.Buffer
 	node := makeNode(n)
 	fset := token.NewFileSet()
@@ -152,14 +211,11 @@ func generatePackage(n *Node) ([]byte, error) {
 	nstr := buf.String()
 	buf.Reset()
 	err = tpl.Execute(&buf, map[string]interface{}{
-		"package": "test",
-		"recv":    "ts",
-		"struct":  "Test",
-		"node":    nstr,
+		"ctx":  ctx,
+		"node": nstr,
 	})
 	if err != nil {
 		return nil, err
 	}
-	// return format.Source(buf.Bytes())
-	return buf.Bytes(), nil
+	return format.Source(buf.Bytes())
 }

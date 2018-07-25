@@ -9,11 +9,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kr/pretty"
+
 	"golang.org/x/net/html"
 )
 
 func TestHTML(t *testing.T) {
-	src := `<div> hello, world</div>`
+	src := `<div key="{{value}}"> hello, world</div>`
 	doc, err := html.Parse(strings.NewReader(src))
 	if err != nil {
 		t.Fatal(err)
@@ -21,7 +23,7 @@ func TestHTML(t *testing.T) {
 	o := &Node{}
 	Clone(doc, o)
 
-	t.Error(o.Format(0))
+	t.Error(pretty.Sprint(o))
 	// t.Error(pretty.Sprint(o))
 }
 
@@ -40,6 +42,8 @@ func run()*xhtml.Node{
 				Data:      "html",
 				Namespace: "",
 				Attr:[]html.Attribute{
+					{Namespace:"", Key:"key", Val:"{{value}}"},
+					{Namespace:"", Key:"key2", Val:"{{value2}}"},
 				},
 				// Children: {
 				// 	&xhtml.Node{
@@ -142,9 +146,12 @@ func TestMkaeNode(t *testing.T) {
 		Data:     doc.Data,
 	}
 	Clone(doc, o)
-	v, err := generatePackage(o)
+	v, err := GenerateRenderMethod(o, &Context{
+		Package:    "sample",
+		StructName: "Component",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Error(string(v))
+	ioutil.WriteFile("sample/sample.component.gen.go", v, 0600)
 }

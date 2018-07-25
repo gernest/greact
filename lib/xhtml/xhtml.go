@@ -46,13 +46,7 @@ func makeNode(n *Node) *ast.UnaryExpr {
 				Sel: &ast.Ident{Name: "Node"},
 			},
 			Elts: []ast.Expr{
-				&ast.KeyValueExpr{
-					Key: &ast.Ident{Name: "Type"},
-					Value: &ast.BasicLit{
-						Kind:  token.INT,
-						Value: fmt.Sprint(n.Type),
-					},
-				},
+				makeTypeField(n.Type),
 				makeDataAtomField(n.DataAtom),
 				&ast.KeyValueExpr{
 					Key: &ast.Ident{Name: "Data"},
@@ -81,6 +75,35 @@ func makeNode(n *Node) *ast.UnaryExpr {
 	}
 }
 
+func formatNodeType(n html.NodeType) string {
+	switch n {
+	case html.ErrorNode:
+		return "ErrorNode"
+	case html.TextNode:
+		return "TextNode"
+	case html.DocumentNode:
+		return "DocumentNode"
+	case html.ElementNode:
+		return "ElementNode"
+	case html.CommentNode:
+		return "CommentNode"
+	case html.DoctypeNode:
+		return "DoctypeNode"
+	default:
+		return "ErrorNode"
+	}
+}
+
+func makeTypeField(a html.NodeType) *ast.KeyValueExpr {
+	v := formatNodeType(a)
+	return &ast.KeyValueExpr{
+		Key: &ast.Ident{Name: "Type"},
+		Value: &ast.SelectorExpr{
+			X:   &ast.Ident{Name: "html"},
+			Sel: &ast.Ident{Name: v},
+		},
+	}
+}
 func makeDataAtomField(a atom.Atom) *ast.KeyValueExpr {
 	v := a.String()
 	if v == "" {

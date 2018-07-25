@@ -45,34 +45,51 @@ func makeNode(n *Node) *ast.UnaryExpr {
 				X:   &ast.Ident{Name: "xhtml"},
 				Sel: &ast.Ident{Name: "Node"},
 			},
-			Elts: []ast.Expr{
-				makeTypeField(n.Type),
-				makeDataAtomField(n.DataAtom),
-				&ast.KeyValueExpr{
+			Elts: nonilExpr(
+				ifExpr(n.Type != html.ErrorNode, makeTypeField(n.Type)),
+				ifExpr(n.DataAtom.String() != "", makeDataAtomField(n.DataAtom)),
+				ifExpr(n.Data != "", &ast.KeyValueExpr{
 					Key: &ast.Ident{Name: "Data"},
 					Value: &ast.BasicLit{
 						Kind:  token.STRING,
 						Value: fmt.Sprintf("%q", n.Data),
 					},
-				},
-				&ast.KeyValueExpr{
+				}),
+				ifExpr(n.Namespace != "", &ast.KeyValueExpr{
 					Key: &ast.Ident{Name: "Namespace"},
 					Value: &ast.BasicLit{
 						Kind:  token.STRING,
 						Value: fmt.Sprintf("%q", n.Namespace),
 					},
-				},
-				&ast.KeyValueExpr{
+				}),
+				ifExpr(n.Attr != nil, &ast.KeyValueExpr{
 					Key:   &ast.Ident{Name: "Attr"},
 					Value: mkAttr(n.Attr),
-				},
-				&ast.KeyValueExpr{
+				}),
+				ifExpr(n.Children != nil, &ast.KeyValueExpr{
 					Key:   &ast.Ident{Name: "Children"},
 					Value: makeChildren(n.Children),
-				},
-			},
+				}),
+			),
 		},
 	}
+}
+
+func ifExpr(cond bool, x ast.Expr) ast.Expr {
+	if cond {
+		return x
+	}
+	return nil
+}
+
+func nonilExpr(x ...ast.Expr) []ast.Expr {
+	var ls []ast.Expr
+	for _, v := range x {
+		if v != nil {
+			ls = append(ls, v)
+		}
+	}
+	return ls
 }
 
 func formatNodeType(n html.NodeType) string {

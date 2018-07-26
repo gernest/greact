@@ -1,4 +1,4 @@
-package xhtml
+package vdom
 
 import (
 	"bytes"

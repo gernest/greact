@@ -2,12 +2,12 @@
 package sample
 
 import (
-	"github.com/gernest/vected/lib/xhtml"
+	"github.com/gernest/vected/lib/vdom"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
 
 // Render implements vected.Renderer interface.
-func (Component) Render() *xhtml.Node {
-	return &xhtml.Node{Children: []*xhtml.Node{&xhtml.Node{Type: html.ElementNode, DataAtom: atom.Html, Data: "html", Children: []*xhtml.Node{&xhtml.Node{Type: html.ElementNode, DataAtom: atom.Head, Data: "head"}, &xhtml.Node{Type: html.ElementNode, DataAtom: atom.Body, Data: "body", Children: []*xhtml.Node{&xhtml.Node{Type: html.ElementNode, DataAtom: atom.Div, Data: "div", Children: []*xhtml.Node{&xhtml.Node{Type: html.TextNode, Data: " hello, world"}}}}}}}}}
+func (Component) Render() *vdom.Node {
+	return &vdom.Node{Children: []*vdom.Node{&vdom.Node{Type: html.ElementNode, DataAtom: atom.Html, Data: "html", Children: []*vdom.Node{&vdom.Node{Type: html.ElementNode, DataAtom: atom.Head, Data: "head"}, &vdom.Node{Type: html.ElementNode, DataAtom: atom.Body, Data: "body", Children: []*vdom.Node{&vdom.Node{Type: html.ElementNode, DataAtom: atom.Div, Data: "div", Children: []*vdom.Node{&vdom.Node{Type: html.TextNode, Data: " hello, world"}}}}}}}}}
 }

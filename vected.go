@@ -32,7 +32,21 @@ type Component interface {
 	core()
 }
 
-type Core struct{}
+// Core is th base struct that every struct that wants to implement Component
+// interface must embed.
+//
+// This is used to make Props available to the component.
+type Core struct {
+	// This is the current component's props.
+	Props props.Props
+
+	// state should be provate per instance.
+	state state.State
+}
+
+// SetState this accepts new state and triggers component rerender.
+func (c *Core) SetState(newState state.State) {
+}
 
 func (c *Core) core() {}
 

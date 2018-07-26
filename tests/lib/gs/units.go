@@ -5,7 +5,7 @@ import (
 	"github.com/gernest/vected/lib/mad"
 )
 
-func TestUnits() mad.Test {
+func TestGSUnits() mad.Test {
 	return mad.List{
 		mad.Describe("Unit",
 			mad.It("it returns the string representation of css unit of measurement", func(t mad.T) {
@@ -36,6 +36,18 @@ func TestUnits() mad.Test {
 				expect := 0.1
 				if got != expect {
 					t.Errorf("expected %v got %v", expect, got)
+				}
+			}),
+		),
+		mad.Describe("Div",
+			mad.It("divides same unit", func(t mad.T) {
+				a := gs.U("20px")
+				b := gs.U("2")
+				g := a.Div(b)
+				got := g.String()
+				expect := "10px"
+				if got != expect {
+					t.Errorf("expected %s got %s", expect, got)
 				}
 			}),
 		),

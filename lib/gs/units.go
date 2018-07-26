@@ -76,7 +76,7 @@ func (u U) Div(n U) U {
 	a, au := u.Value(), u.Unit()
 	b, bu := n.Value(), n.Unit()
 	switch {
-	case au == bu:
+	case au == bu || (au != "" && bu == ""):
 		return U(format(a/b, au))
 	case au == "" && bu != "":
 		return U(format(a/b, bu))
@@ -85,5 +85,5 @@ func (u U) Div(n U) U {
 }
 
 func format(value float64, unit string) string {
-	return fmt.Sprintf("%f%s", value, unit)
+	return fmt.Sprintf("%v%s", value, unit)
 }

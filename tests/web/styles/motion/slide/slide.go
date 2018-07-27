@@ -112,11 +112,10 @@ func TestSlideStyle() mad.Test {
 	})
 }
 
-func TestMotion() mad.Test {
+func TestSlideMotion() mad.Test {
 	return mad.It("generates css for slide motion", func(t mad.T) {
 		css := gs.ToString(slide.Motion(".slide-up", slide.Up))
-		expect := `.slide-up-enter,
-.slide-up-appear {
+		expect := `.slide-up-enter, .slide-up-appear {
   animation-duration:.2s;
   animation-fill-mode::both;
   animation-play-state:paused;
@@ -126,18 +125,16 @@ func TestMotion() mad.Test {
   animation-fill-mode::both;
   animation-play-state:paused;
 }
-.slide-up-enter.slide-up-enter-active,
-.slide-up-enter.slide-up-appear-active {
+.slide-up-enter.slide-up-enter-active, .slide-up-appear.slide-up-appear-active {
   animation-name:~slideUpIn;
   animation-play-state:running;
 }
-.slide-up-leave.slide-up-leaveactive {
+.slide-up-leave.slide-up-leave-active {
   animation-name:~slideUpOut;
   animation-play-state:running;
   pointer-events:none;
 }
-.slide-up-enter,
-.slide-up-appear {
+.slide-up-enter, .slide-up-appear {
   opacity:0;
   animation-timing-function:cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -145,7 +142,8 @@ func TestMotion() mad.Test {
   animation-timing-function:cubic-bezier(0.755, 0.05, 0.855, 0.06);
 }`
 		if css != expect {
-			t.Errorf("expected %s got %s", expect, css)
+			t.Error("got wrong style")
+			t.Error(css)
 		}
 	})
 }

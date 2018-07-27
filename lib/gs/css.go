@@ -1,4 +1,4 @@
-// Package gs allows describing css using go functions.
+// Package gs allows describing css using go functions. This loosely borrows ideas from less.
 package gs
 
 import (
@@ -192,7 +192,7 @@ func replaceParent(parent, selector string) string {
 	if strings.Contains(selector, "&") {
 		return strings.Replace(selector, "&", parent, -1)
 	}
-	return fmt.Sprintf("%s,\n%s", parent, selector)
+	return fmt.Sprintf("%s %s", parent, selector)
 }
 
 func ToString(rule CSSRule, ts ...Transformer) string {

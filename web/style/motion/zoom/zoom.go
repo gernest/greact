@@ -9,7 +9,7 @@ import (
 func Motion(klass, keyframe, duration string) gs.CSSRule {
 	return gs.CSS(
 		mixins.MakeMotion(klass, keyframe, duration),
-		gs.S(klass+"-enter",
+		gs.S(klass+"-enter,",
 			gs.S(""+klass+"-appear",
 				gs.P("transform", "scale(0)"),
 				gs.P("animation-timing-function", themes.Default.EaseOutCirc),

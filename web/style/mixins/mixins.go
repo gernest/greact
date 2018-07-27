@@ -21,7 +21,7 @@ func CommonMotion(duration string) gs.CSSRule {
 
 func MakeMotion(klass, keyframe string, duration string) gs.CSSRule {
 	return gs.CSS(
-		gs.S(join(klass, enter),
+		gs.S(join(klass, enter, ","),
 			gs.S(join("", klass, appear),
 				CommonMotion(duration),
 				gs.P("animation-play-state", "paused"),
@@ -31,16 +31,16 @@ func MakeMotion(klass, keyframe string, duration string) gs.CSSRule {
 			gs.P("animation-play-state", "paused"),
 		),
 		gs.S(join(
-			join(klass, enter), join(klass, enter, "-active"),
+			join(klass, enter), join(klass, enter, "-active,"),
 		),
 			gs.S(
-				join(join("", klass, enter), join(klass, appear, "-active")),
+				join(join("", klass, appear), join(klass, appear, "-active")),
 				gs.P("animation-name", join("~", keyframe, "In")),
 				gs.P("animation-play-state", "running"),
 			),
 		),
 		gs.S(join(
-			join(klass, leave), join(klass, leave, "active"),
+			join(klass, leave), join(klass, leave, "-active"),
 		),
 			gs.P("animation-name", join("~", keyframe, "Out")),
 			gs.P("animation-play-state", "running"),

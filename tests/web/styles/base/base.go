@@ -10,8 +10,7 @@ func TestBase() mad.Test {
 	return mad.It("generates normalize css", func(t mad.T) {
 		css := gs.ToString(base.Base())
 		if css != expectedBaseStyle {
-			// t.Errorf("expected %s got %s", expectedBaseStyle, css)
-			t.Error(css)
+			t.Error("got wrong styles")
 		}
 	})
 }
@@ -33,17 +32,14 @@ const expectedBaseStyle = `@font-face {
   src:local("PingFang SC"), local("SimSun");
   unicode-range:U+2018, U+2019, U+201c, U+201d;
 }
-html {
+html, body {
   width:100%;
   height:100%;
 }
-input::-ms-clear,
-input::-ms-reveal {
+input::-ms-clear, input::-ms-reveal {
   display:none;
 }
-*,
-*:::before,
-*::after {
+*, *:::before, *::after {
   box-sizing:border-box;
 }
 html {
@@ -57,17 +53,7 @@ html {
 @-ms-viewport  {
   width:device-width;
 }
-article,
-aside,
-dialog,
-figcaption,
-figure,
-footer,
-header,
-hgroup,
-main,
-nav,
-section {
+article, aside, dialog, figcaption, figure, footer, header, hgroup, main, nav, section {
   display:block;
 }
 body {
@@ -86,11 +72,7 @@ hr {
   height:0;
   overflow:visible;
 }
-h1,
-h2,
-h3,
-h4,
-h5 {
+h1, h2, h3, h4, h5, h6 {
   margin-top:0;
   margin-bottom::.5em;
   color:rgba(0,0,0,0.85);
@@ -100,8 +82,7 @@ p {
   margin-top:0;
   margin-bottom:1em;
 }
-abbr[title],
-abbr[data-original-title] {
+abbr[title], abbr[data-original-title] {
   text-decoration:underline;
   text-decoration:underline dotted;
   cursor:help;
@@ -112,22 +93,14 @@ address {
   font-style:normal;
   line-height:inherit;
 }
-input[type="text"],
-input[type="password"],
-input[type="number"],
-textarea {
+input[type="text"], input[type="password"], input[type="number"], textarea {
   -webkit-appearance:none;
 }
-ol,
-ul,
-dl {
+ol, ul, dl, {
   margin-top:0;
   margin-bottom:1em;
 }
-ol ol,
-ul ul,
-ol ul,
-ul ol {
+ol ol, ul ul, ol ul, ul ol {
   margin-bottom:1em;
 }
 dt {
@@ -143,15 +116,13 @@ blockquote {
 dfn {
   font-style:italic;
 }
-b,
-strong {
+b, strong {
   font-weight:bolder;
 }
 small {
   font-size:80%;
 }
-sub,
-sup {
+sub, sup {
   position:relative;
   font-size:75%;
   line-height:0;
@@ -182,8 +153,7 @@ a:hover {
 a:active {
   color:#096dd9;
 }
-a:active,
-a:hover {
+a:active, a:hover {
   outline:0;
   text-decoration:none;
 }
@@ -192,10 +162,7 @@ a[disabled] {
   cursor:not-allowed;
   pointer-events:none;
 }
-pre,
-code,
-kbd,
-samp {
+pre, code, kbd, samp {
   font-family:: Consolas, Menlo, Courier, monospace;
   font-size:1em;
 }
@@ -214,15 +181,7 @@ img {
 svg:not(:root) {
   overflow:hidden;
 }
-a,
-area,
-button,
-[role="button"],
-input:not([type=range]),
-label,
-select,
-summary,
-textarea {
+a, area, button, [role="button"], input:not([type=range]), label, select, summary, textarea {
   touch-action:manipulation;
 }
 table {
@@ -238,45 +197,30 @@ caption {
 th {
   text-align:inherit;
 }
-input,
-button,
-select,
-optgroup,
-textarea {
+input, button, select, optgroup, textarea {
   margin:0;
   font-family:inherit;
   font-size::inherit;
   line-height:inherit;
 }
-button,
-input {
+button, input {
   overflow:visible;
 }
-button,
-select {
+button, select {
   text-transform:none;
 }
-button,
-html [type="button"],
-[type="reset"],
-[type="submit"] {
+button, html [type="button"], [type="reset"], [type="submit"] {
   -webkit-appearance:button;
 }
-button::-moz-focus-inner,
-[type="button"]::-moz-focus-inner,
-[type="reset"]::-moz-focus-inner,
-[type="submit"]::-moz-focus-inner {
+button::-moz-focus-inner, [type="button"]::-moz-focus-inner, [type="reset"]::-moz-focus-inner, [type="submit"]::-moz-focus-inner {
   padding:0;
   border-style::none;
 }
-input[type="radio"],
-input[type="checkbox"]  {
+input[type="radio"], input[type="checkbox"]  {
   box-sizing:border-box;
   padding:0;
 }
-input[type="date"],
-input[type="datetime-local"],
-input[type="month"] {
+input[type="date"], input[type="datetime-local"], input[type="month"], {
   -webkit-appearance:listbox;
 }
 textarea {
@@ -302,16 +246,14 @@ legend {
 progress {
   vertical-align:baseline;
 }
-[type="number"]::-webkit-inner-spin-button,
-[type="number"]::-webkit-outer-spin-button {
+[type="number"]::-webkit-inner-spin-button, [type="number"]::-webkit-outer-spin-button {
   height:auto;
 }
 [type="search"] {
   outline-offset:-2px;
   -webkit-appearance:none;
 }
-[type="search"]::-webkit-search-cancel-button,
-[type="search"]::-webkit-search-decoration {
+[type="search"]::-webkit-search-cancel-button, [type="search"]::-webkit-search-decoration {
   -webkit-appearance:none;
 }
 ::-webkit-file-upload-button {

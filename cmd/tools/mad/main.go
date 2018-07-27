@@ -234,8 +234,9 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 	hasTests := len(funcs.Unit) > 0 || len(funcs.Integration) > 0
 	if hasTests {
 		cfg.TestNames[out] = funcs
+		return nil
 	}
-	return nil
+	return fmt.Errorf("no tests matching %s was found", cfg.Run)
 }
 
 const coverTpl = `

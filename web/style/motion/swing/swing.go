@@ -9,13 +9,13 @@ import (
 // Motion returns styles for swing motion.
 func Motion(klass, keyframe string) gs.CSSRule {
 	return gs.CSS(
-		gs.S(klass+"-enter",
-			gs.S(""+klass+"-appear",
+		gs.S(klass+"-enter,",
+			gs.S(klass+"-appear",
 				mixins.CommonMotion(themes.Default.AnimationDurationBase),
 				gs.P("animation-play-state", "paused"),
 			),
 		),
-		gs.S(klass+"-enter"+klass+"-enter-active",
+		gs.S(klass+"-enter"+klass+"-enter-active,",
 			gs.S(""+klass+"-appear"+klass+"-appear-active",
 				gs.P("animation-name", "~"+keyframe+"In"),
 				gs.P("animation-play-state:", "running"),

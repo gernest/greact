@@ -110,11 +110,7 @@ const expect = `.ant-badge {
   font-size:14px;
   margin-left:8px;
 }
-.ant-badge-zoom-appear {
-  animation:antZoomBadgeIn .3s cubic-bezier(0.12, 0.4, 0.29, 1.46);
-  animation-fill-mode:both;
-}
-.ant-badge-zoom-enter {
+.ant-badge-zoom-appear,.ant-badge-zoom-enter  {
   animation:antZoomBadgeIn .3s cubic-bezier(0.12, 0.4, 0.29, 1.46);
   animation-fill-mode:both;
 }
@@ -148,8 +144,7 @@ const expect = `.ant-badge {
   transition:all .3s cubic-bezier(0.645, 0.045, 0.355, 1);
   height:20px;
 }
-.ant-scroll-number-only,
-> p {
+.ant-scroll-number-only > p {
   height:20px;
   margin:0;
 }

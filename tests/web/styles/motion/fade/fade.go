@@ -6,11 +6,10 @@ import (
 	"github.com/gernest/vected/web/style/motion/fade"
 )
 
-func TestMotion() mad.Test {
+func TestFadeMotion() mad.Test {
 	return mad.It("returns default style for fade motion", func(t mad.T) {
-		css := fade.Fade(".fade", "fade")
-		expect := `.fade-enter,
-.fade-appear {
+		css := gs.ToString(fade.Fade(".fade", "fade"))
+		expect := `.fade-enter, .fade-appear {
   animation-duration:.2s;
   animation-fill-mode::both;
   animation-play-state:paused;
@@ -20,27 +19,24 @@ func TestMotion() mad.Test {
   animation-fill-mode::both;
   animation-play-state:paused;
 }
-.fade-enter.fade-enter-active,
-.fade-enter.fade-appear-active {
+.fade-enter.fade-enter-active, .fade-appear.fade-appear-active {
   animation-name:~fadeIn;
   animation-play-state:running;
 }
-.fade-leave.fade-leaveactive {
+.fade-leave.fade-leave-active {
   animation-name:~fadeOut;
   animation-play-state:running;
   pointer-events:none;
 }
-.fade-enter,
-.fade-appear {
+.fade-enter, .fade-appear {
   opacity:0;
   animation-timing-function:linear;
 }
 .fade-leave {
   animation-timing-function:linear;
 }`
-		g := gs.ToString(css)
-		if g != expect {
-			t.Errorf("expected %s got %s", expect, g)
+		if css != expect {
+			t.Error("got wrong styles")
 		}
 	})
 }

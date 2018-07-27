@@ -111,11 +111,10 @@ func TestKeyFrames() mad.Test {
 	})
 }
 
-func TestMotion() mad.Test {
+func TestMoveMotion() mad.Test {
 	return mad.It("generates move motion styles", func(t mad.T) {
 		css := gs.ToString(move.Motion(".move-up", move.Up))
-		expect := `.move-up-enter,
-.move-up-appear {
+		expect := `.move-up-enter, .move-up-appear {
   animation-duration:.2s;
   animation-fill-mode::both;
   animation-play-state:paused;
@@ -125,18 +124,16 @@ func TestMotion() mad.Test {
   animation-fill-mode::both;
   animation-play-state:paused;
 }
-.move-up-enter.move-up-enter-active,
-.move-up-enter.move-up-appear-active {
+.move-up-enter.move-up-enter-active, .move-up-appear.move-up-appear-active {
   animation-name:~moveUpIn;
   animation-play-state:running;
 }
-.move-up-leave.move-up-leaveactive {
+.move-up-leave.move-up-leave-active {
   animation-name:~moveUpOut;
   animation-play-state:running;
   pointer-events:none;
 }
-.move-up-enter,
-.move-up-appear {
+.move-up-enter, .move-up-appear {
   opacity:0;
   animation-timing-function:cubic-bezier(0.08, 0.82, 0.17, 1);
 }
@@ -144,7 +141,8 @@ func TestMotion() mad.Test {
   animation-timing-function:cubic-bezier(0.6, 0.04, 0.98, 0.34);
 }`
 		if css != expect {
-			t.Errorf("expected %s got %s", expect, css)
+			t.Error("got wrong styles")
+			t.Error(css)
 		}
 	})
 }

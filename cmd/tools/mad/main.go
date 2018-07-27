@@ -93,6 +93,9 @@ func runTestsCommand(ctx *cli.Context) error {
 	if err = generateTestPackage(executionContext, cfg); err != nil {
 		return err
 	}
+	if len(cfg.TestNames) == 0 {
+		return fmt.Errorf("no tests found")
+	}
 	if cfg.Dry {
 		return nil
 	}
@@ -234,9 +237,8 @@ func createTestPackage(cfg *config.Config, out *config.Info) error {
 	hasTests := len(funcs.Unit) > 0 || len(funcs.Integration) > 0
 	if hasTests {
 		cfg.TestNames[out] = funcs
-		return nil
 	}
-	return fmt.Errorf("no tests matching %s was found", cfg.Run)
+	return nil
 }
 
 const coverTpl = `

@@ -297,6 +297,19 @@ func replaceParent(parent, selector string) string {
 	return fmt.Sprintf("%s %s", parent, selector)
 }
 
+// ToString takes the rule and returns a css string for the stylesheet described
+// by rule.
+//
+// Optionally you can pass a series of transformers. This expects the
+// transformer to work on the tree level. Since they are applied in sequence,
+// with each output becoming an input to the next transformer.
+//
+// By default, the rule will be flattened to a single RuleList, then subsequent
+// calls to the transformers will working on it. However transformer functions
+// can return anything that implements CSSRule and this function does not make
+// any assumptions.
+//
+// Leading and trailing spaces are removed from the final string before it is returned.
 func ToString(rule CSSRule, ts ...Transformer) string {
 	rule = Process(rule, ts...)
 	return strings.TrimSpace(rule.String())

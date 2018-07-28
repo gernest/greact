@@ -302,10 +302,6 @@ func ToString(rule CSSRule, ts ...Transformer) string {
 	return strings.TrimSpace(rule.String())
 }
 
-type Options struct {
-	NoPretty bool
-}
-
 // Process this applies any transformation to the rule. It automatically
 // flatterns the rule tree.
 func Process(rule CSSRule, ts ...Transformer) CSSRule {

@@ -35,13 +35,6 @@ func ExampleS_nested() {
 }
 
 func ExampleS_parent() {
-	gs.S("root",
-		gs.S(" & > child_1",
-			gs.S("& > child2",
-				gs.P("key", "value"),
-			),
-		),
-	)
 	css := gs.S("root",
 		gs.S(" & > child_1",
 			gs.S("& > child2",
@@ -51,6 +44,9 @@ func ExampleS_parent() {
 	)
 	fmt.Println(gs.ToString(css))
 	//Output:
+	// root > child_1 > child2 {
+	//   key:value;
+	// }
 }
 func ExampleP_attribute() {
 	css := gs.P("color", "green")

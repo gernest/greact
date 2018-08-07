@@ -87,3 +87,18 @@ func (u U) Div(n U) U {
 func format(value float64, unit string) string {
 	return fmt.Sprintf("%v%s", value, unit)
 }
+
+// Sub substracts n from u.
+//
+// TODO: Perform unit conversion before substraction.
+func (u U) Sub(n U) U {
+	a, au := u.Value(), u.Unit()
+	b, bu := n.Value(), n.Unit()
+	switch {
+	case au == bu || (au != "" && bu == ""):
+		return U(format(a-b, au))
+	case au == "" && bu != "":
+		return U(format(a-b, bu))
+	}
+	return U("")
+}

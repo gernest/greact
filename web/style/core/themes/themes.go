@@ -143,9 +143,9 @@ type Theme struct {
 	BtnPaddingLG   string
 	BtnPaddingSM   string
 
-	BtnHeighBase string
-	BtnHeighLG   string
-	BtnHeighSM   string
+	BtnHeighBase gs.U
+	BtnHeighLG   gs.U
+	BtnHeighSM   gs.U
 
 	BtnCircleSize   string
 	BtnCircleSizeLG string

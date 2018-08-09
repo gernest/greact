@@ -119,3 +119,14 @@ func IconFontFont(content string) gs.CSSRule {
 		gs.P("content", content),
 	)
 }
+
+func Size(height, width string) gs.CSSRule {
+	return gs.CSS(
+		gs.P("width", width),
+		gs.P("height", height),
+	)
+}
+
+func Square(size string) gs.CSSRule {
+	return Size(size, size)
+}

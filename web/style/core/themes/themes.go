@@ -138,8 +138,8 @@ type Theme struct {
 	BtnDisabledBorder *color.Color
 
 	BtnPaddingBase string
-	BtnFontSizeLG  string
-	BtnFontSizeSM  string
+	BtnFontSizeLG  gs.U
+	BtnFontSizeSM  gs.U
 	BtnPaddingLG   string
 	BtnPaddingSM   string
 
@@ -147,9 +147,9 @@ type Theme struct {
 	BtnHeighLG   gs.U
 	BtnHeighSM   gs.U
 
-	BtnCircleSize   string
-	BtnCircleSizeLG string
-	BtnCircleSizeSM string
+	BtnCircleSize   gs.U
+	BtnCircleSizeLG gs.U
+	BtnCircleSizeSM gs.U
 	BtnGroupBorder  *color.Color
 
 	// Checkbox
@@ -500,6 +500,9 @@ func New() *Theme {
 		BtnBorderRadiusSM:              "4px",
 		BtnPrimaryColor:                color.New("#fff"),
 		BtnDefaultBG:                   color.New("#fff"),
+		BtnHeighBase:                   "32px",
+		BtnHeighLG:                     "40px",
+		BtnHeighSM:                     "24px",
 		IconFontPrefix:                 "anticon",
 		IconURL:                        "https://at.alicdn.com/t/font_148784_v4ggb6wrjmkotj4i",
 		LinkDecoration:                 "none",
@@ -660,6 +663,15 @@ func New() *Theme {
 	t.BtnDisabledColor = t.DisabledColor
 	t.BtnDisabledBG = t.DisabledBG
 	t.BtnDisabledBorder = t.BorderColorBase
+	t.BtnPaddingBase = "0 " + t.PaddingMD.Sub(gs.U("1px")).String()
+	t.BtnFontSizeLG = t.FontSizeLG
+	t.BtnFontSizeSM = t.FontSizeBase
+	t.BtnPaddingLG = t.BtnPaddingBase
+	t.BtnPaddingSM = "0 " + t.PaddingXS.Sub(gs.U("1px")).String()
+	t.BtnCircleSize = t.BtnHeighBase
+	t.BtnCircleSizeLG = t.BtnHeighLG
+	t.BtnCircleSizeSM = t.BtnHeighSM
+	t.BtnGroupBorder = t.Primary[4]
 	t.ControlPaddingHorizontal = t.PaddingSM
 	t.ControlPaddingHorizontalSM = t.PaddingXS
 	t.ActiveItemBG = t.Primary[0]

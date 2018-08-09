@@ -102,3 +102,16 @@ func (u U) Sub(n U) U {
 	}
 	return U("")
 }
+
+// Add performs arithmetic add between u nits. This returns new unit with the result.
+func (u U) Add(n U) U {
+	a, au := u.Value(), u.Unit()
+	b, bu := n.Value(), n.Unit()
+	switch {
+	case au == bu || (au != "" && bu == ""):
+		return U(format(a+b, au))
+	case au == "" && bu != "":
+		return U(format(a+b, bu))
+	}
+	return U("")
+}

@@ -16,6 +16,7 @@ func main() {
 		gen.RuntimeCMD(),
 		gen.AgentsCommand(),
 		gen.DataCommand(),
+		gen.AttrCMD(),
 	}
 	if err := a.Run(os.Args); err != nil {
 		fmt.Println(err)

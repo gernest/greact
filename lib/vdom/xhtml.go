@@ -4,11 +4,18 @@ import (
 	"bytes"
 	"go/ast"
 	"go/format"
+	"io"
 	"strings"
 	"text/template"
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
+)
+
+const (
+	// ContainerNode this is tha name of a node which acts as a container to a
+	// slice of other nodes.
+	ContainerNode = "__internal_container___"
 )
 
 type Node struct {
@@ -33,6 +40,27 @@ func Clone(n *html.Node, e *Node) {
 		e.Children = append(e.Children, ch)
 		Clone(c, ch)
 	}
+}
+
+// Clear removes nodes injected by the parser.
+func Clear(n *Node) *Node {
+	if len(n.Children) > 0 && n.Children[0].DataAtom == atom.Html {
+		// this is the root node. The html parser injects html,bead,body tags by
+		// default.
+		//
+		// The plan here is to remove the injected  tags
+		body := n.Children[0].Children[1]
+		if len(body.Children) > 1 {
+			// wrap the children in a container
+			return &Node{
+				Type:     html.ElementNode,
+				Data:     ContainerNode,
+				Children: body.Children,
+			}
+		}
+		return body.Children[0]
+	}
+	return n
 }
 
 func nonilExpr(x ...ast.Expr) []ast.Expr {
@@ -117,4 +145,22 @@ func GenerateRenderMethod(n *Node, ctx *Context) ([]byte, error) {
 		return nil, err
 	}
 	return format.Source(buf.Bytes())
+}
+
+// Parse parses src
+func Parse(r io.Reader) (*Node, error) {
+	doc, err := html.Parse(r)
+	if err != nil {
+		return nil, err
+	}
+	o := &Node{
+		Data: doc.Data,
+	}
+	Clone(doc, o)
+	return Clear(o), nil
+}
+
+// ParseString helper that wraps s to io.Reader.
+func ParseString(s string) (*Node, error) {
+	return Parse(strings.NewReader(s))
 }

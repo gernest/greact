@@ -14,8 +14,8 @@
 package vected
 
 import (
-	"github.com/gernest/vected/lib/props"
-	"github.com/gernest/vected/lib/state"
+	"github.com/gernest/vected/props"
+	"github.com/gernest/vected/state"
 )
 
 // Component is an interface which defines a unit of user interface.

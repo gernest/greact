@@ -4,10 +4,9 @@ package props
 
 import (
 	"fmt"
+	"html/template"
 	"sort"
 	"strings"
-
-	"github.com/gernest/vected/lib/html/template"
 )
 
 // Props is a map of properties. These are used to pass values to components.

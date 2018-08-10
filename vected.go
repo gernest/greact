@@ -21,6 +21,16 @@ import (
 	"github.com/gernest/vected/vdom"
 )
 
+// RenderMode is a flag determining how a component is rendered.
+type RenderMode uint
+
+//supported render mode
+const (
+	No RenderMode = iota
+	Sync
+	Async
+)
+
 // Component is an interface which defines a unit of user interface.
 type Component interface {
 

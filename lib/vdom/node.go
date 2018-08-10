@@ -1,9 +1,7 @@
 package vdom
 
 import (
-	"bytes"
 	"go/ast"
-	"go/format"
 	"io"
 	"strings"
 	"text/template"
@@ -130,22 +128,6 @@ type Context struct {
 	Package    string
 	Recv       string
 	StructName string
-}
-
-// GenerateRenderMethod using the given context, this returns a new go file with
-// the Render method attached to the struct defined in ctx.
-func GenerateRenderMethod(n *Node, ctx *Context) ([]byte, error) {
-	var buf bytes.Buffer
-	nstr := n.Print(0, false)
-	buf.Reset()
-	err := tpl.Execute(&buf, map[string]interface{}{
-		"ctx":  ctx,
-		"node": nstr,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return format.Source(buf.Bytes())
 }
 
 // Parse parses src

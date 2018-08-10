@@ -58,7 +58,9 @@ func (c *Core) SetState(newState state.State, callback ...func()) {
 	prev := c.prevState
 	c.prevState = newState
 	c.state = state.Merge(prev, newState)
-
+	if len(callback) > 0 {
+		c.renderCallbacks = append(c.renderCallbacks, callback...)
+	}
 	//TODO enqueue this for re rendering.
 }
 

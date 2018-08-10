@@ -101,7 +101,7 @@ func AttrCMD() cli.Command {
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "out",
-				Value: "lib/attribute/attributes.go",
+				Value: "attribute/attributes.go",
 			},
 		},
 		Action: func(ctx *cli.Context) error {

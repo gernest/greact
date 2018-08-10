@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package vdom
+package text
 
 import (
 	"bufio"
@@ -21,10 +21,11 @@ type writer interface {
 	WriteString(string) (int, error)
 }
 
-// Render renders the n tree as text to the w writer.
-func Render(w io.Writer, n *vdom.Node) error {
+// Render renders the n tree as text to the w writer. ctx is used as lookup for
+// custom nodes.
+func Render(w io.Writer, n *vdom.Node, ctx map[string]*vdom.Node) error {
 	buf := bufio.NewWriter(w)
-	if err := render(buf, n); err != nil {
+	if err := render(buf, n, ctx); err != nil {
 		return err
 	}
 	return buf.Flush()
@@ -34,8 +35,8 @@ func Render(w io.Writer, n *vdom.Node) error {
 // has been rendered. No more end tags should be rendered after that.
 var plaintextAbort = errors.New("html: internal error (plaintext abort)")
 
-func render(w writer, n *vdom.Node) error {
-	err := render1(w, n)
+func render(w writer, n *vdom.Node, ctx map[string]*vdom.Node) error {
+	err := render1(w, n, ctx)
 	if err == plaintextAbort {
 		err = nil
 	}
@@ -47,7 +48,7 @@ func escape(w writer, txt string) error {
 	_, err := w.WriteString(e)
 	return err
 }
-func render1(w writer, n *vdom.Node) error {
+func render1(w writer, n *vdom.Node, ctx map[string]*vdom.Node) error {
 	// Render non-element nodes; these are the easy cases.
 	switch n.Type {
 	case html.ErrorNode:
@@ -56,7 +57,7 @@ func render1(w writer, n *vdom.Node) error {
 		return escape(w, n.Data)
 	case html.DocumentNode:
 		for _, c := range n.Children {
-			if err := render1(w, c); err != nil {
+			if err := render1(w, c, ctx); err != nil {
 				return err
 			}
 		}
@@ -118,6 +119,15 @@ func render1(w writer, n *vdom.Node) error {
 		return w.WriteByte('>')
 	default:
 		return errors.New("html: unknown node type")
+	}
+	if n.DataAtom.String() == "" {
+		// we are dealing with custom component here
+		if ctx != nil {
+			if v, ok := ctx[n.Data]; ok {
+				return render(w, v, ctx)
+			}
+		}
+		return fmt.Errorf("can't find component: %s", n.Data)
 	}
 
 	// Render the <xxx> opening tag.
@@ -184,7 +194,7 @@ func render1(w writer, n *vdom.Node) error {
 					return err
 				}
 			} else {
-				if err := render1(w, c); err != nil {
+				if err := render1(w, c, ctx); err != nil {
 					return err
 				}
 			}
@@ -196,7 +206,7 @@ func render1(w writer, n *vdom.Node) error {
 		}
 	default:
 		for _, c := range n.Children {
-			if err := render1(w, c); err != nil {
+			if err := render1(w, c, ctx); err != nil {
 				return err
 			}
 		}

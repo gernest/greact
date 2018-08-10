@@ -13,9 +13,6 @@ func main() {
 	a.Name = "vected_gen"
 	a.Usage = "provides various commands that generate code for vected project"
 	a.Commands = []cli.Command{
-		gen.RuntimeCMD(),
-		gen.AgentsCommand(),
-		gen.DataCommand(),
 		gen.AttrCMD(),
 	}
 	if err := a.Run(os.Args); err != nil {

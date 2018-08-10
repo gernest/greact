@@ -14,8 +14,11 @@
 package vected
 
 import (
+	"context"
+
 	"github.com/gernest/vected/props"
 	"github.com/gernest/vected/state"
+	"github.com/gernest/vected/vdom"
 )
 
 // Component is an interface which defines a unit of user interface.
@@ -29,7 +32,8 @@ type Component interface {
 
 	// Template this is the vected template that is rendered by the component.
 	Template() string
-	core()
+	Render(context.Context, props.Props, state.State) vdom.Node
+	core() *Core
 }
 
 // Core is th base struct that every struct that wants to implement Component
@@ -37,18 +41,26 @@ type Component interface {
 //
 // This is used to make Props available to the component.
 type Core struct {
-	// This is the current component's props.
-	Props props.Props
-
-	// state should be provate per instance.
-	state state.State
+	props           props.Props
+	state           state.State
+	prevProps       props.Props
+	prevState       state.State
+	disable         bool
+	renderCallbacks []func()
+	context         context.Context
+	component       Component
 }
 
-// SetState this accepts new state and triggers component rerender.
-func (c *Core) SetState(newState state.State) {
-}
+func (c *Core) core() *Core { return c }
 
-func (c *Core) core() {}
+// SetState updates component state and schedule re rendering.
+func (c *Core) SetState(newState state.State, callback ...func()) {
+	prev := c.prevState
+	c.prevState = newState
+	c.state = state.Merge(prev, newState)
+
+	//TODO enqueue this for re rendering.
+}
 
 // InitState is an interface for exposing initial state.
 // Component should implement this interface if they want to set initial state

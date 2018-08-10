@@ -11,6 +11,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/gernest/vected/lib/vdom"
 	"golang.org/x/net/html"
 )
 
@@ -20,7 +21,8 @@ type writer interface {
 	WriteString(string) (int, error)
 }
 
-func Render(w io.Writer, n *Node) error {
+// Render renders the n tree as text to the w writer.
+func Render(w io.Writer, n *vdom.Node) error {
 	buf := bufio.NewWriter(w)
 	if err := render(buf, n); err != nil {
 		return err
@@ -32,7 +34,7 @@ func Render(w io.Writer, n *Node) error {
 // has been rendered. No more end tags should be rendered after that.
 var plaintextAbort = errors.New("html: internal error (plaintext abort)")
 
-func render(w writer, n *Node) error {
+func render(w writer, n *vdom.Node) error {
 	err := render1(w, n)
 	if err == plaintextAbort {
 		err = nil
@@ -45,7 +47,7 @@ func escape(w writer, txt string) error {
 	_, err := w.WriteString(e)
 	return err
 }
-func render1(w writer, n *Node) error {
+func render1(w writer, n *vdom.Node) error {
 	// Render non-element nodes; these are the easy cases.
 	switch n.Type {
 	case html.ErrorNode:

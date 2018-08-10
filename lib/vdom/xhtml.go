@@ -27,6 +27,7 @@ type Node struct {
 	Children  []*Node
 }
 
+// Clone traverse n and copies the tree to e.
 func Clone(n *html.Node, e *Node) {
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
 		ch := &Node{

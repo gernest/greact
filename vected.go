@@ -27,6 +27,7 @@ type RenderMode uint
 //supported render mode
 const (
 	No RenderMode = iota
+	Force
 	Sync
 	Async
 )
@@ -42,7 +43,7 @@ type Component interface {
 
 	// Template this is the vected template that is rendered by the component.
 	Template() string
-	Render(context.Context, props.Props, state.State) vdom.Node
+	Render(context.Context, props.Props, state.State) *vdom.Node
 	core() *Core
 }
 
@@ -58,7 +59,11 @@ type Core struct {
 	disable         bool
 	renderCallbacks []func()
 	context         context.Context
+	prevContext     context.Context
 	component       Component
+	base            bool
+	nextBase        bool
+	dirty           bool
 }
 
 func (c *Core) core() *Core { return c }
@@ -123,17 +128,22 @@ type UpdateOptions struct {
 // determine if re render is necessary.
 type ShouldUpdate interface {
 	// If this returns false then re rendering for the component is skipped.
-	ShouldComponentUpdate(UpdateOptions) bool
+	ShouldComponentUpdate(context.Context, props.Props, state.State) bool
 }
 
 // WillUpdate is an interface defining a callback that is called before rendering
 type WillUpdate interface {
 	// If returned props are not nil, then it will be merged with nextprops then
 	// passed to render for rendering.
-	ComponentWillUpdate(UpdateOptions) props.Props
+	ComponentWillUpdate(context.Context, props.Props, state.State) props.Props
 }
 
 // DidUpdate defines a callback that is invoked after rendering.
 type DidUpdate interface {
 	ComponentDidUpdate()
+}
+
+// DerivedState is an interface which can be used to derive state from props.
+type DerivedState interface {
+	DeriveState(props.Props, state.State) state.State
 }

@@ -10,10 +10,11 @@ import (
 	"github.com/urfave/cli"
 )
 
+// Serve defines serve command which builds and serves wasm modules.
 func Serve() cli.Command {
 	return cli.Command{
 		Name:   "serve",
-		Usage:  "starts a web server that serves main.wasm file",
+		Usage:  "builds and starts web server to serve wasm modules",
 		Action: serve,
 	}
 }

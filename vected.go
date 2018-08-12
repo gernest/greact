@@ -95,33 +95,25 @@ type InitProps interface {
 // WillMount is an interface defining a callback which is invoked before the
 // component is mounted on the dom.
 type WillMount interface {
-	ComponentWillMount(UpdateOptions)
+	ComponentWillMount(context.Context, props.Props, state.State)
 }
 
 // DidMount is an interface defining a callback that is invoked after the
 // component has been mounted to the dom.
 type DidMount interface {
-	ComponentDidMount(UpdateOptions)
+	ComponentDidMount(context.Context, props.Props, state.State)
 }
 
 // WillUnmount is an interface defining a callback that is invoked prior to
 // removal of the rendered component from the dom.
 type WillUnmount interface {
-	ComponentWillUnmount(UpdateOptions)
+	ComponentWillUnmount(context.Context, props.Props, state.State)
 }
 
 // WillReceiveProps is an interface defining a callback that will be called with
 // the new props before they are accepted and passed to be rendered.
 type WillReceiveProps interface {
-	ComponentWillReceiveProps(UpdateOptions)
-}
-
-// UpdateOptions these are options passed to lifecycle hooks.
-type UpdateOptions struct {
-	State     state.State
-	NextState state.State
-	Props     props.Props
-	NextProps props.Props
+	ComponentWillReceiveProps(context.Context, props.Props, state.State)
 }
 
 // ShouldUpdate is an interface defining callback that is called before render

@@ -85,6 +85,10 @@ func SetAccessor(node Element, name string, old, value interface{}, isSVG bool) 
 		switch {
 		case strings.HasPrefix(name, "on"):
 			// TODO: register and handle event listeners
+			// useCapture := name != strings.TrimSuffix(name, "Capture")
+			// if cb, ok := value.(js.Callback); ok {
+
+			// }
 		}
 	}
 }

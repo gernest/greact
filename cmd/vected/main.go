@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gernest/vected/cmd/gen"
+	"github.com/gernest/vected/cmd/server"
 	"github.com/urfave/cli"
 )
 
@@ -14,6 +15,7 @@ func main() {
 	a.Usage = "provides various commands that generate code for vected project"
 	a.Commands = []cli.Command{
 		gen.AttrCMD(),
+		server.Serve(),
 	}
 	if err := a.Run(os.Args); err != nil {
 		fmt.Println(err)

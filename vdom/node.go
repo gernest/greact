@@ -190,10 +190,11 @@ import (
 	"github.com/gernest/vected/state"
 	"golang.org/x/net/html/atom"
 	"golang.org/x/net/html"
+	"context"
 )
 
 // Render implements vected.Renderer interface.
-func ({{.ctx.Recv}} {{.ctx.StructName}})Render(props props.Props, state state.State)*vdom.Node{
+func ({{.ctx.Recv}} {{.ctx.StructName}})Render(ctx context.Context, props props.Props, state state.State)*vdom.Node{
 	return {{.node -}}
 }
 `

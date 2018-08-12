@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/urfave/cli"
@@ -25,6 +26,16 @@ func serve(ctx *cli.Context) error {
 			return err
 		}
 		a = wd
+	}
+	out := filepath.Join(a, "main.wasm")
+	cmd := exec.Command("go", "build", "-o", out, a)
+	cmd.Env = append(cmd.Env, "GOARCH=wasm")
+	cmd.Env = append(cmd.Env, "GOOS=js")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	err := cmd.Run()
+	if err != nil {
+		return err
 	}
 	idx := "cmd/server/index.html"
 	v, err := Asset(idx)

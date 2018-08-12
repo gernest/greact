@@ -16,12 +16,17 @@ const (
 	ContainerNode = "__internal_container___"
 )
 
+type Attribute struct {
+	Namespace, Key string
+	Value          interface{}
+}
+
 type Node struct {
 	Type      html.NodeType
 	DataAtom  atom.Atom
 	Data      string
 	Namespace string
-	Attr      []html.Attribute
+	Attr      []Attribute
 	Children  []*Node
 }
 
@@ -33,9 +38,15 @@ func Clone(n *html.Node, e *Node) {
 			DataAtom:  c.DataAtom,
 			Data:      c.Data,
 			Namespace: c.Namespace,
-			Attr:      make([]html.Attribute, len(c.Attr)),
+			Attr:      make([]Attribute, len(c.Attr)),
 		}
-		copy(ch.Attr, c.Attr)
+		for _, v := range c.Attr {
+			ch.Attr = append(ch.Attr, Attribute{
+				Namespace: v.Namespace,
+				Key:       v.Key,
+				Value:     v.Val,
+			})
+		}
 		e.Children = append(e.Children, ch)
 		Clone(c, ch)
 	}

@@ -64,6 +64,11 @@ type Core struct {
 	base            bool
 	nextBase        bool
 	dirty           bool
+	key             prop.NullString
+
+	// This is a callback used to receive instance of Component or the Dom element.
+	// after they have been mounted.
+	ref func(interface{})
 }
 
 func (c *Core) core() *Core { return c }
@@ -95,7 +100,7 @@ type InitProps interface {
 // WillMount is an interface defining a callback which is invoked before the
 // component is mounted on the dom.
 type WillMount interface {
-	ComponentWillMount(context.Context, prop.Props, state.State)
+	ComponentWillMount()
 }
 
 // DidMount is an interface defining a callback that is invoked after the
@@ -113,7 +118,7 @@ type WillUnmount interface {
 // WillReceiveProps is an interface defining a callback that will be called with
 // the new props before they are accepted and passed to be rendered.
 type WillReceiveProps interface {
-	ComponentWillReceiveProps(context.Context, prop.Props, state.State)
+	ComponentWillReceiveProps(context.Context, prop.Props)
 }
 
 // ShouldUpdate is an interface defining callback that is called before render
@@ -138,4 +143,44 @@ type DidUpdate interface {
 // DerivedState is an interface which can be used to derive state from props.
 type DerivedState interface {
 	DeriveState(prop.Props, state.State) state.State
+}
+
+// SetProps sets cmp props and possibly re renders
+func SetProps(ctx context.Context, cmp Component, props prop.Props, state state.State, mode RenderMode, mountAll bool) {
+	core := cmp.core()
+	if core.disable {
+		return
+	}
+	ref := props["ref"]
+	if fn, ok := ref.(func(interface{})); ok {
+		core.ref = fn
+	}
+	core.key = props.String("key")
+	delete(props, "key")
+	delete(props, "ref")
+	_, ok := cmp.(DerivedState)
+	if !ok {
+		if !core.base || mountAll {
+			if m, ok := cmp.(WillMount); ok {
+				m.ComponentWillMount()
+			}
+		} else if m, ok := cmp.(WillReceiveProps); ok {
+			m.ComponentWillReceiveProps(ctx, props)
+		}
+	}
+	if core.prevProps == nil {
+		core.prevProps = core.props
+	}
+	core.props = props
+	core.disable = false
+	if mode != No {
+		if mode == Sync {
+			// TODO render component
+		} else {
+			//TODO enqueue render
+		}
+	}
+	if core.ref != nil {
+		core.ref(cmp)
+	}
 }

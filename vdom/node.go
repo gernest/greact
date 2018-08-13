@@ -16,7 +16,6 @@ const (
 	ElementNode
 	CommentNode
 	DoctypeNode
-	scopeMarkerNode
 )
 
 func (n NodeType) String() string {
@@ -50,4 +49,27 @@ type Node struct {
 	Namespace string
 	Attr      []Attribute
 	Children  []*Node
+}
+
+// New is a wrapper for creating new node
+func New(typ NodeType, ns, name string, attrs []Attribute, children ...*Node) *Node {
+	return &Node{
+		Type:      typ,
+		Namespace: ns,
+		Data:      name,
+		Attr:      attrs,
+		Children:  children,
+	}
+}
+
+func Attr(ns, key string, val interface{}) Attribute {
+	return Attribute{
+		Namespace: ns,
+		Key:       key,
+		Val:       val,
+	}
+}
+
+func Attrs(attr ...Attribute) []Attribute {
+	return attr
 }

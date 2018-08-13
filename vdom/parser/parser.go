@@ -65,6 +65,11 @@ import (
 	"context"
 )
 
+// N is an alias for creating a new node
+var h =vdom.New
+var ha= vdom.Attr
+var hat= vdom.Attrs
+
 // Render implements vected.Renderer interface.
 func ({{.ctx.Recv}} {{.ctx.StructName}})Render(ctx context.Context, props props.Props, state state.State)*vdom.Node{
 	return {{.node -}}
@@ -83,7 +88,7 @@ type Context struct {
 // the Render method attached to the struct defined in ctx.
 func GenerateRenderMethod(n *vdom.Node, ctx *Context) ([]byte, error) {
 	var buf bytes.Buffer
-	nstr := printNode(n, 0, false)
+	nstr := printNode(n, 0)
 	buf.Reset()
 	err := tpl.Execute(&buf, map[string]interface{}{
 		"ctx":  ctx,
@@ -92,6 +97,7 @@ func GenerateRenderMethod(n *vdom.Node, ctx *Context) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// ioutil.WriteFile("test/test.gen.go", buf.Bytes(), 0600)
 	return format.Source(buf.Bytes())
 }
 

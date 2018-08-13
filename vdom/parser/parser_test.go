@@ -35,13 +35,29 @@ func TestClear(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
-	n, err := ParseString(`<div className={props.classNames}></div>`)
+	sample := `<div className={props.classNames} key=value>
+		<ul>
+			<li>1</li>
+			<li>2</li>
+			<li>3</li>
+			<li>4</li>
+			<li>5</li>
+		</ul>
+		<ol>
+			<li>1</li>
+			<li>2</li>
+			<li>3</li>
+			<li>4</li>
+			<li>5</li>
+		</ol>
+	</div>`
+	n, err := ParseString(sample)
 	if err != nil {
 		t.Fatal(err)
 	}
 	v, err := GenerateRenderMethod(n, &Context{
 		Package:    "test",
-		Recv:       "h",
+		Recv:       "t",
 		StructName: "Hello",
 	})
 	if err != nil {
@@ -64,14 +80,37 @@ import (
 	"github.com/gernest/vected/vdom"
 )
 
+// N is an alias for creating a new node
+var h = vdom.New
+var ha = vdom.Attr
+var hat = vdom.Attrs
+
 // Render implements vected.Renderer interface.
-func (h Hello) Render(ctx context.Context, props props.Props, state state.State) *vdom.Node {
-	return &vdom.Node{
-		Type: vdom.ElementNode,
-		Data: "div",
-		Attr: []vdom.Attribute{
-			{Key: "classname", Val: props["classNames"]},
-		},
-	}
+func (t Hello) Render(ctx context.Context, props props.Props, state state.State) *vdom.Node {
+	return h(3, "", "div", hat(
+		ha("", "classname", props["classNames"]),
+		ha("", "key", "value")),
+		h(3, "", "ul", nil,
+			h(3, "", "li", nil,
+				h(1, "", "1", nil)),
+			h(3, "", "li", nil,
+				h(1, "", "2", nil)),
+			h(3, "", "li", nil,
+				h(1, "", "3", nil)),
+			h(3, "", "li", nil,
+				h(1, "", "4", nil)),
+			h(3, "", "li", nil,
+				h(1, "", "5", nil))),
+		h(3, "", "ol", nil,
+			h(3, "", "li", nil,
+				h(1, "", "1", nil)),
+			h(3, "", "li", nil,
+				h(1, "", "2", nil)),
+			h(3, "", "li", nil,
+				h(1, "", "3", nil)),
+			h(3, "", "li", nil,
+				h(1, "", "4", nil)),
+			h(3, "", "li", nil,
+				h(1, "", "5", nil))))
 }
 `

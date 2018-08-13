@@ -8,45 +8,45 @@ import (
 )
 
 func printAttr(a vdom.Attribute) string {
-	if a.Namespace != "" {
-		return fmt.Sprintf("{Namespace:%q,Key:%q,Val:%v},\n",
-			a.Namespace, a.Key, interpret(a.Val))
-	}
-	return fmt.Sprintf("{Key:%q,Val:%v},\n", a.Key, interpret(a.Val))
+	return fmt.Sprintf("ha(%q,%q,%v)", a.Namespace, a.Key, interpret(a.Val))
 }
 
-func printNode(n *vdom.Node, level int, child bool) string {
-	v := indent("&vdom.Node{\n", level)
-	if n.Type != 0 {
-		v += indent("Type: vdom."+n.Type.String()+",\n", level+2)
-	}
-	if n.Data != "" {
-		v += indent("Data:"+fmt.Sprintf("%q", n.Data)+",\n", level+2)
-	}
-	if n.Namespace != "" {
-		v += indent("Namespace:"+fmt.Sprintf("%q", n.Namespace)+",\n", level+2)
-	}
+func printNode(n *vdom.Node, level int) string {
+	v := indent((fmt.Sprintf("h(%d,%q,%q",
+		n.Type, n.Namespace, n.Data)), level)
 	if len(n.Attr) > 0 {
-		v += indent("Attr:[]vdom.Attribute{\n", level+2)
+		v += indent(",hat(", level+2)
 		for _, attr := range n.Attr {
-			if attr.Key != "" {
-				v += indent(printAttr(attr), level+4)
+			if attr.Key == "" {
+				continue
 			}
+			v += "\n"
+			v += indent(printAttr(attr), level+4)
+			v += ","
 		}
-		v += indent("},\n", level+2)
+		v += indent(")", level+2)
+	} else {
+		v += ",nil"
 	}
 	if len(n.Children) > 0 {
-		v += indent("Children:[]*vdom.Node{\n", level+2)
+		v += ","
 		for _, ch := range n.Children {
-			v += printNode(ch, level+4, true)
+			switch ch.Type {
+			case vdom.TextNode:
+				x := strings.TrimSpace(ch.Data)
+				if x == "" {
+					continue
+				}
+			case vdom.CommentNode:
+				continue
+			}
+			v += "\n"
+			v += printNode(ch, level+4)
+			v += ","
 		}
-		v += indent("},\n", level+2)
+
 	}
-	if child {
-		v += indent("},\n", level)
-	} else {
-		v += indent("}\n", level)
-	}
+	v += indent(")", level)
 	return v
 }
 

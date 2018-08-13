@@ -91,6 +91,12 @@ func SetAccessor(node Element, name string, old, value interface{}, isSVG bool) 
 			if ev, ok := value.(Event); ok {
 				cb := js.NewEventCallback(ev.Flags(), ev.Call)
 				if old == nil {
+					var release js.Callback
+					release = js.NewCallback(func(args []js.Value) {
+						node.Call("removeEventListener", name, cb, useCapture)
+						cb.Release()
+						release.Release()
+					})
 					node.Call("addEventListener", name, cb, useCapture)
 					// To release resources allocated for the callback we keep track of of all
 					// callbacks added to this node.
@@ -101,8 +107,7 @@ func SetAccessor(node Element, name string, old, value interface{}, isSVG bool) 
 						node.Set("_listeners", make(map[string]interface{}))
 						releaseList = node.Get("_listeners")
 					}
-					releaseList.Set(name, cb)
-					node.Call("addEventListener", name, cb, useCapture)
+					releaseList.Set(name, release)
 				}
 			} else {
 				// If we don't supply the event call back it is the same as saying remove

@@ -9,6 +9,11 @@ import (
 // Element is an alias for the dom node.
 type Element = js.Value
 
+// HasProperty returns true if e has property.
+func HasProperty(e Element, v string) bool {
+	return e.Call("hasOwnProperty", v).Bool()
+}
+
 var doc = js.Global().Get("document")
 
 // CreateNode creates a dom element.
@@ -121,8 +126,29 @@ func SetAccessor(node Element, name string, old, value interface{}, isSVG bool) 
 					releaseList.Set(name, js.Undefined())
 				}
 			}
+		case name != "list" && name != "type" && !isSVG && HasProperty(node, name):
+			func() {
+				defer recover()
+				if value != nil {
+					node.Set(name, value)
+				} else {
+					node.Set(name, "")
+				}
+			}()
+			if (value == nil || !toBool(value)) && name != "spellcheck" {
+				node.Call("removeAttribute", name)
+			}
+		default:
+			//TODO handle namespace
 		}
 	}
+}
+
+func toBool(v interface{}) bool {
+	if v, ok := v.(bool); ok {
+		return v
+	}
+	return false
 }
 
 type Event interface {

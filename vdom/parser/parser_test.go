@@ -55,10 +55,10 @@ func TestGenerate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	v, err := GenerateRenderMethod(n, &Context{
-		Package:    "test",
+	v, err := GenerateRenderMethod("test", Context{
 		Recv:       "t",
 		StructName: "Hello",
+		Node:       n,
 	})
 	if err != nil {
 		t.Fatal(err)

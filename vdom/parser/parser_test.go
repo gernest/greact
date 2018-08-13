@@ -47,6 +47,7 @@ func TestGenerate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// ioutil.WriteFile("test/test.gen.go", v, 0600)
 	s := string(v)
 	if s != expected1 {
 		t.Errorf("got wrong generated output")
@@ -61,18 +62,15 @@ import (
 	"github.com/gernest/vected/props"
 	"github.com/gernest/vected/state"
 	"github.com/gernest/vected/vdom"
-	"golang.org/x/net/html"
-	"golang.org/x/net/html/atom"
 )
 
 // Render implements vected.Renderer interface.
 func (h Hello) Render(ctx context.Context, props props.Props, state state.State) *vdom.Node {
 	return &vdom.Node{
-		Type:     html.ElementNode,
-		DataAtom: atom.Div,
-		Data:     "div",
+		Type: vdom.ElementNode,
+		Data: "div",
 		Attr: []vdom.Attribute{
-			{Key: "classname", Val: props.classNames},
+			{Key: "classname", Val: props["classNames"]},
 		},
 	}
 }

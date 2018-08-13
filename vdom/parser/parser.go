@@ -16,8 +16,7 @@ import (
 func Clone(n *html.Node, e *vdom.Node) {
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
 		ch := &vdom.Node{
-			Type:      c.Type,
-			DataAtom:  c.DataAtom,
+			Type:      vdom.NodeType(uint32(c.Type)),
 			Data:      c.Data,
 			Namespace: c.Namespace,
 			Attr:      make([]vdom.Attribute, len(c.Attr)),
@@ -36,7 +35,8 @@ func Clone(n *html.Node, e *vdom.Node) {
 
 // Clear removes nodes injected by the parser.
 func Clear(n *vdom.Node) *vdom.Node {
-	if len(n.Children) > 0 && n.Children[0].DataAtom == atom.Html {
+	if len(n.Children) > 0 &&
+		atom.Lookup([]byte(n.Children[0].Data)) == atom.Html {
 		// this is the root node. The html parser injects html,bead,body tags by
 		// default.
 		//
@@ -45,7 +45,7 @@ func Clear(n *vdom.Node) *vdom.Node {
 		if len(body.Children) > 1 {
 			// wrap the children in a container
 			return &vdom.Node{
-				Type:     html.ElementNode,
+				Type:     vdom.ElementNode,
 				Data:     vdom.ContainerNode,
 				Children: body.Children,
 			}
@@ -62,8 +62,6 @@ import (
 	"github.com/gernest/vected/vdom"
 	"github.com/gernest/vected/props"
 	"github.com/gernest/vected/state"
-	"golang.org/x/net/html/atom"
-	"golang.org/x/net/html"
 	"context"
 )
 
@@ -85,7 +83,7 @@ type Context struct {
 // the Render method attached to the struct defined in ctx.
 func GenerateRenderMethod(n *vdom.Node, ctx *Context) ([]byte, error) {
 	var buf bytes.Buffer
-	nstr := n.Print(0, false)
+	nstr := PrintNode(n, 0, false)
 	buf.Reset()
 	err := tpl.Execute(&buf, map[string]interface{}{
 		"ctx":  ctx,

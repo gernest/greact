@@ -83,7 +83,7 @@ type Context struct {
 // the Render method attached to the struct defined in ctx.
 func GenerateRenderMethod(n *vdom.Node, ctx *Context) ([]byte, error) {
 	var buf bytes.Buffer
-	nstr := PrintNode(n, 0, false)
+	nstr := printNode(n, 0, false)
 	buf.Reset()
 	err := tpl.Execute(&buf, map[string]interface{}{
 		"ctx":  ctx,

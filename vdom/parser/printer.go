@@ -7,7 +7,7 @@ import (
 	"github.com/gernest/vected/vdom"
 )
 
-func PrintAttr(a vdom.Attribute) string {
+func printAttr(a vdom.Attribute) string {
 	if a.Namespace != "" {
 		return fmt.Sprintf("{Namespace:%q,Key:%q,Val:%v},\n",
 			a.Namespace, a.Key, interpret(a.Val))
@@ -15,7 +15,7 @@ func PrintAttr(a vdom.Attribute) string {
 	return fmt.Sprintf("{Key:%q,Val:%v},\n", a.Key, interpret(a.Val))
 }
 
-func PrintNode(n *vdom.Node, level int, child bool) string {
+func printNode(n *vdom.Node, level int, child bool) string {
 	v := indent("&vdom.Node{\n", level)
 	if n.Type != 0 {
 		v += indent("Type: vdom."+n.Type.String()+",\n", level+2)
@@ -30,7 +30,7 @@ func PrintNode(n *vdom.Node, level int, child bool) string {
 		v += indent("Attr:[]vdom.Attribute{\n", level+2)
 		for _, attr := range n.Attr {
 			if attr.Key != "" {
-				v += indent(PrintAttr(attr), level+4)
+				v += indent(printAttr(attr), level+4)
 			}
 		}
 		v += indent("},\n", level+2)
@@ -38,7 +38,7 @@ func PrintNode(n *vdom.Node, level int, child bool) string {
 	if len(n.Children) > 0 {
 		v += indent("Children:[]*vdom.Node{\n", level+2)
 		for _, ch := range n.Children {
-			v += PrintNode(ch, level+4, true)
+			v += printNode(ch, level+4, true)
 		}
 		v += indent("},\n", level+2)
 	}

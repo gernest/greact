@@ -1,4 +1,4 @@
-package props
+package prop
 
 type NullInt struct {
 	Value  int

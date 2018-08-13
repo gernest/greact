@@ -16,7 +16,7 @@ package vected
 import (
 	"context"
 
-	"github.com/gernest/vected/props"
+	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
 	"github.com/gernest/vected/vdom"
 )
@@ -39,11 +39,11 @@ type Component interface {
 	// props passed to the component from the parent are passed as arguments,
 	//
 	// Initializing state should happen here.
-	New(props.Props) (Component, error)
+	New(prop.Props) (Component, error)
 
 	// Template this is the vected template that is rendered by the component.
 	Template() string
-	Render(context.Context, props.Props, state.State) *vdom.Node
+	Render(context.Context, prop.Props, state.State) *vdom.Node
 	core() *Core
 }
 
@@ -52,9 +52,9 @@ type Component interface {
 //
 // This is used to make Props available to the component.
 type Core struct {
-	props           props.Props
+	props           prop.Props
 	state           state.State
-	prevProps       props.Props
+	prevProps       prop.Props
 	prevState       state.State
 	disable         bool
 	renderCallbacks []func()
@@ -89,45 +89,45 @@ type InitState interface {
 // InitProps is an interface for exposing default props. This will be merged
 // with other props before being sent to render.
 type InitProps interface {
-	InitProps() props.Props
+	InitProps() prop.Props
 }
 
 // WillMount is an interface defining a callback which is invoked before the
 // component is mounted on the dom.
 type WillMount interface {
-	ComponentWillMount(context.Context, props.Props, state.State)
+	ComponentWillMount(context.Context, prop.Props, state.State)
 }
 
 // DidMount is an interface defining a callback that is invoked after the
 // component has been mounted to the dom.
 type DidMount interface {
-	ComponentDidMount(context.Context, props.Props, state.State)
+	ComponentDidMount(context.Context, prop.Props, state.State)
 }
 
 // WillUnmount is an interface defining a callback that is invoked prior to
 // removal of the rendered component from the dom.
 type WillUnmount interface {
-	ComponentWillUnmount(context.Context, props.Props, state.State)
+	ComponentWillUnmount(context.Context, prop.Props, state.State)
 }
 
 // WillReceiveProps is an interface defining a callback that will be called with
 // the new props before they are accepted and passed to be rendered.
 type WillReceiveProps interface {
-	ComponentWillReceiveProps(context.Context, props.Props, state.State)
+	ComponentWillReceiveProps(context.Context, prop.Props, state.State)
 }
 
 // ShouldUpdate is an interface defining callback that is called before render
 // determine if re render is necessary.
 type ShouldUpdate interface {
 	// If this returns false then re rendering for the component is skipped.
-	ShouldComponentUpdate(context.Context, props.Props, state.State) bool
+	ShouldComponentUpdate(context.Context, prop.Props, state.State) bool
 }
 
 // WillUpdate is an interface defining a callback that is called before rendering
 type WillUpdate interface {
 	// If returned props are not nil, then it will be merged with nextprops then
 	// passed to render for rendering.
-	ComponentWillUpdate(context.Context, props.Props, state.State) props.Props
+	ComponentWillUpdate(context.Context, prop.Props, state.State) prop.Props
 }
 
 // DidUpdate defines a callback that is invoked after rendering.
@@ -137,5 +137,5 @@ type DidUpdate interface {
 
 // DerivedState is an interface which can be used to derive state from props.
 type DerivedState interface {
-	DeriveState(props.Props, state.State) state.State
+	DeriveState(prop.Props, state.State) state.State
 }

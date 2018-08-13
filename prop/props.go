@@ -1,6 +1,6 @@
-// Package props exposes structs and functions for manipulating of properties.
+// Package prop exposes structs and functions for manipulating of properties.
 // properties are values that can be passed around to components.
-package props
+package prop
 
 import (
 	"fmt"

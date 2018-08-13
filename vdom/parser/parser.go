@@ -60,7 +60,7 @@ package {{.pkg}}
 
 import (
 	"github.com/gernest/vected/vdom"
-	"github.com/gernest/vected/props"
+	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
 	"context"
 )
@@ -72,7 +72,7 @@ var hat= vdom.Attrs
 
 {{range .ctx}}
 // Render implements vected.Renderer interface.
-func ({{.Recv}} {{.StructName}})Render(ctx context.Context, props props.Props, state state.State)*vdom.Node{
+func ({{.Recv}} {{.StructName}})Render(ctx context.Context, props prop.Props, state state.State)*vdom.Node{
 	return {{text .Node -}}
 }
 {{end}}

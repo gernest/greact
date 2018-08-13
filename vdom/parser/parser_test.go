@@ -75,7 +75,7 @@ package test
 
 import (
 	"context"
-	"github.com/gernest/vected/props"
+	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
 	"github.com/gernest/vected/vdom"
 )
@@ -86,7 +86,7 @@ var ha = vdom.Attr
 var hat = vdom.Attrs
 
 // Render implements vected.Renderer interface.
-func (t Hello) Render(ctx context.Context, props props.Props, state state.State) *vdom.Node {
+func (t Hello) Render(ctx context.Context, props prop.Props, state state.State) *vdom.Node {
 	return h(3, "", "div", hat(
 		ha("", "classname", props["classNames"]),
 		ha("", "key", "value")),

@@ -1,6 +1,7 @@
 package dom
 
 import (
+	"fmt"
 	"strings"
 	"syscall/js"
 )
@@ -28,10 +29,10 @@ func CreateSVGNode(name string) Element {
 
 // returns true if value is not null or undefined.
 func valid(v js.Value) bool {
-	if v.InstanceOf(js.Undefined()) {
+	if v.Type() == js.TypeUndefined {
 		return false
 	}
-	return !v.InstanceOf(js.Null())
+	return v.Type() != js.TypeNull
 }
 
 // RemoveNode removes node from its parent if attached.
@@ -84,11 +85,65 @@ func SetAccessor(node Element, name string, old, value interface{}, isSVG bool) 
 	default:
 		switch {
 		case strings.HasPrefix(name, "on"):
-			// TODO: register and handle event listeners
-			// useCapture := name != strings.TrimSuffix(name, "Capture")
-			// if cb, ok := value.(js.Callback); ok {
-
-			// }
+			useCapture := name != strings.TrimSuffix(name, "Capture")
+			name = eventName(name)
+			fmt.Println(name)
+			if ev, ok := value.(Event); ok {
+				cb := js.NewEventCallback(ev.Flags(), ev.Call)
+				if old == nil {
+					node.Call("addEventListener", name, cb, useCapture)
+					// To release resources allocated for the callback we keep track of of all
+					// callbacks added to this node.
+					//
+					// These can be later removed by calling the functions.
+					releaseList := node.Get("_listeners")
+					if releaseList.Type() == js.TypeUndefined {
+						node.Set("_listeners", make(map[string]interface{}))
+						releaseList = node.Get("_listeners")
+					}
+					releaseList.Set(name, cb)
+					node.Call("addEventListener", name, cb, useCapture)
+				}
+			} else {
+				// If we don't supply the event call back it is the same as saying remove
+				// this event.
+				//
+				// We release the resources allocated for the event callback and free up the
+				// event reference by setting its value to undefined.
+				releaseList := node.Get("_listeners")
+				if valid(releaseList) {
+					releaseList.Call(name)
+					releaseList.Set(name, js.Undefined())
+				}
+			}
 		}
 	}
+}
+
+type Event interface {
+	Flags() js.EventCallbackFlag
+	Call(js.Value)
+}
+type eventWrapper struct {
+	flags js.EventCallbackFlag
+	event func(js.Value)
+}
+
+func (e eventWrapper) Flags() js.EventCallbackFlag {
+	return e.flags
+}
+func (e eventWrapper) Call(v js.Value) {
+	e.event(v)
+}
+
+// NewEvent returns new Event call back.
+func NewEvent(flags js.EventCallbackFlag, fn func(event js.Value)) Event {
+	return eventWrapper{flags: flags, event: fn}
+}
+
+// eventName takes a props event name and returns a string suitable for
+// registering the event on the dom.
+func eventName(name string) string {
+	name = strings.ToLower(name)
+	return name[2:]
 }

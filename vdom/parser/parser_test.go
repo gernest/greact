@@ -1,7 +1,9 @@
-package vdom
+package parser
 
 import (
 	"testing"
+
+	"github.com/gernest/vected/vdom"
 )
 
 func TestClear(t *testing.T) {
@@ -26,8 +28,8 @@ func TestClear(t *testing.T) {
 		if err != nil {
 			ts.Fatal(err)
 		}
-		if n.Data != ContainerNode {
-			t.Errorf("expected %s got %s", ContainerNode, n.Data)
+		if n.Data != vdom.ContainerNode {
+			t.Errorf("expected %s got %s", vdom.ContainerNode, n.Data)
 		}
 	})
 }

@@ -35,7 +35,7 @@ func TestClear(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
-	sample := `<div className={props.classNames} key=value>
+	sample := `<div className={props["classNames"]} key=value>
 		<ul>
 			<li>1</li>
 			<li>2</li>
@@ -114,3 +114,18 @@ func (t Hello) Render(ctx context.Context, props prop.Props, state state.State) 
 				h(1, "", "5", nil))))
 }
 `
+
+func TestInterpret(t *testing.T) {
+	sample := []struct {
+		expr, expect string
+	}{
+		{`{"hello"}`, `"hello"`},
+		{"{props.class}", "props.class"},
+	}
+	for _, v := range sample {
+		got := interpret(v.expr)
+		if got != v.expect {
+			t.Errorf("expected %s got %s", v.expect, got)
+		}
+	}
+}

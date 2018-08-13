@@ -1,7 +1,11 @@
 package parser
 
 import (
+	"bytes"
 	"fmt"
+	"go/parser"
+	"go/printer"
+	"go/token"
 	"strings"
 
 	"github.com/gernest/vected/vdom"
@@ -57,27 +61,25 @@ func interpret(v interface{}) string {
 	case string:
 		e = strings.TrimSpace(e)
 		if strings.HasPrefix(e, "{") {
+			// We remove prefix { and suffix }, pick what is left and evaluate if it is a
+			// valid go expression.
+			//
+			// TODO handle errors when given wrong expressions.
 			x := strings.TrimPrefix(e, "{")
 			x = strings.TrimSuffix(x, "}")
 			x = strings.TrimSpace(x)
-			if strings.HasPrefix(x, "\"") {
-				return fmt.Sprintf("%q", x)
+			v, err := parser.ParseExpr(x)
+			if err != nil {
+				return "nil"
 			}
-			parts := strings.Split(x, ".")
-			if len(parts) > 1 {
-				for k, v := range parts {
-					if k == 0 {
-						continue
-					}
-					parts[k] = fmt.Sprintf("[%q]", v)
-				}
-				return strings.Join(parts, "")
-			}
-			return x
+			var buf bytes.Buffer
+			fset := token.NewFileSet()
+			printer.Fprint(&buf, fset, v)
+			return buf.String()
 		}
 		return fmt.Sprintf("%q", e)
 	default:
-		return fmt.Sprint(v)
+		return "nil"
 	}
 }
 

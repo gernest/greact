@@ -2,7 +2,9 @@ package parser
 
 import (
 	"bytes"
+	"go/ast"
 	"go/format"
+	"go/parser"
 	"io"
 	"strings"
 	"text/template"
@@ -125,4 +127,8 @@ func Parse(r io.Reader) (*vdom.Node, error) {
 // ParseString helper that wraps s to io.Reader.
 func ParseString(s string) (*vdom.Node, error) {
 	return Parse(strings.NewReader(s))
+}
+
+func parseExpression(x string) (ast.Expr, error) {
+	return parser.ParseExpr(x)
 }

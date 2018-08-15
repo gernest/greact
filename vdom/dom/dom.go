@@ -3,50 +3,20 @@ package dom
 import (
 	"fmt"
 	"strings"
+
+	"github.com/gernest/vected/vdom/value"
 )
-
-type Type int
-
-const (
-	TypeUndefined Type = iota
-	TypeNull
-	TypeBoolean
-	TypeNumber
-	TypeString
-	TypeSymbol
-	TypeObject
-	TypeFunction
-)
-
-type Value interface {
-	Bool() bool
-	Call(m string, args ...interface{}) Value
-	Float() float64
-	Get(string) Value
-	Index(int) Value
-	Int() int
-	Invoke(args ...interface{}) Value
-	Set(p string, x interface{})
-	String() string
-	Type() Type
-}
-
-type Callback interface {
-	Release()
-}
 
 // Element is an alias for the dom node.
-type Element Value
+type Element value.Value
 
 // HasProperty returns true if e has property.
 func HasProperty(e Element, v string) bool {
 	return e.Call("hasOwnProperty", v).Bool()
 }
 
-var doc Value
-
 // CreateNode creates a dom element.
-func CreateNode(name string) Element {
+func CreateNode(doc value.Value, name string) Element {
 	node := doc.Call("createElement", name)
 	node.Set("normalizedNodeName", name)
 	return node
@@ -55,22 +25,22 @@ func CreateNode(name string) Element {
 const svg = "http://www.w3.org/2000/svg'"
 
 // CreateSVGNode creates svg dom element.
-func CreateSVGNode(name string) Element {
+func CreateSVGNode(doc value.Value, name string) Element {
 	node := doc.Call("createElementNS", svg, name)
 	node.Set("normalizedNodeName", name)
 	return node
 }
 
 // returns true if value is not null or undefined.
-func valid(v Value) bool {
-	if v.Type() == TypeUndefined {
+func valid(v value.Value) bool {
+	if v.Type() == value.TypeUndefined {
 		return false
 	}
-	return v.Type() != TypeNull
+	return v.Type() != value.TypeNull
 }
 
 // RemoveNode removes node from its parent if attached.
-func RemoveNode(node Value) {
+func RemoveNode(node value.Value) {
 	parent := node.Get("parentNode")
 	if valid(parent) {
 		parent.Call("removeChild", node)
@@ -86,20 +56,20 @@ func RemoveNode(node Value) {
 // old The last value that was set for this name/node pair
 // value An attribute value, such as a function to be used as an event handler
 // isSVG Are we currently diffing inside an svg?
-func SetAccessor(gen CB, node Element, name string, old, value interface{}, isSVG bool) {
+func SetAccessor(gen CB, node Element, name string, old, val interface{}, isSVG bool) {
 	if name == "className" {
 		name = "class"
 	}
 	switch name {
 	case "class":
-		v := value
+		v := val
 		if v == nil {
 			v = ""
 		}
 		node.Set("className", v)
 	case "style":
 		style := node.Get("style")
-		switch e := value.(type) {
+		switch e := val.(type) {
 		case string:
 			style.Set("cssText", e)
 		case map[string]string:
@@ -115,14 +85,14 @@ func SetAccessor(gen CB, node Element, name string, old, value interface{}, isSV
 			}
 		}
 	case "dangerouslySetInnerHTML":
-		node.Set("innerHTML", value)
+		node.Set("innerHTML", val)
 	default:
 		switch {
 		case strings.HasPrefix(name, "on"):
 			useCapture := name != strings.TrimSuffix(name, "Capture")
 			name = eventName(name)
 			fmt.Println(name)
-			if ev, ok := value.(func([]Value)); ok {
+			if ev, ok := val.(func([]value.Value)); ok {
 				cb := gen(ev)
 				if old == nil {
 					node.Call("addEventListener", name, cb, useCapture)
@@ -130,14 +100,14 @@ func SetAccessor(gen CB, node Element, name string, old, value interface{}, isSV
 					// callbacks added to this node.
 					//
 					// These can be later removed by calling the functions.
-					var release Callback
-					release = gen(func(args []Value) {
+					var release value.Callback
+					release = gen(func(args []value.Value) {
 						node.Call("removeEventListener", name, cb, useCapture)
 						cb.Release()
 						release.Release()
 					})
 					releaseList := node.Get("_listeners")
-					if releaseList.Type() == TypeUndefined {
+					if releaseList.Type() == value.TypeUndefined {
 						node.Set("_listeners", make(map[string]interface{}))
 						releaseList = node.Get("_listeners")
 					}
@@ -158,13 +128,13 @@ func SetAccessor(gen CB, node Element, name string, old, value interface{}, isSV
 		case name != "list" && name != "type" && !isSVG && HasProperty(node, name):
 			func() {
 				defer recover()
-				if value != nil {
-					node.Set(name, value)
+				if val != nil {
+					node.Set(name, val)
 				} else {
 					node.Set(name, "")
 				}
 			}()
-			if (value == nil || !toBool(value)) && name != "spellcheck" {
+			if (val == nil || !toBool(val)) && name != "spellcheck" {
 				node.Call("removeAttribute", name)
 			}
 		default:
@@ -174,7 +144,7 @@ func SetAccessor(gen CB, node Element, name string, old, value interface{}, isSV
 }
 
 // CB is a function that returns callbacks.
-type CB func(fn func([]Value)) Callback
+type CB func(fn func([]value.Value)) value.Callback
 
 func toBool(v interface{}) bool {
 	if v, ok := v.(bool); ok {

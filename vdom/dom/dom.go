@@ -56,7 +56,7 @@ func RemoveNode(node value.Value) {
 // old The last value that was set for this name/node pair
 // value An attribute value, such as a function to be used as an event handler
 // isSVG Are we currently diffing inside an svg?
-func SetAccessor(gen CB, node Element, name string, old, val interface{}, isSVG bool) {
+func SetAccessor(gen CallbackGenerator, node Element, name string, old, val interface{}, isSVG bool) {
 	if name == "className" {
 		name = "class"
 	}
@@ -143,8 +143,8 @@ func SetAccessor(gen CB, node Element, name string, old, val interface{}, isSVG 
 	}
 }
 
-// CB is a function that returns callbacks.
-type CB func(fn func([]value.Value)) value.Callback
+// CallbackGenerator is a function that returns callbacks.
+type CallbackGenerator func(fn func([]value.Value)) value.Callback
 
 func toBool(v interface{}) bool {
 	if v, ok := v.(bool); ok {

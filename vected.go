@@ -183,7 +183,7 @@ func SetProps(ctx context.Context, cmp Component, props prop.Props, state state.
 	core.disable = false
 	if mode != No {
 		if mode == Sync {
-			RenderComponent(cmp, Sync, mountAll)
+			renderComponent(cmp, Sync, mountAll)
 		} else {
 			enqueueRender(cmp)
 		}
@@ -193,7 +193,7 @@ func SetProps(ctx context.Context, cmp Component, props prop.Props, state state.
 	}
 }
 
-func RenderComponent(cmp Component, mode RenderMode, mountAll bool, child ...bool) {
+func renderComponent(cmp Component, mode RenderMode, mountAll bool, child ...bool) {
 
 }
 
@@ -234,6 +234,7 @@ func (q *QueuedRender) Push(v Component) {
 	q.components.PushBack(v)
 }
 
+// Pop returns the last added component and removes it from the queue.
 func (q *QueuedRender) Pop() Component {
 	e := q.pop()
 	if e != nil {
@@ -259,6 +260,7 @@ func (q *QueuedRender) last() *list.Element {
 	return e
 }
 
+// Last returns the last added component to the queue.
 func (q *QueuedRender) Last() Component {
 	e := q.last()
 	if e != nil {
@@ -288,7 +290,7 @@ func (q *QueuedRender) Rerender() {
 func (q *QueuedRender) rerender() {
 	for cmp := q.Pop(); cmp != nil; cmp = q.Pop() {
 		if cmp.core().dirty {
-			RenderComponent(cmp, 0, false)
+			renderComponent(cmp, 0, false)
 		}
 	}
 }

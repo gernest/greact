@@ -183,7 +183,7 @@ func SetProps(ctx context.Context, cmp Component, props prop.Props, state state.
 	core.disable = false
 	if mode != No {
 		if mode == Sync {
-			RenderComponent(cmp)
+			RenderComponent(cmp, Sync, mountAll)
 		} else {
 			enqueueRender(cmp)
 		}
@@ -193,7 +193,7 @@ func SetProps(ctx context.Context, cmp Component, props prop.Props, state state.
 	}
 }
 
-func RenderComponent(cmp Component) {
+func RenderComponent(cmp Component, mode RenderMode, mountAll bool, child ...bool) {
 
 }
 
@@ -288,7 +288,7 @@ func (q *QueuedRender) Rerender() {
 func (q *QueuedRender) rerender() {
 	for cmp := q.Pop(); cmp != nil; cmp = q.Pop() {
 		if cmp.core().dirty {
-			RenderComponent(cmp)
+			RenderComponent(cmp, 0, false)
 		}
 	}
 }

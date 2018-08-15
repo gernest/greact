@@ -197,31 +197,6 @@ func renderComponent(cmp Component, mode RenderMode, mountAll bool, child ...boo
 
 }
 
-type List []Component
-
-func (ls List) Len() int { return len(ls) }
-
-func (ls List) Less(i, j int) bool {
-	return ls[i].core().priority > ls[j].core().priority
-}
-
-func (ls List) Swap(i, j int) {
-	ls[i], ls[j] = ls[j], ls[i]
-}
-
-func (ls *List) Push(x interface{}) {
-	item := x.(Component)
-	*ls = append(*ls, item)
-}
-
-func (ls *List) Pop() interface{} {
-	old := *ls
-	n := len(old)
-	item := old[n-1]
-	*ls = old[0 : n-1]
-	return item
-}
-
 type QueuedRender struct {
 	components *list.List
 	mu         sync.RWMutex

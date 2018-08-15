@@ -14,7 +14,9 @@
 package vected
 
 import (
+	"container/list"
 	"context"
+	"sync"
 
 	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
@@ -31,6 +33,8 @@ const (
 	Sync
 	Async
 )
+
+var queue = NeqQueueRenderer()
 
 // Component is an interface which defines a unit of user interface.
 type Component interface {
@@ -69,6 +73,10 @@ type Core struct {
 	// This is a callback used to receive instance of Component or the Dom element.
 	// after they have been mounted.
 	ref func(interface{})
+
+	// priority this is a number indicating how important this component is in the
+	// re rendering queue. The higher the number the more urgent re renders.
+	priority int
 }
 
 func (c *Core) core() *Core { return c }
@@ -175,12 +183,112 @@ func SetProps(ctx context.Context, cmp Component, props prop.Props, state state.
 	core.disable = false
 	if mode != No {
 		if mode == Sync {
-			// TODO render component
+			RenderComponent(cmp)
 		} else {
-			//TODO enqueue render
+			enqueueRender(cmp)
 		}
 	}
 	if core.ref != nil {
 		core.ref(cmp)
+	}
+}
+
+func RenderComponent(cmp Component) {
+
+}
+
+type List []Component
+
+func (ls List) Len() int { return len(ls) }
+
+func (ls List) Less(i, j int) bool {
+	return ls[i].core().priority > ls[j].core().priority
+}
+
+func (ls List) Swap(i, j int) {
+	ls[i], ls[j] = ls[j], ls[i]
+}
+
+func (ls *List) Push(x interface{}) {
+	item := x.(Component)
+	*ls = append(*ls, item)
+}
+
+func (ls *List) Pop() interface{} {
+	old := *ls
+	n := len(old)
+	item := old[n-1]
+	*ls = old[0 : n-1]
+	return item
+}
+
+type QueuedRender struct {
+	components *list.List
+	mu         sync.RWMutex
+	closed     bool
+}
+
+func (q *QueuedRender) Push(v Component) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.components.PushBack(v)
+}
+
+func (q *QueuedRender) Pop() Component {
+	e := q.pop()
+	if e != nil {
+		return e.Value.(Component)
+	}
+	return nil
+}
+
+func (q *QueuedRender) pop() *list.Element {
+	e := q.last()
+	q.mu.Lock()
+	if e != nil {
+		q.components.Remove(e)
+	}
+	q.mu.Unlock()
+	return e
+}
+
+func (q *QueuedRender) last() *list.Element {
+	q.mu.RLock()
+	e := q.components.Back()
+	q.mu.RUnlock()
+	return e
+}
+
+func (q *QueuedRender) Last() Component {
+	e := q.last()
+	if e != nil {
+		return e.Value.(Component)
+	}
+	return nil
+}
+
+func NeqQueueRenderer() *QueuedRender {
+	return &QueuedRender{
+		components: list.New(),
+	}
+}
+
+func enqueueRender(cmp Component) {
+	if cmp.core().dirty {
+		queue.Push(cmp)
+		queue.Rerender()
+	}
+}
+
+// Rerender re renders all enqueued dirty components.
+func (q *QueuedRender) Rerender() {
+	go q.rerender()
+}
+
+func (q *QueuedRender) rerender() {
+	for cmp := q.Pop(); cmp != nil; cmp = q.Pop() {
+		if cmp.core().dirty {
+			RenderComponent(cmp)
+		}
 	}
 }

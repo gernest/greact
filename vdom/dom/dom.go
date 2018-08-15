@@ -3,18 +3,47 @@ package dom
 import (
 	"fmt"
 	"strings"
-	"syscall/js"
 )
 
+type Type int
+
+const (
+	TypeUndefined Type = iota
+	TypeNull
+	TypeBoolean
+	TypeNumber
+	TypeString
+	TypeSymbol
+	TypeObject
+	TypeFunction
+)
+
+type Value interface {
+	Bool() bool
+	Call(m string, args ...interface{}) Value
+	Float() float64
+	Get(string) Value
+	Index(int) Value
+	Int() int
+	Invoke(args ...interface{}) Value
+	Set(p string, x interface{})
+	String() string
+	Type() Type
+}
+
+type Callback interface {
+	Release()
+}
+
 // Element is an alias for the dom node.
-type Element = js.Value
+type Element Value
 
 // HasProperty returns true if e has property.
 func HasProperty(e Element, v string) bool {
 	return e.Call("hasOwnProperty", v).Bool()
 }
 
-var doc = js.Global().Get("document")
+var doc Value
 
 // CreateNode creates a dom element.
 func CreateNode(name string) Element {
@@ -33,15 +62,15 @@ func CreateSVGNode(name string) Element {
 }
 
 // returns true if value is not null or undefined.
-func valid(v js.Value) bool {
-	if v.Type() == js.TypeUndefined {
+func valid(v Value) bool {
+	if v.Type() == TypeUndefined {
 		return false
 	}
-	return v.Type() != js.TypeNull
+	return v.Type() != TypeNull
 }
 
 // RemoveNode removes node from its parent if attached.
-func RemoveNode(node js.Value) {
+func RemoveNode(node Value) {
 	parent := node.Get("parentNode")
 	if valid(parent) {
 		parent.Call("removeChild", node)
@@ -57,7 +86,7 @@ func RemoveNode(node js.Value) {
 // old The last value that was set for this name/node pair
 // value An attribute value, such as a function to be used as an event handler
 // isSVG Are we currently diffing inside an svg?
-func SetAccessor(node Element, name string, old, value interface{}, isSVG bool) {
+func SetAccessor(gen CB, node Element, name string, old, value interface{}, isSVG bool) {
 	if name == "className" {
 		name = "class"
 	}
@@ -93,22 +122,22 @@ func SetAccessor(node Element, name string, old, value interface{}, isSVG bool) 
 			useCapture := name != strings.TrimSuffix(name, "Capture")
 			name = eventName(name)
 			fmt.Println(name)
-			if ev, ok := value.(Event); ok {
-				cb := js.NewEventCallback(ev.Flags(), ev.Call)
+			if ev, ok := value.(func([]Value)); ok {
+				cb := gen(ev)
 				if old == nil {
 					node.Call("addEventListener", name, cb, useCapture)
 					// To release resources allocated for the callback we keep track of of all
 					// callbacks added to this node.
 					//
 					// These can be later removed by calling the functions.
-					var release js.Callback
-					release = js.NewCallback(func(args []js.Value) {
+					var release Callback
+					release = gen(func(args []Value) {
 						node.Call("removeEventListener", name, cb, useCapture)
 						cb.Release()
 						release.Release()
 					})
 					releaseList := node.Get("_listeners")
-					if releaseList.Type() == js.TypeUndefined {
+					if releaseList.Type() == TypeUndefined {
 						node.Set("_listeners", make(map[string]interface{}))
 						releaseList = node.Get("_listeners")
 					}
@@ -123,7 +152,7 @@ func SetAccessor(node Element, name string, old, value interface{}, isSVG bool) 
 				releaseList := node.Get("_listeners")
 				if valid(releaseList) {
 					releaseList.Call(name)
-					releaseList.Set(name, js.Undefined())
+					releaseList.Set(name, "")
 				}
 			}
 		case name != "list" && name != "type" && !isSVG && HasProperty(node, name):
@@ -144,32 +173,14 @@ func SetAccessor(node Element, name string, old, value interface{}, isSVG bool) 
 	}
 }
 
+// CB is a function that returns callbacks.
+type CB func(fn func([]Value)) Callback
+
 func toBool(v interface{}) bool {
 	if v, ok := v.(bool); ok {
 		return v
 	}
 	return false
-}
-
-type Event interface {
-	Flags() js.EventCallbackFlag
-	Call(js.Value)
-}
-type eventWrapper struct {
-	flags js.EventCallbackFlag
-	event func(js.Value)
-}
-
-func (e eventWrapper) Flags() js.EventCallbackFlag {
-	return e.flags
-}
-func (e eventWrapper) Call(v js.Value) {
-	e.event(v)
-}
-
-// NewEvent returns new Event call back.
-func NewEvent(flags js.EventCallbackFlag, fn func(event js.Value)) Event {
-	return eventWrapper{flags: flags, event: fn}
 }
 
 // eventName takes a props event name and returns a string suitable for

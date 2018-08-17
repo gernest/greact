@@ -65,18 +65,18 @@ func (p Props) Attr() template.HTMLAttr {
 
 // Int calls Int with p as first argument.
 func (p Props) Int(key interface{}) NullInt {
-	return Int(p, key)
+	return GetInt(p, key)
 }
 
 // StringV calls StringV with p as first argument.
 func (p Props) StringV(key interface{}, value string) NullString {
-	return StringV(p, key, value)
+	return GetStringV(p, key, value)
 }
 
 // Int looks for property value with key, and tries to cast it to an int. This
 // will set NullInt.IsNull to true if the key is missing or the value is not of
 // type it.
-func Int(p Props, key interface{}) NullInt {
+func GetInt(p Props, key interface{}) NullInt {
 	if v, ok := p[key]; ok {
 		if vi, ok := v.(int); ok {
 			return NullInt{Value: vi}
@@ -88,7 +88,7 @@ func Int(p Props, key interface{}) NullInt {
 // StringV looks for key's value in ctx. This will return value if the key is
 // missing, this function will try to cast the value to string.When the value is
 // not of type string the NullString.IsNull field will be set to true.
-func StringV(ctx Props, key interface{}, value string) NullString {
+func GetStringV(ctx Props, key interface{}, value string) NullString {
 	if v, ok := ctx[key]; ok {
 		if vk, ok := v.(string); ok {
 			return NullString{Value: vk}
@@ -100,11 +100,11 @@ func StringV(ctx Props, key interface{}, value string) NullString {
 
 // String tries to return the value stored by key as a string.
 func (p Props) String(key interface{}) NullString {
-	return String(p, key)
+	return GetString(p, key)
 }
 
 // String finds key's value in p and casts it as a string.
-func String(p Props, key interface{}) NullString {
+func GetString(p Props, key interface{}) NullString {
 	if v, ok := p[key]; ok {
 		if vi, ok := v.(string); ok {
 			return NullString{Value: vi}
@@ -115,11 +115,11 @@ func String(p Props, key interface{}) NullString {
 
 // Bool tries to find key's value in p and casts it to bool if found.
 func (p Props) Bool(key interface{}) NullBool {
-	return Bool(p, key)
+	return GetBool(p, key)
 }
 
 // Bool finds key's value in p and casts it as a bool.
-func Bool(p Props, key interface{}) NullBool {
+func GetBool(p Props, key interface{}) NullBool {
 	if v, ok := p[key]; ok {
 		if vi, ok := v.(bool); ok {
 			return NullBool{Value: vi}

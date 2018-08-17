@@ -20,4 +20,13 @@ func TestSetAccessor(t *testing.T) {
 			t.Error("expected className to be set")
 		}
 	})
+	t.Run("should set style", func(ts *testing.T) {
+		text := "color:blue;"
+		e := testutil.NewObject()
+		SetAccessor(nil, e, "style", nil, text, false)
+		v := e.Get("style").Get("cssText").String()
+		if v != text {
+			t.Error("expected style.cssText to be set")
+		}
+	})
 }

@@ -1,7 +1,6 @@
 package dom
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gernest/vected/vdom/value"
@@ -91,7 +90,6 @@ func SetAccessor(gen CallbackGenerator, node Element, name string, old, val inte
 		case strings.HasPrefix(name, "on"):
 			useCapture := name != strings.TrimSuffix(name, "Capture")
 			name = eventName(name)
-			fmt.Println(name)
 			if ev, ok := val.(func([]value.Value)); ok {
 				cb := gen(ev)
 				if old == nil {

@@ -17,7 +17,7 @@ type Object struct {
 }
 
 func NewObject() *Object {
-	return &Object{props: make(map[string]*Object)}
+	return &Object{props: defaultProps()}
 }
 
 func (o *Object) Bool() bool {
@@ -101,4 +101,10 @@ func (o *Object) Index(n int) value.Value {
 
 func (o *Object) Invoke(args ...interface{}) value.Value {
 	return &Object{typ: value.TypeUndefined}
+}
+
+func defaultProps() map[string]*Object {
+	return map[string]*Object{
+		"style": &Object{typ: value.TypeObject},
+	}
 }

@@ -16,6 +16,10 @@ type Object struct {
 	typ       value.Type
 }
 
+func NewObject() *Object {
+	return &Object{props: make(map[string]*Object)}
+}
+
 func (o *Object) Bool() bool {
 	return o.value.(bool)
 }
@@ -61,6 +65,30 @@ func (o *Object) Get(k string) value.Value {
 }
 
 func (o *Object) Call(k string, args ...interface{}) value.Value {
+	switch k {
+	case "hasOwnProperty":
+		if len(args) > 0 {
+			a := args[0]
+			if av, ok := a.(string); ok {
+				_, ok = o.props[av]
+				return &Object{typ: value.TypeBoolean, value: ok}
+			}
+		}
+		return &Object{typ: value.TypeBoolean, value: false}
+	case "createElement":
+		// element name must be provided.
+		name := args[0].(string)
+		b := NewObject()
+		b.name = name
+		return b
+	case "createElementNS":
+		ns := args[0].(string)
+		name := args[1].(string)
+		b := NewObject()
+		b.namespace = ns
+		b.name = name
+		return b
+	}
 	return &Object{typ: value.TypeUndefined}
 }
 

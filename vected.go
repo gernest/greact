@@ -18,9 +18,12 @@ import (
 	"context"
 	"sync"
 
+	"github.com/gernest/vected/vdom/value"
+
 	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
 	"github.com/gernest/vected/vdom"
+	"github.com/gernest/vected/vdom/dom"
 )
 
 // RenderMode is a flag determining how a component is rendered.
@@ -35,17 +38,10 @@ const (
 )
 
 var queue = NeqQueueRenderer()
+var mounts = list.New()
 
 // Component is an interface which defines a unit of user interface.
 type Component interface {
-
-	// New must return an initialized component. This acts as a constructor, the
-	// props passed to the component from the parent are passed as arguments,
-	//
-	// Initializing state should happen here.
-	New(prop.Props) (Component, error)
-
-	// Template this is the vected template that is rendered by the component.
 	Template() string
 	Render(context.Context, prop.Props, state.State) *vdom.Node
 	core() *Core
@@ -65,8 +61,8 @@ type Core struct {
 	context         context.Context
 	prevContext     context.Context
 	component       Component
-	base            bool
-	nextBase        bool
+	base            dom.Element
+	nextBase        dom.Element
 	dirty           bool
 	key             prop.NullString
 
@@ -114,13 +110,13 @@ type WillMount interface {
 // DidMount is an interface defining a callback that is invoked after the
 // component has been mounted to the dom.
 type DidMount interface {
-	ComponentDidMount(context.Context, prop.Props, state.State)
+	ComponentDidMount()
 }
 
 // WillUnmount is an interface defining a callback that is invoked prior to
 // removal of the rendered component from the dom.
 type WillUnmount interface {
-	ComponentWillUnmount(context.Context, prop.Props, state.State)
+	ComponentWillUnmount()
 }
 
 // WillReceiveProps is an interface defining a callback that will be called with
@@ -168,7 +164,7 @@ func SetProps(ctx context.Context, cmp Component, props prop.Props, state state.
 	delete(props, "ref")
 	_, ok := cmp.(DerivedState)
 	if !ok {
-		if !core.base || mountAll {
+		if core.base == nil || mountAll {
 			if m, ok := cmp.(WillMount); ok {
 				m.ComponentWillMount()
 			}
@@ -268,4 +264,100 @@ func (q *QueuedRender) rerender() {
 			renderComponent(cmp, 0, false)
 		}
 	}
+}
+
+func flushMounts() {
+	for c := mounts.Back(); c != nil; c = mounts.Back() {
+		if cmp, ok := c.Value.(Component); ok {
+			if m, ok := cmp.(DidMount); ok {
+				m.ComponentDidMount()
+			}
+		}
+		mounts.Remove(c)
+	}
+}
+
+func recollectNodeTree(node dom.Element, unmountOnly bool) {
+	cmp := findComponent(node)
+	if cmp != nil {
+		unmountComponent(cmp)
+	} else {
+		if !unmountOnly {
+			dom.RemoveNode(node)
+		}
+		removeChildren(node)
+	}
+}
+
+// findComponent returns the component that rendered the node element. This
+// returns nil if the node wasn't a component.
+func findComponent(node dom.Element) Component {
+	return nil
+}
+
+func unmountComponent(cmp Component) {
+	core := cmp.core()
+	core.disable = true
+	base := core.base
+	if wm, ok := cmp.(WillUnmount); ok {
+		wm.ComponentWillUnmount()
+	}
+	core.base = nil
+	if core.component != nil {
+		unmountComponent(core.component)
+	} else if base != nil {
+		core.nextBase = base
+		dom.RemoveNode(base)
+		removeChildren(base)
+	}
+}
+
+func removeChildren(node dom.Element) {
+	node = node.Get("lastChild")
+	for {
+		if !dom.Valid(node) {
+			return
+		}
+		next := node.Get("previousSibling")
+		recollectNodeTree(node, true)
+		node = next
+	}
+}
+
+// UndefinedFunc is a function  that returns a javascript undefined value.
+type UndefinedFunc func() value.Value
+
+// Undefined is a work around to allow the library to work with/without wasm
+// support.
+//
+// TODO: find a better way to handle this.
+var Undefined UndefinedFunc
+
+// Callback this is supposed to be defined by the package consumers.
+var Callback dom.CallbackGenerator
+
+func diffAttributes(node dom.Element, attrs, old []vdom.Attribute, isSvgMode bool) {
+	a := mapAtts(attrs)
+	b := mapAtts(old)
+	for k, v := range b {
+		if _, ok := a[k]; !ok {
+			dom.SetAccessor(Callback, node, k, v, Undefined(), isSvgMode)
+		}
+	}
+	for k := range a {
+		switch k {
+		case "children", "innerHTML":
+			continue
+		default:
+			dom.SetAccessor(Callback, node, k, b[k], a[k], isSvgMode)
+		}
+	}
+}
+
+func mapAtts(attrs []vdom.Attribute) map[string]vdom.Attribute {
+	m := make(map[string]vdom.Attribute)
+	for _, v := range attrs {
+		m[v.Key] = v
+	}
+	return m
 }

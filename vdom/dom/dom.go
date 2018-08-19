@@ -31,7 +31,7 @@ func CreateSVGNode(doc value.Value, name string) Element {
 }
 
 // returns true if value is not null or undefined.
-func valid(v value.Value) bool {
+func Valid(v value.Value) bool {
 	if v.Type() == value.TypeUndefined {
 		return false
 	}
@@ -41,7 +41,7 @@ func valid(v value.Value) bool {
 // RemoveNode removes node from its parent if attached.
 func RemoveNode(node value.Value) {
 	parent := node.Get("parentNode")
-	if valid(parent) {
+	if Valid(parent) {
 		parent.Call("removeChild", node)
 	}
 }
@@ -118,7 +118,7 @@ func SetAccessor(gen CallbackGenerator, node Element, name string, old, val inte
 				// We release the resources allocated for the event callback and free up the
 				// event reference by setting its value to undefined.
 				releaseList := node.Get("_listeners")
-				if valid(releaseList) {
+				if Valid(releaseList) {
 					releaseList.Call(name)
 					releaseList.Set(name, "")
 				}

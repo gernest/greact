@@ -12,14 +12,14 @@ import (
 )
 
 func printAttr(a vdom.Attribute) string {
-	return fmt.Sprintf("ha(%q,%q,%v)", a.Namespace, a.Key, interpret(a.Val))
+	return fmt.Sprintf("HA(%q,%q,%v)", a.Namespace, a.Key, interpret(a.Val))
 }
 
 func printNode(n *vdom.Node, level int) string {
-	v := indent((fmt.Sprintf("h(%d,%q,%q",
+	v := indent((fmt.Sprintf("H(%d,%q,%q",
 		n.Type, n.Namespace, n.Data)), level)
 	if len(n.Attr) > 0 {
-		v += indent(",hat(", level+2)
+		v += indent(",HAT(", level+2)
 		for _, attr := range n.Attr {
 			if attr.Key == "" {
 				continue

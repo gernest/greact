@@ -8,36 +8,35 @@ import (
 	"github.com/gernest/vected/vdom"
 )
 
-// N is an alias for creating a new node
-var h = vdom.New
-var ha = vdom.Attr
-var hat = vdom.Attrs
+var H = vdom.New
+var HA = vdom.Attr
+var HAT = vdom.Attrs
 
 // Render implements vected.Renderer interface.
 func (t Hello) Render(ctx context.Context, props prop.Props, state state.State) *vdom.Node {
-	return h(3, "", "div", hat(
-		ha("", "classname", props["classNames"]),
-		ha("", "key", "value")),
-		h(3, "", "ul", nil,
-			h(3, "", "li", nil,
-				h(1, "", "1", nil)),
-			h(3, "", "li", nil,
-				h(1, "", "2", nil)),
-			h(3, "", "li", nil,
-				h(1, "", "3", nil)),
-			h(3, "", "li", nil,
-				h(1, "", "4", nil)),
-			h(3, "", "li", nil,
-				h(1, "", "5", nil))),
-		h(3, "", "ol", nil,
-			h(3, "", "li", nil,
-				h(1, "", "1", nil)),
-			h(3, "", "li", nil,
-				h(1, "", "2", nil)),
-			h(3, "", "li", nil,
-				h(1, "", "3", nil)),
-			h(3, "", "li", nil,
-				h(1, "", "4", nil)),
-			h(3, "", "li", nil,
-				h(1, "", "5", nil))))
+	return H(3, "", "div", HAT(
+		HA("", "classname", props["classNames"]),
+		HA("", "key", "value")),
+		H(3, "", "ul", nil,
+			H(3, "", "li", nil,
+				H(1, "", "1", nil)),
+			H(3, "", "li", nil,
+				H(1, "", "2", nil)),
+			H(3, "", "li", nil,
+				H(1, "", "3", nil)),
+			H(3, "", "li", nil,
+				H(1, "", "4", nil)),
+			H(3, "", "li", nil,
+				H(1, "", "5", nil))),
+		H(3, "", "ol", nil,
+			H(3, "", "li", nil,
+				H(1, "", "1", nil)),
+			H(3, "", "li", nil,
+				H(1, "", "2", nil)),
+			H(3, "", "li", nil,
+				H(1, "", "3", nil)),
+			H(3, "", "li", nil,
+				H(1, "", "4", nil)),
+			H(3, "", "li", nil,
+				H(1, "", "5", nil))))
 }

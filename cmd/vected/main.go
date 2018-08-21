@@ -15,6 +15,7 @@ func main() {
 	a.Usage = "provides various commands that generate code for vected project"
 	a.Commands = []cli.Command{
 		gen.AttrCMD(),
+		gen.RenderCMD(),
 		server.Serve(),
 	}
 	if err := a.Run(os.Args); err != nil {

@@ -67,10 +67,9 @@ import (
 	"context"
 )
 
-// N is an alias for creating a new node
-var h =vdom.New
-var ha= vdom.Attr
-var hat= vdom.Attrs
+var H =vdom.New
+var HA= vdom.Attr
+var HAT= vdom.Attrs
 
 {{range .ctx}}
 // Render implements vected.Renderer interface.

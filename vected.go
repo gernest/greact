@@ -16,6 +16,7 @@ package vected
 import (
 	"container/list"
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/gernest/vected/vdom/value"
@@ -36,6 +37,7 @@ const (
 	Sync
 	Async
 )
+const ATTR_KEY = "__vected___"
 
 var queue = NeqQueueRenderer()
 var mounts = list.New()
@@ -360,4 +362,119 @@ func mapAtts(attrs []vdom.Attribute) map[string]vdom.Attribute {
 		m[v.Key] = v
 	}
 	return m
+}
+
+func idiff(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll bool) dom.Element {
+	//TODO
+	//
+	// portidiff
+	return nil
+}
+
+func innerDiffMode(ctx context.Context, elem dom.Element, vchildrens []*vdom.Node, mountAll, isHydrating bool) {
+	original := elem.Get("childNodes")
+	length := original.Get("length").Int()
+	keys := make(map[string]dom.Element)
+	var children []dom.Element
+	var min int
+	if length > 0 {
+		for i := 0; i < length; i++ {
+			child := original.Index(i)
+			cmp := findComponent(child)
+			var key prop.NullString
+			if cmp != nil {
+				key = cmp.core().key
+			}
+			if !key.IsNull {
+				keys[key.Value] = child
+			} else {
+				var x bool
+				if cmp != nil || dom.Valid(child.Get("splitText")) {
+					v := child.Get("nodeValue").String()
+					v = strings.TrimSpace(v)
+					if isHydrating {
+						x = v != ""
+					} else {
+						x = true
+					}
+				} else {
+					x = isHydrating
+				}
+				if x {
+					children = append(children, child)
+				}
+			}
+		}
+	}
+	for i := 0; i < len(vchildrens); i++ {
+		vchild := vchildrens[i]
+		key := vchild.Key()
+		var child dom.Element
+		if key != "" {
+			if ch, ok := keys[key]; ok {
+				delete(keys, key)
+				child = ch
+			}
+		} else if min < len(children) {
+			for j := min; j < len(children); j++ {
+				c := children[j]
+				if c != nil && dom.Valid(c) && isSameNodeType(c, vchild, isHydrating) {
+					child = c
+					children[j] = nil
+					if j == min {
+						min++
+					}
+					break
+				}
+			}
+		}
+		child = idiff(ctx, child, vchild, mountAll)
+		f := original.Index(i)
+		if dom.Valid(child) && !dom.IsEqual(child, elem) && !dom.IsEqual(child, f) {
+			if f.Type() == value.TypeNull {
+				elem.Call("appendChild", child)
+			} else if dom.IsEqual(child, f.Get("nextSibling")) {
+				dom.RemoveNode(f)
+			} else {
+				elem.Call("insertBefore", child, f)
+			}
+		}
+	}
+
+	// removing unused keyed  children
+	for _, v := range keys {
+		recollectNodeTree(v, false)
+	}
+	for i := min; i < len(children); i++ {
+		ch := children[i]
+		if ch != nil {
+			recollectNodeTree(ch, false)
+		}
+	}
+}
+
+// isSameNodeType compares elem to vnode and returns true if thy are of the same
+// type.
+//
+// There are only two types of nodes supported , TextNode and ElementNode.
+func isSameNodeType(elem dom.Element, vnode *vdom.Node, isHydrating bool) bool {
+	switch vnode.Type {
+	case vdom.TextNode:
+		return dom.Valid(elem.Get("splitText"))
+	case vdom.ElementNode:
+		return isNamedNode(elem, vnode)
+	default:
+		return false
+	}
+}
+
+// isNamedNode compares elem to vnode to see if elem was created from the
+// virtual node of the same type as vnode..
+func isNamedNode(elem dom.Element, vnode *vdom.Node) bool {
+	v := elem.Get("normalizedNodeName")
+	if dom.Valid(v) {
+		name := v.String()
+		return name == vnode.Data
+	}
+	return false
 }

@@ -157,3 +157,8 @@ func eventName(name string) string {
 	name = strings.ToLower(name)
 	return name[2:]
 }
+
+// IsEqual returns true if the ywo elements are equal
+func IsEqual(a, b Element) bool {
+	return a.Call("isEqualNode", b).Bool()
+}

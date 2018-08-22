@@ -15,7 +15,7 @@ import (
 	"golang.org/x/net/html/atom"
 )
 
-const mozAttr = "https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes"
+const mozAttributeReference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes"
 
 func downloadAttrs(dest string) error {
 	res, err := http.Get("https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes")
@@ -107,7 +107,7 @@ func AttrCMD() cli.Command {
 		Action: func(ctx *cli.Context) error {
 			out := ctx.String("out")
 			var buf bytes.Buffer
-			q, err := goquery.NewDocument(mozAttr)
+			q, err := goquery.NewDocument(mozAttributeReference)
 			if err != nil {
 				return err
 			}

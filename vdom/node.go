@@ -73,3 +73,12 @@ func Attr(ns, key string, val interface{}) Attribute {
 func Attrs(attr ...Attribute) []Attribute {
 	return attr
 }
+
+func (v *Node) Key() string {
+	for _, v := range v.Attr {
+		if v.Key == "key" {
+			return v.Val.(string)
+		}
+	}
+	return ""
+}

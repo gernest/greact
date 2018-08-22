@@ -32,7 +32,16 @@ func extractElements(doc *goquery.Document) ([]byte, error) {
 		"iframe",
 	}
 	sel = append(sel, add...)
-	sort.Strings(sel)
+	var ctx []string
+	m := make(map[string]bool)
+	for _, v := range sel {
+		if !m[v] {
+			ctx = append(ctx, v)
+			m[v] = true
+		}
+	}
+	sort.Strings(ctx)
+
 	tpl, err := template.New("el").Parse(`package elements
 
 	var elems =map[string]bool{
@@ -49,7 +58,7 @@ func extractElements(doc *goquery.Document) ([]byte, error) {
 		return nil, err
 	}
 	var buf bytes.Buffer
-	err = tpl.Execute(&buf, sel)
+	err = tpl.Execute(&buf, ctx)
 	if err != nil {
 		return nil, err
 	}

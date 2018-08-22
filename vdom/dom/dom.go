@@ -6,6 +6,8 @@ import (
 	"github.com/gernest/vected/vdom/value"
 )
 
+var Document value.Value
+
 // Element is an alias for the dom node.
 type Element value.Value
 
@@ -15,7 +17,10 @@ func HasProperty(e Element, v string) bool {
 }
 
 // CreateNode creates a dom element.
-func CreateNode(doc value.Value, name string) Element {
+func CreateNode(name string) Element {
+	return createNode(Document, name)
+}
+func createNode(doc value.Value, name string) Element {
 	node := doc.Call("createElement", name)
 	node.Set("normalizedNodeName", name)
 	return node
@@ -32,6 +37,9 @@ func CreateSVGNode(doc value.Value, name string) Element {
 
 // returns true if value is not null or undefined.
 func Valid(v value.Value) bool {
+	if v == nil {
+		return false
+	}
 	if v.Type() == value.TypeUndefined {
 		return false
 	}

@@ -19,6 +19,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gernest/vected/elements"
 	"github.com/gernest/vected/vdom/value"
 
 	"github.com/gernest/vected/prop"
@@ -37,10 +38,14 @@ const (
 	Sync
 	Async
 )
-const ATTR_KEY = "__vected___"
+
+// AttrKeys is a key used to store node's attributes/props
+const AttrKey = "__vected_attr__"
 
 var queue = NeqQueueRenderer()
 var mounts = list.New()
+var isSVGMode bool
+var hydrating bool
 
 // Component is an interface which defines a unit of user interface.
 type Component interface {
@@ -338,12 +343,12 @@ var Undefined UndefinedFunc
 // Callback this is supposed to be defined by the package consumers.
 var Callback dom.CallbackGenerator
 
-func diffAttributes(node dom.Element, attrs, old []vdom.Attribute, isSvgMode bool) {
+func diffAttributes(node dom.Element, attrs, old []vdom.Attribute) {
 	a := mapAtts(attrs)
 	b := mapAtts(old)
 	for k, v := range b {
 		if _, ok := a[k]; !ok {
-			dom.SetAccessor(Callback, node, k, v, Undefined(), isSvgMode)
+			dom.SetAccessor(Callback, node, k, v, Undefined(), isSVGMode)
 		}
 	}
 	for k := range a {
@@ -351,7 +356,7 @@ func diffAttributes(node dom.Element, attrs, old []vdom.Attribute, isSvgMode boo
 		case "children", "innerHTML":
 			continue
 		default:
-			dom.SetAccessor(Callback, node, k, b[k], a[k], isSvgMode)
+			dom.SetAccessor(Callback, node, k, b[k], a[k], isSVGMode)
 		}
 	}
 }
@@ -364,13 +369,87 @@ func mapAtts(attrs []vdom.Attribute) map[string]vdom.Attribute {
 	return m
 }
 
-func idiff(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll bool) dom.Element {
+func idiff(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, componentRoot bool) dom.Element {
+	out := elem
+	prevSVGMode := isSVGMode
+	switch node.Type {
+	case vdom.TextNode:
+		if dom.Valid(elem) && dom.Valid(elem.Get("splitText")) &&
+			dom.Valid(elem.Get("parentNode")) {
+			v := elem.Get("nodeValue").String()
+			if v != node.Data {
+				elem.Set("nodeValue", node.Data)
+			}
+
+		} else {
+			out = dom.Document.Call("createTextNode", node.Data)
+			if dom.Valid(elem) {
+				if dom.Valid(elem.Get("parentNode")) {
+					elem.Get("parentNode").Call("replaceChild", out, elem)
+				}
+				recollectNodeTree(elem, true)
+			}
+		}
+		out.Set(AttrKey, true)
+		return out
+	case vdom.ElementNode:
+		if !elements.Valid(node.Data) {
+			if node.Data == "svg" {
+				isSVGMode = true
+			} else if node.Data == "foreignObject" {
+				isSVGMode = false
+			}
+		}
+		nodeName := node.Data
+		if !dom.Valid(elem) || !isNamedNode(elem, node) {
+			out = dom.CreateNode(nodeName)
+			if dom.Valid(elem) {
+				if dom.Valid(elem.Get("firstChild")) {
+					out.Call("appendChild", elem.Get("firstChild"))
+				}
+				if e := elem.Get("parentNode"); dom.Valid(e) {
+					elem.Get("parentNode").Call("replaceChild", out, elem)
+				}
+				recollectNodeTree(elem, true)
+			}
+		}
+		fc := out.Get("firstChild")
+		props := out.Get(AttrKey)
+		var old []vdom.Attribute
+		if !dom.Valid(props) {
+			a := elem.Get("attributes")
+			for _, v := range value.Keys(a) {
+				old = append(old, vdom.Attribute{
+					Key: v,
+					Val: a.Get(v).String(),
+				})
+			}
+		}
+		if !hydrating && len(node.Children) == 1 &&
+			node.Children[0].Type == vdom.TextNode && dom.Valid(fc) &&
+			dom.Valid(fc.Get("splitText")) &&
+			fc.Get("nextSibling").Type() == value.TypeNull {
+			nv := node.Children[0].Data
+			fv := fc.Get("nodeValue").String()
+			if fv != nv {
+				fc.Set("nodeValue", nv)
+			}
+		} else if len(node.Children) > 0 || dom.Valid(fc) {
+			innerDiffMode(ctx, out, node.Children, mountAll, hydrating)
+		}
+		diffAttributes(out, node.Attr, old)
+		isSVGMode = prevSVGMode
+		return out
+	default:
+		panic("Un supported node")
+	}
+}
+func buildComponentFromVNode(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, componentRoot bool) dom.Element {
 	//TODO
 	//
-	// portidiff
+	// port buildComponentFromVNode
 	return nil
 }
-
 func innerDiffMode(ctx context.Context, elem dom.Element, vchildrens []*vdom.Node, mountAll, isHydrating bool) {
 	original := elem.Get("childNodes")
 	length := original.Get("length").Int()
@@ -428,7 +507,7 @@ func innerDiffMode(ctx context.Context, elem dom.Element, vchildrens []*vdom.Nod
 				}
 			}
 		}
-		child = idiff(ctx, child, vchild, mountAll)
+		child = idiff(ctx, child, vchild, mountAll, false)
 		f := original.Index(i)
 		if dom.Valid(child) && !dom.IsEqual(child, elem) && !dom.IsEqual(child, f) {
 			if f.Type() == value.TypeNull {

@@ -49,9 +49,16 @@ var hydrating bool
 
 // Component is an interface which defines a unit of user interface.
 type Component interface {
-	Template() string
 	Render(context.Context, prop.Props, state.State) *vdom.Node
 	core() *Core
+}
+
+type Templater interface {
+	Template() string
+}
+
+type Constructor interface {
+	New() Component
 }
 
 // Core is th base struct that every struct that wants to implement Component

@@ -16,6 +16,7 @@ func main() {
 	a.Commands = []cli.Command{
 		gen.AttrCMD(),
 		gen.RenderCMD(),
+		gen.ElementsCMD(),
 		server.Serve(),
 	}
 	if err := a.Run(os.Args); err != nil {

@@ -75,6 +75,7 @@ type Core struct {
 	context         context.Context
 	prevContext     context.Context
 	component       Component
+	parentComponent Component
 	base            dom.Element
 	nextBase        dom.Element
 	dirty           bool
@@ -163,54 +164,17 @@ type DerivedState interface {
 	DeriveState(prop.Props, state.State) state.State
 }
 
-// SetProps sets cmp props and possibly re renders
-func SetProps(ctx context.Context, cmp Component, props prop.Props, state state.State, mode RenderMode, mountAll bool) {
-	core := cmp.core()
-	if core.disable {
-		return
-	}
-	ref := props["ref"]
-	if fn, ok := ref.(func(interface{})); ok {
-		core.ref = fn
-	}
-	core.key = props.String("key")
-	delete(props, "key")
-	delete(props, "ref")
-	_, ok := cmp.(DerivedState)
-	if !ok {
-		if core.base == nil || mountAll {
-			if m, ok := cmp.(WillMount); ok {
-				m.ComponentWillMount()
-			}
-		} else if m, ok := cmp.(WillReceiveProps); ok {
-			m.ComponentWillReceiveProps(ctx, props)
-		}
-	}
-	if core.prevProps == nil {
-		core.prevProps = core.props
-	}
-	core.props = props
-	core.disable = false
-	if mode != No {
-		if mode == Sync {
-			renderComponent(cmp, Sync, mountAll)
-		} else {
-			enqueueRender(cmp)
-		}
-	}
-	if core.ref != nil {
-		core.ref(cmp)
-	}
-}
-
-func renderComponent(cmp Component, mode RenderMode, mountAll bool, child ...bool) {
-
+// WithContext is an interface used to update the context that is passed to
+// component's children.
+type WithContext interface {
+	WithContext(context.Context) context.Context
 }
 
 type QueuedRender struct {
 	components *list.List
 	mu         sync.RWMutex
 	closed     bool
+	r          *Renderer
 }
 
 func (q *QueuedRender) Push(v Component) {
@@ -275,7 +239,7 @@ func (q *QueuedRender) Rerender() {
 func (q *QueuedRender) rerender() {
 	for cmp := q.Pop(); cmp != nil; cmp = q.Pop() {
 		if cmp.core().dirty {
-			renderComponent(cmp, 0, false)
+			q.r.renderComponent(cmp, 0, false)
 		}
 	}
 }

@@ -240,7 +240,7 @@ func (q *QueuedRender) Rerender() {
 func (q *QueuedRender) rerender() {
 	for cmp := q.Pop(); cmp != nil; cmp = q.Pop() {
 		if cmp.core().dirty {
-			q.r.renderComponent(cmp, 0, false)
+			q.r.renderComponent(cmp, 0, false, false)
 		}
 	}
 }

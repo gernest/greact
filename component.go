@@ -61,7 +61,7 @@ func (r *Renderer) SetProps(ctx context.Context, cmp Component, props prop.Props
 	core.disable = false
 	if mode != No {
 		if mode == Sync {
-			r.renderComponent(cmp, Sync, mountAll)
+			r.renderComponent(cmp, Sync, mountAll, false)
 		} else {
 			enqueueRender(cmp)
 		}
@@ -89,7 +89,7 @@ func (r *Renderer) getComponent(node *vdom.Node) Component {
 	return r.components[node.Data]
 }
 
-func (r *Renderer) renderComponent(cmp Component, mode RenderMode, mountAll bool, child ...bool) {
+func (r *Renderer) renderComponent(cmp Component, mode RenderMode, mountAll bool, isChild bool) {
 	core := cmp.core()
 	if core.disable {
 		return
@@ -202,11 +202,37 @@ func (r *Renderer) renderComponent(cmp Component, mode RenderMode, mountAll bool
 					// One option is to have a unique id for every component and only store the
 					// id in the dom node that is assigned to a component ijnstance.
 				}
+				var parent dom.Element
+				if dom.Valid(initialBase) {
+					parent = initialBase.Get("parentNode")
+				}
+				base = diff(context, cbase, rendered, parent, mountAll || !dom.Valid(isUpdate), true)
 			}
 		}
+		if dom.Valid(initialBase) &&
+			!dom.IsEqual(base, initialBase) {
+			// TODO: add inst!==initialChildComponent to the if condition
+			// Go doesnt support that operation on structs so I will need to use
+			// reflection for that or comeup with something else.
+			baseParent := initialBase.Get("parentNode")
+			if dom.Valid(baseParent) && !dom.IsEqual(base, baseParent) {
+				baseParent.Call("replaceChild", base, initialBase)
 
+				if toUnmount == nil {
+					//TODO : add initialBase._component = null;
+					//
+					recollectNodeTree(initialBase, false)
+				}
+			}
+		}
+		if toUnmount != nil {
+			unmountComponent(toUnmount)
+		}
+		core.base = base
+		if dom.Valid(base) && !isChild {
+
+		}
 	}
-
 }
 
 func getNodeProps(node *vdom.Node) prop.Props {

@@ -93,6 +93,18 @@ func (o *Object) Get(k string) value.Value {
 			}
 		}
 		return undefined()
+	case "previousSibling":
+		if o.parent != nil {
+			for k, v := range o.parent.children {
+				if v.id == o.id {
+					x := k - 1
+					if x >= 0 {
+						return o.parent.children[x]
+					}
+				}
+			}
+		}
+		return undefined()
 	case "childNodes":
 		var children []value.Value
 		for _, ch := range o.children {

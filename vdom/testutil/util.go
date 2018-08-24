@@ -23,10 +23,12 @@ type Object struct {
 	id        int64
 	name      string
 	namespace string
+	text      bool
 	parent    *Object
 	props     map[string]*Object
 	value     interface{}
 	typ       value.Type
+	nodeValue string
 	cache     map[string]value.Value
 	children  []*Object
 }
@@ -92,8 +94,12 @@ func (o *Object) Get(k string) value.Value {
 		}
 		return undefined()
 	case "childNodes":
+		var children []value.Value
+		for _, ch := range o.children {
+			children = append(children, ch)
+		}
 		return &Object{
-			value: o.children,
+			value: children,
 			typ:   value.TypeObject,
 		}
 	case "length":
@@ -101,10 +107,17 @@ func (o *Object) Get(k string) value.Value {
 			return undefined()
 		}
 		switch e := o.value.(type) {
-		case []*Object:
+		case []value.Value:
 			return &Object{typ: value.TypeNumber, value: len(e)}
 		}
 		return undefined()
+	case "splitText":
+		if o.text {
+			return &Object{typ: value.TypeFunction}
+		}
+		return undefined()
+	case "nodeValue":
+		return &Object{typ: value.TypeString, value: o.nodeValue}
 	}
 	if m, ok := o.props[k]; ok {
 		return m
@@ -210,8 +223,8 @@ func null() *Object {
 }
 
 func (o *Object) Index(n int) value.Value {
-	if v, ok := o.value.([]interface{}); ok {
-		return &Object{value: v[n]}
+	if v, ok := o.value.([]value.Value); ok {
+		return v[n]
 	}
 	return &Object{typ: value.TypeUndefined}
 }

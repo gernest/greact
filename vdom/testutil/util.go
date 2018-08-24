@@ -105,6 +105,11 @@ func (o *Object) Get(k string) value.Value {
 			}
 		}
 		return undefined()
+	case "lastChild":
+		if o.parent != nil && len(o.parent.children) > 0 {
+			return o.parent.children[len(o.parent.children)-1]
+		}
+		return undefined()
 	case "childNodes":
 		var children []value.Value
 		for _, ch := range o.children {

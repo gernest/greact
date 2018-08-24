@@ -132,6 +132,18 @@ func (o *Object) Call(k string, args ...interface{}) value.Value {
 			o.children = append(o.children, a)
 			return undefined()
 		}
+	case "insertBefore":
+		if len(args) == 2 {
+			a, ok := args[0].(*Object)
+			if !ok {
+				return undefined()
+			}
+			b, ok := args[0].(*Object)
+			if !ok {
+				return undefined()
+			}
+			return o.insertBefore(a, b)
+		}
 	}
 	return undefined()
 }
@@ -141,6 +153,20 @@ func (o *Object) replaceChild(a, b *Object) *Object {
 		for _, v := range o.children {
 			if v.id == a.id {
 				rst = append(rst, b)
+			} else {
+				rst = append(rst, v)
+			}
+		}
+		o.children = rst
+	}
+	return undefined()
+}
+func (o *Object) insertBefore(a, b *Object) *Object {
+	if len(o.children) > 0 {
+		var rst []*Object
+		for _, v := range o.children {
+			if v.id == a.id {
+				rst = append(rst, b, a)
 			} else {
 				rst = append(rst, v)
 			}

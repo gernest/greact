@@ -73,6 +73,13 @@ func (o *Object) Set(k string, v interface{}) {
 }
 
 func (o *Object) Get(k string) value.Value {
+	switch k {
+	case "parentNode":
+		if o.parent != nil {
+			return o.parent
+		}
+		return null()
+	}
 	if m, ok := o.props[k]; ok {
 		return m
 	}
@@ -146,6 +153,10 @@ func (o *Object) replaceChild(a, b *Object) *Object {
 func undefined() *Object {
 	return &Object{typ: value.TypeUndefined}
 }
+func null() *Object {
+	return &Object{typ: value.TypeNull}
+}
+
 func (o *Object) Index(n int) value.Value {
 	if v, ok := o.value.([]interface{}); ok {
 		return &Object{value: v[n]}

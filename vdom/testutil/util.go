@@ -115,6 +115,16 @@ func (o *Object) Call(k string, args ...interface{}) value.Value {
 			}
 			return o.replaceChild(a, b)
 		}
+	case "appendChild":
+		if len(args) == 1 {
+			a, ok := args[0].(*Object)
+			if !ok {
+				return undefined()
+			}
+			a.parent = o
+			o.children = append(o.children, a)
+			return undefined()
+		}
 	}
 	return undefined()
 }

@@ -79,6 +79,18 @@ func (o *Object) Get(k string) value.Value {
 			return o.parent
 		}
 		return null()
+	case "nextSibling":
+		if o.parent != nil {
+			for k, v := range o.parent.children {
+				if v.id == o.id {
+					x := k + 1
+					if x < len(o.parent.children) {
+						return o.parent.children[x]
+					}
+				}
+			}
+		}
+		return undefined()
 	}
 	if m, ok := o.props[k]; ok {
 		return m

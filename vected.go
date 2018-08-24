@@ -46,6 +46,7 @@ var queue = NeqQueueRenderer()
 var mounts = list.New()
 var isSVGMode bool
 var hydrating bool
+var diffLevel int
 
 // Component is an interface which defines a unit of user interface.
 type Component interface {
@@ -338,6 +339,34 @@ func mapAtts(attrs []vdom.Attribute) map[string]vdom.Attribute {
 		m[v.Key] = v
 	}
 	return m
+}
+
+func diff(ctx context.Context, elem dom.Element, node *vdom.Node, parent dom.Element, mountAll, componentRoot bool) dom.Element {
+	if diffLevel == 0 {
+		diffLevel++
+		// when first starting the diff, check if we're diffing an SVG or within an SVG
+		isSVGMode = parent != nil && parent.Type() != value.TypeNull &&
+			dom.Valid(parent.Get("ownerSVGElement"))
+
+		// hydration is indicated by the existing element to be diffed not having a
+		// prop cache
+		hydrating = dom.Valid(elem) && dom.Valid(elem.Get(AttrKey))
+	}
+	ret := idiff(ctx, elem, node, mountAll, componentRoot)
+
+	// append the element if its a new parent
+	if dom.Valid(parent) &&
+		!dom.IsEqual(ret.Get("parentNode"), parent) {
+		parent.Call("appendChild", ret)
+	}
+	diffLevel--
+	if diffLevel == 0 {
+		hydrating = false
+		if !componentRoot {
+			flushMounts()
+		}
+	}
+	return ret
 }
 
 func idiff(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, componentRoot bool) dom.Element {

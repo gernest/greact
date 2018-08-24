@@ -91,6 +91,20 @@ func (o *Object) Get(k string) value.Value {
 			}
 		}
 		return undefined()
+	case "childNodes":
+		return &Object{
+			value: o.children,
+			typ:   value.TypeObject,
+		}
+	case "length":
+		if o.typ != value.TypeObject {
+			return undefined()
+		}
+		switch e := o.value.(type) {
+		case []*Object:
+			return &Object{typ: value.TypeNumber, value: len(e)}
+		}
+		return undefined()
 	}
 	if m, ok := o.props[k]; ok {
 		return m

@@ -34,7 +34,11 @@ type Object struct {
 }
 
 func NewObject() *Object {
-	return &Object{id: idPool.Get().(int64), props: defaultProps()}
+	return &Object{
+		id:    idPool.Get().(int64),
+		props: defaultProps(),
+		typ:   value.TypeObject,
+	}
 }
 
 func (o *Object) Bool() bool {
@@ -106,8 +110,8 @@ func (o *Object) Get(k string) value.Value {
 		}
 		return undefined()
 	case "lastChild":
-		if o.parent != nil && len(o.parent.children) > 0 {
-			return o.parent.children[len(o.parent.children)-1]
+		if len(o.children) > 0 {
+			return o.children[len(o.children)-1]
 		}
 		return undefined()
 	case "childNodes":
@@ -177,6 +181,22 @@ func (o *Object) Call(k string, args ...interface{}) value.Value {
 				return undefined()
 			}
 			return o.replaceChild(a, b)
+		}
+	case "removeChild":
+		if len(args) == 1 {
+			a, ok := args[0].(*Object)
+			if !ok {
+				return undefined()
+			}
+			if len(o.children) > 0 {
+				var sv []*Object
+				for _, v := range o.children {
+					if v.id != a.id {
+						sv = append(sv, v)
+					}
+				}
+				o.children = sv
+			}
 		}
 	case "appendChild":
 		if len(args) == 1 {

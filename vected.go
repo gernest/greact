@@ -261,7 +261,7 @@ func recollectNodeTree(node dom.Element, unmountOnly bool) {
 	if cmp != nil {
 		unmountComponent(cmp)
 	} else {
-		if !unmountOnly {
+		if !unmountOnly || !dom.Valid(node.Get(AttrKey)) {
 			dom.RemoveNode(node)
 		}
 		removeChildren(node)
@@ -295,7 +295,7 @@ func removeChildren(node dom.Element) {
 	node = node.Get("lastChild")
 	for {
 		if !dom.Valid(node) {
-			return
+			break
 		}
 		next := node.Get("previousSibling")
 		recollectNodeTree(node, true)

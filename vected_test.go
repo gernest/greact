@@ -8,6 +8,7 @@ import (
 	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
 	"github.com/gernest/vected/vdom"
+	"github.com/gernest/vected/vdom/testutil"
 )
 
 var _ Component = (*A)(nil)
@@ -53,6 +54,21 @@ func TestFlashMounts(t *testing.T) {
 		flushMounts()
 		if n != size {
 			t.Errorf("expected %d mounts but got %d", size, n)
+		}
+	})
+}
+
+func TestDOM(t *testing.T) {
+	t.Run("removeChildren", func(ts *testing.T) {
+		e := testutil.NewObject()
+		for i := 0; i < 5; i++ {
+			e.Call("appendChild", testutil.NewObject())
+		}
+		removeChildren(e)
+		ch := e.Get("childNodes").Get("length").Int()
+		expect := 0
+		if ch != expect {
+			ts.Errorf("expected %d got %d", expect, ch)
 		}
 	})
 }

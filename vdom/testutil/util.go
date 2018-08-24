@@ -1,23 +1,38 @@
 package testutil
 
 import (
+	"sync"
+
 	"github.com/gernest/vected/vdom/value"
 )
+
+var idx int64
+
+var idPool = &sync.Pool{
+	New: func() interface{} {
+		idx++
+		return idx
+	},
+}
 
 type CallbackHandle func([]value.Value)
 
 func (CallbackHandle) Release() {}
 
 type Object struct {
+	id        int64
 	name      string
 	namespace string
+	parent    *Object
 	props     map[string]*Object
 	value     interface{}
 	typ       value.Type
+	cache     map[string]value.Value
+	children  []*Object
 }
 
 func NewObject() *Object {
-	return &Object{props: defaultProps()}
+	return &Object{id: idPool.Get().(int64), props: defaultProps()}
 }
 
 func (o *Object) Bool() bool {
@@ -88,10 +103,39 @@ func (o *Object) Call(k string, args ...interface{}) value.Value {
 		b.namespace = ns
 		b.name = name
 		return b
+	case "replaceChild":
+		if len(args) == 2 {
+			a, ok := args[0].(*Object)
+			if !ok {
+				return undefined()
+			}
+			b, ok := args[0].(*Object)
+			if !ok {
+				return undefined()
+			}
+			return o.replaceChild(a, b)
+		}
 	}
-	return &Object{typ: value.TypeUndefined}
+	return undefined()
+}
+func (o *Object) replaceChild(a, b *Object) *Object {
+	if len(o.children) > 0 {
+		var rst []*Object
+		for _, v := range o.children {
+			if v.id == a.id {
+				rst = append(rst, b)
+			} else {
+				rst = append(rst, v)
+			}
+		}
+		o.children = rst
+	}
+	return undefined()
 }
 
+func undefined() *Object {
+	return &Object{typ: value.TypeUndefined}
+}
 func (o *Object) Index(n int) value.Value {
 	if v, ok := o.value.([]interface{}); ok {
 		return &Object{value: v[n]}

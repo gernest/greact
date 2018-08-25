@@ -42,7 +42,6 @@ const (
 // AttrKeys is a key used to store node's attributes/props
 const AttrKey = "__vected_attr__"
 
-var isSVGMode bool
 var hydrating bool
 var diffLevel int
 
@@ -250,6 +249,8 @@ type Vected struct {
 
 	// Mounts is a list of components ready to be mounted.
 	Mounts *list.List
+
+	isSVGMode bool
 }
 
 func (v *Vected) enqueueRender(cmp Component) {
@@ -307,12 +308,12 @@ var Undefined UndefinedFunc
 // Callback this is supposed to be defined by the package consumers.
 var Callback dom.CallbackGenerator
 
-func diffAttributes(node dom.Element, attrs, old []vdom.Attribute) {
+func (v *Vected) diffAttributes(node dom.Element, attrs, old []vdom.Attribute) {
 	a := mapAtts(attrs)
 	b := mapAtts(old)
-	for k, v := range b {
+	for k, val := range b {
 		if _, ok := a[k]; !ok {
-			dom.SetAccessor(Callback, node, k, v, Undefined(), isSVGMode)
+			dom.SetAccessor(Callback, node, k, val, Undefined(), v.isSVGMode)
 		}
 	}
 	for k := range a {
@@ -320,7 +321,7 @@ func diffAttributes(node dom.Element, attrs, old []vdom.Attribute) {
 		case "children", "innerHTML":
 			continue
 		default:
-			dom.SetAccessor(Callback, node, k, b[k], a[k], isSVGMode)
+			dom.SetAccessor(Callback, node, k, b[k], a[k], v.isSVGMode)
 		}
 	}
 }
@@ -337,14 +338,14 @@ func (v *Vected) diff(ctx context.Context, elem dom.Element, node *vdom.Node, pa
 	if diffLevel == 0 {
 		diffLevel++
 		// when first starting the diff, check if we're diffing an SVG or within an SVG
-		isSVGMode = parent != nil && parent.Type() != value.TypeNull &&
+		v.isSVGMode = parent != nil && parent.Type() != value.TypeNull &&
 			dom.Valid(parent.Get("ownerSVGElement"))
 
 		// hydration is indicated by the existing element to be diffed not having a
 		// prop cache
 		hydrating = dom.Valid(elem) && dom.Valid(elem.Get(AttrKey))
 	}
-	ret := idiff(ctx, elem, node, mountAll, componentRoot)
+	ret := v.idiff(ctx, elem, node, mountAll, componentRoot)
 
 	// append the element if its a new parent
 	if dom.Valid(parent) &&
@@ -361,9 +362,9 @@ func (v *Vected) diff(ctx context.Context, elem dom.Element, node *vdom.Node, pa
 	return ret
 }
 
-func idiff(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, componentRoot bool) dom.Element {
+func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, componentRoot bool) dom.Element {
 	out := elem
-	prevSVGMode := isSVGMode
+	prevSVGMode := v.isSVGMode
 	switch node.Type {
 	case vdom.TextNode:
 		if dom.Valid(elem) && dom.Valid(elem.Get("splitText")) &&
@@ -387,9 +388,9 @@ func idiff(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, com
 	case vdom.ElementNode:
 		if !elements.Valid(node.Data) {
 			if node.Data == "svg" {
-				isSVGMode = true
+				v.isSVGMode = true
 			} else if node.Data == "foreignObject" {
-				isSVGMode = false
+				v.isSVGMode = false
 			}
 		}
 		nodeName := node.Data
@@ -427,10 +428,10 @@ func idiff(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, com
 				fc.Set("nodeValue", nv)
 			}
 		} else if len(node.Children) > 0 || dom.Valid(fc) {
-			innerDiffMode(ctx, out, node.Children, mountAll, hydrating)
+			v.innerDiffMode(ctx, out, node.Children, mountAll, hydrating)
 		}
-		diffAttributes(out, node.Attr, old)
-		isSVGMode = prevSVGMode
+		v.diffAttributes(out, node.Attr, old)
+		v.isSVGMode = prevSVGMode
 		return out
 	default:
 		panic("Un supported node")
@@ -442,7 +443,8 @@ func buildComponentFromVNode(ctx context.Context, elem dom.Element, node *vdom.N
 	// port buildComponentFromVNode
 	return nil
 }
-func innerDiffMode(ctx context.Context, elem dom.Element, vchildrens []*vdom.Node, mountAll, isHydrating bool) {
+
+func (v *Vected) innerDiffMode(ctx context.Context, elem dom.Element, vchildrens []*vdom.Node, mountAll, isHydrating bool) {
 	original := elem.Get("childNodes")
 	length := original.Get("length").Int()
 	keys := make(map[string]dom.Element)
@@ -499,7 +501,7 @@ func innerDiffMode(ctx context.Context, elem dom.Element, vchildrens []*vdom.Nod
 				}
 			}
 		}
-		child = idiff(ctx, child, vchild, mountAll, false)
+		child = v.idiff(ctx, child, vchild, mountAll, false)
 		f := original.Index(i)
 		if dom.Valid(child) && !dom.IsEqual(child, elem) && !dom.IsEqual(child, f) {
 			if f.Type() == value.TypeNull {

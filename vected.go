@@ -39,11 +39,8 @@ const (
 	Async
 )
 
-// AttrKeys is a key used to store node's attributes/props
+// AttrKey is a key used to store node's attributes/props
 const AttrKey = "__vected_attr__"
-
-var hydrating bool
-var diffLevel int
 
 // Component is an interface which defines a unit of user interface.
 type Component interface {
@@ -251,6 +248,8 @@ type Vected struct {
 	Mounts *list.List
 
 	isSVGMode bool
+	hydrating bool
+	diffLevel int
 }
 
 func (v *Vected) enqueueRender(cmp Component) {
@@ -335,15 +334,15 @@ func mapAtts(attrs []vdom.Attribute) map[string]vdom.Attribute {
 }
 
 func (v *Vected) diff(ctx context.Context, elem dom.Element, node *vdom.Node, parent dom.Element, mountAll, componentRoot bool) dom.Element {
-	if diffLevel == 0 {
-		diffLevel++
+	if v.diffLevel == 0 {
+		v.diffLevel++
 		// when first starting the diff, check if we're diffing an SVG or within an SVG
 		v.isSVGMode = parent != nil && parent.Type() != value.TypeNull &&
 			dom.Valid(parent.Get("ownerSVGElement"))
 
 		// hydration is indicated by the existing element to be diffed not having a
 		// prop cache
-		hydrating = dom.Valid(elem) && dom.Valid(elem.Get(AttrKey))
+		v.hydrating = dom.Valid(elem) && dom.Valid(elem.Get(AttrKey))
 	}
 	ret := v.idiff(ctx, elem, node, mountAll, componentRoot)
 
@@ -352,9 +351,9 @@ func (v *Vected) diff(ctx context.Context, elem dom.Element, node *vdom.Node, pa
 		!dom.IsEqual(ret.Get("parentNode"), parent) {
 		parent.Call("appendChild", ret)
 	}
-	diffLevel--
-	if diffLevel == 0 {
-		hydrating = false
+	v.diffLevel--
+	if v.diffLevel == 0 {
+		v.hydrating = false
 		if !componentRoot {
 			v.flushMounts()
 		}
@@ -418,7 +417,7 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 				})
 			}
 		}
-		if !hydrating && len(node.Children) == 1 &&
+		if !v.hydrating && len(node.Children) == 1 &&
 			node.Children[0].Type == vdom.TextNode && dom.Valid(fc) &&
 			dom.Valid(fc.Get("splitText")) &&
 			fc.Get("nextSibling").Type() == value.TypeNull {
@@ -428,7 +427,7 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 				fc.Set("nodeValue", nv)
 			}
 		} else if len(node.Children) > 0 || dom.Valid(fc) {
-			v.innerDiffMode(ctx, out, node.Children, mountAll, hydrating)
+			v.innerDiffMode(ctx, out, node.Children, mountAll, v.hydrating)
 		}
 		v.diffAttributes(out, node.Attr, old)
 		v.isSVGMode = prevSVGMode

@@ -268,41 +268,6 @@ func recollectNodeTree(node dom.Element, unmountOnly bool) {
 	}
 }
 
-// findComponent returns the component that rendered the node element. This
-// returns nil if the node wasn't a component.
-func findComponent(node dom.Element) Component {
-	return nil
-}
-
-func unmountComponent(cmp Component) {
-	core := cmp.core()
-	core.disable = true
-	base := core.base
-	if wm, ok := cmp.(WillUnmount); ok {
-		wm.ComponentWillUnmount()
-	}
-	core.base = nil
-	if core.component != nil {
-		unmountComponent(core.component)
-	} else if base != nil {
-		core.nextBase = base
-		dom.RemoveNode(base)
-		removeChildren(base)
-	}
-}
-
-func removeChildren(node dom.Element) {
-	node = node.Get("lastChild")
-	for {
-		if !dom.Valid(node) {
-			break
-		}
-		next := node.Get("previousSibling")
-		recollectNodeTree(node, true)
-		node = next
-	}
-}
-
 // UndefinedFunc is a function  that returns a javascript undefined value.
 type UndefinedFunc func() value.Value
 

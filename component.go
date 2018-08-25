@@ -263,3 +263,51 @@ func sameConstructor(a, b Component) bool {
 	}
 	return false
 }
+
+// findComponent returns the component that rendered the node element. This
+// returns nil if the node wasn't a component.
+//
+// There is a challenge of storing references to higher order components. We
+// can't simply attach Components to the dom elements since there is no way to
+// move objects between the dom and go runtime(wasm) yet.
+//
+// To work around this, a simple reference counting is used to decide what
+// componen's to keep around long enough.
+func findComponent(node dom.Element) Component {
+	return nil
+}
+
+func unmountComponent(cmp Component) {
+	core := cmp.core()
+	core.disable = true
+	base := core.base
+	if wm, ok := cmp.(WillUnmount); ok {
+		wm.ComponentWillUnmount()
+	}
+	core.base = nil
+	if core.component != nil {
+		unmountComponent(core.component)
+	} else if base != nil {
+		core.nextBase = base
+		dom.RemoveNode(base)
+		removeChildren(base)
+	}
+}
+
+func removeChildren(node dom.Element) {
+	node = node.Get("lastChild")
+	for {
+		if !dom.Valid(node) {
+			break
+		}
+		next := node.Get("previousSibling")
+		recollectNodeTree(node, true)
+		node = next
+	}
+}
+
+// componentCache this stores references to rendered components.
+type componentCache struct {
+	cache map[int64]Component
+	refs  map[int64]int64
+}

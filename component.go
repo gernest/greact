@@ -32,7 +32,7 @@ func createComponent(ctx context.Context, cmp Component, props prop.Props) Compo
 }
 
 // SetProps sets cmp props and possibly re renders
-func (r *Renderer) SetProps(ctx context.Context, cmp Component, props prop.Props, mode RenderMode, mountAll bool) {
+func (v *Vected) SetProps(ctx context.Context, cmp Component, props prop.Props, mode RenderMode, mountAll bool) {
 	core := cmp.core()
 	if core.disable {
 		return
@@ -61,9 +61,9 @@ func (r *Renderer) SetProps(ctx context.Context, cmp Component, props prop.Props
 	core.disable = false
 	if mode != No {
 		if mode == Sync {
-			r.renderComponent(cmp, Sync, mountAll, false)
+			v.renderComponent(cmp, Sync, mountAll, false)
 		} else {
-			enqueueRender(cmp)
+			v.enqueueRender(cmp)
 		}
 	}
 	if core.ref != nil {
@@ -71,25 +71,20 @@ func (r *Renderer) SetProps(ctx context.Context, cmp Component, props prop.Props
 	}
 }
 
-type Renderer struct {
-	components map[string]Component
-	queue      *QueuedRender
-}
-
-func (r *Renderer) isHigherOrder(node *vdom.Node) bool {
+func (v *Vected) isHigherOrder(node *vdom.Node) bool {
 	if node.Type == vdom.ElementNode {
-		if _, ok := r.components[node.Data]; ok {
+		if _, ok := v.Components[node.Data]; ok {
 			return true
 		}
 	}
 	return false
 }
 
-func (r *Renderer) getComponent(node *vdom.Node) Component {
-	return r.components[node.Data]
+func (v *Vected) getComponent(node *vdom.Node) Component {
+	return v.Components[node.Data]
 }
 
-func (r *Renderer) renderComponent(cmp Component, mode RenderMode, mountAll bool, isChild bool) {
+func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, isChild bool) {
 	core := cmp.core()
 	if core.disable {
 		return
@@ -152,10 +147,10 @@ func (r *Renderer) renderComponent(cmp Component, mode RenderMode, mountAll bool
 		if ctx, ok := cmp.(WithContext); ok {
 			context = ctx.WithContext(context)
 		}
-		childComponent := r.getComponent(rendered)
+		childComponent := v.getComponent(rendered)
 		var toUnmount Component
 		var base dom.Element
-		if r.isHigherOrder(rendered) {
+		if v.isHigherOrder(rendered) {
 			childProps := getNodeProps(rendered)
 			inst = initialChildComponent
 
@@ -170,7 +165,7 @@ func (r *Renderer) renderComponent(cmp Component, mode RenderMode, mountAll bool
 				return false
 			}
 			if validForProps() {
-				r.SetProps(context, inst, childProps, Sync, false)
+				v.SetProps(context, inst, childProps, Sync, false)
 			} else {
 				toUnmount = inst
 				inst = createComponent(context, childComponent, childProps)
@@ -180,8 +175,8 @@ func (r *Renderer) renderComponent(cmp Component, mode RenderMode, mountAll bool
 					icore.nextBase = nextBase
 				}
 				icore.parentComponent = cmp
-				r.SetProps(context, inst, childProps, No, false)
-				r.renderComponent(inst, Sync, mountAll, true)
+				v.SetProps(context, inst, childProps, No, false)
+				v.renderComponent(inst, Sync, mountAll, true)
 			}
 			base = inst.core().base
 		} else {
@@ -206,7 +201,7 @@ func (r *Renderer) renderComponent(cmp Component, mode RenderMode, mountAll bool
 				if dom.Valid(initialBase) {
 					parent = initialBase.Get("parentNode")
 				}
-				base = diff(context, cbase, rendered, parent, mountAll || !dom.Valid(isUpdate), true)
+				base = v.diff(context, cbase, rendered, parent, mountAll || !dom.Valid(isUpdate), true)
 			}
 		}
 		if dom.Valid(initialBase) &&

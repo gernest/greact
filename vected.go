@@ -42,8 +42,6 @@ const (
 // AttrKeys is a key used to store node's attributes/props
 const AttrKey = "__vected_attr__"
 
-var queue = NeqQueueRenderer()
-var mounts = list.New()
 var isSVGMode bool
 var hydrating bool
 var diffLevel int
@@ -175,7 +173,7 @@ type QueuedRender struct {
 	components *list.List
 	mu         sync.RWMutex
 	closed     bool
-	r          *Renderer
+	r          *Vected
 }
 
 func (q *QueuedRender) Push(v Component) {
@@ -225,10 +223,39 @@ func NeqQueueRenderer() *QueuedRender {
 	}
 }
 
-func enqueueRender(cmp Component) {
+// Vected this is the ultimate struct that ports preact to work with go/was.
+// This is not a direct port, the two languages are different. Although some
+// portion of the methods are a direct translation, the working differs from
+// preact.
+type Vected struct {
+
+	// Queue this is q queue of components that are supposed to be rendered
+	// asynchronously.
+	Queue *QueuedRender
+
+	// Component this is a mapping of component name to component instance. The
+	// name is not case sensitive and must not be the same as the standard html
+	// elements.
+	//
+	// This means you cant have a component with name div,p,h1 etc. Remener that it
+	// is case insensitive so Div is also not allowed.
+	//
+	// In case you are not so sure, use the github.com/gernest/elements package to
+	// check if the name is a valid component.
+	//
+	// The registered components won't be used as is, instead new instance will be
+	// created so please don't pass component's which have state in them
+	// (initialized field values etc) here, because they will be ignored.
+	Components map[string]Component
+
+	// Mounts is a list of components ready to be mounted.
+	Mounts *list.List
+}
+
+func (v *Vected) enqueueRender(cmp Component) {
 	if cmp.core().dirty {
-		queue.Push(cmp)
-		queue.Rerender()
+		v.Queue.Push(cmp)
+		v.Queue.Rerender()
 	}
 }
 
@@ -245,14 +272,14 @@ func (q *QueuedRender) rerender() {
 	}
 }
 
-func flushMounts() {
-	for c := mounts.Back(); c != nil; c = mounts.Back() {
+func (v *Vected) flushMounts() {
+	for c := v.Mounts.Back(); c != nil; c = v.Mounts.Back() {
 		if cmp, ok := c.Value.(Component); ok {
 			if m, ok := cmp.(DidMount); ok {
 				m.ComponentDidMount()
 			}
 		}
-		mounts.Remove(c)
+		v.Mounts.Remove(c)
 	}
 }
 
@@ -306,7 +333,7 @@ func mapAtts(attrs []vdom.Attribute) map[string]vdom.Attribute {
 	return m
 }
 
-func diff(ctx context.Context, elem dom.Element, node *vdom.Node, parent dom.Element, mountAll, componentRoot bool) dom.Element {
+func (v *Vected) diff(ctx context.Context, elem dom.Element, node *vdom.Node, parent dom.Element, mountAll, componentRoot bool) dom.Element {
 	if diffLevel == 0 {
 		diffLevel++
 		// when first starting the diff, check if we're diffing an SVG or within an SVG
@@ -328,7 +355,7 @@ func diff(ctx context.Context, elem dom.Element, node *vdom.Node, parent dom.Ele
 	if diffLevel == 0 {
 		hydrating = false
 		if !componentRoot {
-			flushMounts()
+			v.flushMounts()
 		}
 	}
 	return ret

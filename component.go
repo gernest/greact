@@ -21,7 +21,7 @@ const (
 // cached for future retrieval.
 //
 // caching is important because we can't pass object references to the dom yet,
-// instead we will pass the the id which will be used to reference the
+// instead we will pass  the id which will be used to reference the
 // component.
 func (v *Vected) createComponent(ctx context.Context, cmp Component, props prop.Props) Component {
 	var ncmp Component
@@ -43,7 +43,13 @@ func (v *Vected) createComponent(ctx context.Context, cmp Component, props prop.
 	return ncmp
 }
 
-// SetProps sets cmp props and possibly re renders
+// SetProps sets cmp props and possibly re renders. Props can contain key,ref
+// props where key will be registered as the component key and ref is a function
+// receiving an interface{}, the ref function is a callback which will be passed
+// either component's instance if it is a higher order component or dom.Element
+// if it is a regular dom node.
+//
+// Disabled components are ignored.
 func (v *Vected) SetProps(ctx context.Context, cmp Component, props prop.Props, mode RenderMode, mountAll bool) {
 	core := cmp.core()
 	if core.disable {

@@ -86,10 +86,14 @@ type Core struct {
 	// This is the instance of the child component.
 	component       Component
 	parentComponent Component
-	base            dom.Element
-	nextBase        dom.Element
-	dirty           bool
-	key             prop.NullString
+
+	// The base dom node on which the component was rendered. When this is set it
+	// signals for an update, this will be nil if the component hasn't been
+	// rendered yet.
+	base     dom.Element
+	nextBase dom.Element
+	dirty    bool
+	key      prop.NullString
 
 	// This is a callback used to receive instance of Component or the Dom element.
 	// after they have been mounted.

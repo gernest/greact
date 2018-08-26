@@ -1,7 +1,6 @@
 package vected
 
 import (
-	"container/list"
 	"context"
 	"reflect"
 
@@ -17,8 +16,6 @@ const (
 	componentKey         = "_component"
 	componentConstructor = "_componentConstructor"
 )
-
-var recyclerComponents = list.New()
 
 // Creates a new component instance. The component is assigned a unique id and
 // cached for future retrieval.

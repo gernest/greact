@@ -5,15 +5,28 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/gernest/vected/vdom/value"
+
 	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
 	"github.com/gernest/vected/vdom"
 	"github.com/gernest/vected/vdom/dom"
 )
 
+const (
+	componentKey         = "_component"
+	componentConstructor = "_componentConstructor"
+)
+
 var recyclerComponents = list.New()
 
-func createComponent(ctx context.Context, cmp Component, props prop.Props) Component {
+// Creates a new component instance. The component is assigned a unique id and
+// cached for future retrieval.
+//
+// caching is important because we can't pass object references to the dom yet,
+// instead we will pass the the id which will be used to reference the
+// component.
+func (v *Vected) createComponent(ctx context.Context, cmp Component, props prop.Props) Component {
 	var ncmp Component
 	if in, ok := cmp.(Constructor); ok {
 		ncmp = in.New()
@@ -28,6 +41,8 @@ func createComponent(ctx context.Context, cmp Component, props prop.Props) Compo
 	core := ncmp.core()
 	core.context = ctx
 	core.props = props
+	core.id = idPool.Get().(int)
+	v.cache[core.id] = ncmp
 	return ncmp
 }
 
@@ -167,14 +182,17 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 			if validForProps() {
 				v.SetProps(context, inst, childProps, Sync, false)
 			} else {
+				// We must create a new initialChildComponent and set the current cmp as
+				// parent.
 				toUnmount = inst
-				inst = createComponent(context, childComponent, childProps)
-				icore := inst.core()
-				icore.component = inst
-				if icore.nextBase == nil {
-					icore.nextBase = nextBase
+				inst = v.createComponent(context, childComponent, childProps)
+				core.component = inst
+				instanceCore := inst.core()
+				instanceCore.component = inst
+				if instanceCore.nextBase == nil {
+					instanceCore.nextBase = nextBase
 				}
-				icore.parentComponent = cmp
+				instanceCore.parentComponent = cmp
 				v.SetProps(context, inst, childProps, No, false)
 				v.renderComponent(inst, Sync, mountAll, true)
 			}
@@ -188,14 +206,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 			}
 			if initialBase != nil || mode == Sync {
 				if cbase != nil {
-					//TODO : destroy the reference to the child component.
-					//cbase._component=nil
-					//
-					// We can't do this right now because tehre is no way to move objects
-					// references between wasm(go) and js
-					//
-					// One option is to have a unique id for every component and only store the
-					// id in the dom node that is assigned to a component ijnstance.
+					cbase.Set(componentKey, 0)
 				}
 				var parent dom.Element
 				if dom.Valid(initialBase) {
@@ -212,20 +223,28 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 			baseParent := initialBase.Get("parentNode")
 			if dom.Valid(baseParent) && !dom.IsEqual(base, baseParent) {
 				baseParent.Call("replaceChild", base, initialBase)
-
 				if toUnmount == nil {
-					//TODO : add initialBase._component = null;
-					//
-					recollectNodeTree(initialBase, false)
+					v.removeComponentRef(initialBase)
+					v.recollectNodeTree(initialBase, false)
 				}
 			}
 		}
 		if toUnmount != nil {
-			unmountComponent(toUnmount)
+			v.unmountComponent(toUnmount)
 		}
 		core.base = base
 		if dom.Valid(base) && !isChild {
-
+			componentRef := cmp
+			t := cmp
+			for {
+				t = t.core().parentComponent
+				if t == nil {
+					break
+				}
+				t.core().base = base
+				componentRef = t
+			}
+			v.addComponentRef(base, componentRef)
 		}
 	}
 }
@@ -268,11 +287,40 @@ func sameConstructor(a, b Component) bool {
 //
 // To work around this, a simple reference counting is used to decide what
 // componen's to keep around long enough.
-func findComponent(node dom.Element) Component {
+func (v *Vected) findComponent(node dom.Element) Component {
+	if dom.Valid(node) {
+		id := node.Get(componentKey)
+		if id.Type() == value.TypeNumber {
+			i := id.Int()
+			if c, ok := v.cache[i]; ok {
+				return c
+			}
+		}
+	}
 	return nil
 }
 
-func unmountComponent(cmp Component) {
+// removeComponentRef removes the reference to a component from the dom element.
+func (v *Vected) removeComponentRef(e dom.Element) {
+	if dom.Valid(e) {
+		id := e.Get(componentKey)
+		if id.Type() == value.TypeNumber {
+			i := id.Int()
+			v.refs[i]--
+		}
+		e.Set(componentKey, 0)
+	}
+}
+
+func (v *Vected) addComponentRef(e dom.Element, cmp Component) {
+	if dom.Valid(e) {
+		e.Set(componentKey, cmp.core().id)
+		e.Set(componentConstructor, cmp.core().constructor)
+		v.refs[cmp.core().id]++
+	}
+}
+
+func (v *Vected) unmountComponent(cmp Component) {
 	core := cmp.core()
 	core.disable = true
 	base := core.base
@@ -281,22 +329,22 @@ func unmountComponent(cmp Component) {
 	}
 	core.base = nil
 	if core.component != nil {
-		unmountComponent(core.component)
+		v.unmountComponent(core.component)
 	} else if base != nil {
 		core.nextBase = base
 		dom.RemoveNode(base)
-		removeChildren(base)
+		v.removeChildren(base)
 	}
 }
 
-func removeChildren(node dom.Element) {
+func (v *Vected) removeChildren(node dom.Element) {
 	node = node.Get("lastChild")
 	for {
 		if !dom.Valid(node) {
 			break
 		}
 		next := node.Get("previousSibling")
-		recollectNodeTree(node, true)
+		v.recollectNodeTree(node, true)
 		node = next
 	}
 }

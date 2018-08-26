@@ -42,6 +42,17 @@ const (
 // AttrKey is a key used to store node's attributes/props
 const AttrKey = "__vected_attr__"
 
+// This tracks the last id issued. We use sync pool to reuse component id's.
+//
+// TODO: come up with a better way that can scale.
+var idx int
+var idPool = &sync.Pool{
+	New: func() interface{} {
+		idx++
+		return idx
+	},
+}
+
 // Component is an interface which defines a unit of user interface.
 type Component interface {
 	Render(context.Context, prop.Props, state.State) *vdom.Node
@@ -61,6 +72,8 @@ type Constructor interface {
 //
 // This is used to make Props available to the component.
 type Core struct {
+	id              int
+	constructor     string
 	props           prop.Props
 	state           state.State
 	prevProps       prop.Props
@@ -69,6 +82,8 @@ type Core struct {
 	renderCallbacks []func()
 	context         context.Context
 	prevContext     context.Context
+
+	// This is the instance of the child component.
 	component       Component
 	parentComponent Component
 	base            dom.Element
@@ -250,6 +265,9 @@ type Vected struct {
 	isSVGMode bool
 	hydrating bool
 	diffLevel int
+
+	cache map[int]Component
+	refs  map[int]int
 }
 
 func (v *Vected) enqueueRender(cmp Component) {
@@ -283,15 +301,15 @@ func (v *Vected) flushMounts() {
 	}
 }
 
-func recollectNodeTree(node dom.Element, unmountOnly bool) {
-	cmp := findComponent(node)
+func (v *Vected) recollectNodeTree(node dom.Element, unmountOnly bool) {
+	cmp := v.findComponent(node)
 	if cmp != nil {
-		unmountComponent(cmp)
+		v.unmountComponent(cmp)
 	} else {
 		if !unmountOnly || !dom.Valid(node.Get(AttrKey)) {
 			dom.RemoveNode(node)
 		}
-		removeChildren(node)
+		v.removeChildren(node)
 	}
 }
 
@@ -379,7 +397,7 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 				if dom.Valid(elem.Get("parentNode")) {
 					elem.Get("parentNode").Call("replaceChild", out, elem)
 				}
-				recollectNodeTree(elem, true)
+				v.recollectNodeTree(elem, true)
 			}
 		}
 		out.Set(AttrKey, true)
@@ -402,7 +420,7 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 				if e := elem.Get("parentNode"); dom.Valid(e) {
 					elem.Get("parentNode").Call("replaceChild", out, elem)
 				}
-				recollectNodeTree(elem, true)
+				v.recollectNodeTree(elem, true)
 			}
 		}
 		fc := out.Get("firstChild")
@@ -452,7 +470,7 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem dom.Element, vchildrens
 	if length > 0 {
 		for i := 0; i < length; i++ {
 			child := original.Index(i)
-			cmp := findComponent(child)
+			cmp := v.findComponent(child)
 			var key prop.NullString
 			if cmp != nil {
 				key = cmp.core().key
@@ -514,13 +532,13 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem dom.Element, vchildrens
 	}
 
 	// removing unused keyed  children
-	for _, v := range keys {
-		recollectNodeTree(v, false)
+	for _, val := range keys {
+		v.recollectNodeTree(val, false)
 	}
 	for i := min; i < len(children); i++ {
 		ch := children[i]
 		if ch != nil {
-			recollectNodeTree(ch, false)
+			v.recollectNodeTree(ch, false)
 		}
 	}
 }

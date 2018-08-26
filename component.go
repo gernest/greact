@@ -43,14 +43,14 @@ func (v *Vected) createComponent(ctx context.Context, cmp Component, props prop.
 	return ncmp
 }
 
-// SetProps sets cmp props and possibly re renders. Props can contain key,ref
+// setProps sets cmp props and possibly re renders. Props can contain key,ref
 // props where key will be registered as the component key and ref is a function
 // receiving an interface{}, the ref function is a callback which will be passed
 // either component's instance if it is a higher order component or dom.Element
 // if it is a regular dom node.
 //
 // Disabled components are ignored.
-func (v *Vected) SetProps(ctx context.Context, cmp Component, props prop.Props, mode RenderMode, mountAll bool) {
+func (v *Vected) setProps(ctx context.Context, cmp Component, props prop.Props, mode RenderMode, mountAll bool) {
 	core := cmp.core()
 	if core.disable {
 		return
@@ -183,7 +183,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 				return false
 			}
 			if validForProps() {
-				v.SetProps(context, inst, childProps, Sync, false)
+				v.setProps(context, inst, childProps, Sync, false)
 			} else {
 				// We must create a new initialChildComponent and set the current cmp as
 				// parent.
@@ -196,7 +196,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 					instanceCore.nextBase = nextBase
 				}
 				instanceCore.parentComponent = cmp
-				v.SetProps(context, inst, childProps, No, false)
+				v.setProps(context, inst, childProps, No, false)
 				v.renderComponent(inst, Sync, mountAll, true)
 			}
 			base = inst.core().base

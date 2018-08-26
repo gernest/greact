@@ -113,6 +113,21 @@ func (c *Core) SetState(newState state.State, callback ...func()) {
 	//TODO enqueue this for re rendering.
 }
 
+// Props returns current props.s
+func (c *Core) Props() prop.Props {
+	return c.props
+}
+
+// State returns current state.
+func (c *Core) State() state.State {
+	return c.state
+}
+
+// Context returns current context.
+func (c *Core) Context() context.Context {
+	return c.context
+}
+
 // InitState is an interface for exposing initial state.
 // Component should implement this interface if they want to set initial state
 // when the component is first created before being rendered.

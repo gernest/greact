@@ -469,6 +469,7 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 		panic("Un supported node")
 	}
 }
+
 func buildComponentFromVNode(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, componentRoot bool) dom.Element {
 	//TODO
 	//

@@ -170,6 +170,14 @@ func (o *Object) Call(k string, args ...interface{}) value.Value {
 		b.namespace = ns
 		b.name = name
 		return b
+	case "createTextNode":
+		ns := args[0].(string)
+		text := args[1].(string)
+		b := NewObject()
+		b.text = true
+		b.nodeValue = text
+		b.namespace = ns
+		return b
 	case "replaceChild":
 		if len(args) == 2 {
 			a, ok := args[0].(*Object)

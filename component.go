@@ -244,6 +244,20 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 			v.addComponentRef(base, componentRef)
 		}
 	}
+	if !dom.Valid(isUpdate) || mountAll {
+		//TODO mounts.unshift(component);
+	} else if !skip {
+		// Ensure that pending componentDidMount() hooks of child components
+		// are called before the componentDidUpdate() hook in the parent.
+		// Note: disabled as it causes duplicate hooks, see https://github.com/developit/preact/issues/750
+		// flushMounts();
+		if u, ok := cmp.(DidUpdate); ok {
+			u.ComponentDidUpdate(prevProps, prevState)
+		}
+	}
+	if v.diffLevel == 0 && !isChild {
+		v.flushMounts()
+	}
 }
 
 func getNodeProps(node *vdom.Node) prop.Props {

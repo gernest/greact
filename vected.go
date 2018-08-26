@@ -166,7 +166,7 @@ type WillUpdate interface {
 
 // DidUpdate defines a callback that is invoked after rendering.
 type DidUpdate interface {
-	ComponentDidUpdate()
+	ComponentDidUpdate(prevProps prop.Props, prevState state.State)
 }
 
 // DerivedState is an interface which can be used to derive state from props.

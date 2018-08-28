@@ -254,7 +254,7 @@ func (q *queuedRender) Last() Component {
 	return nil
 }
 
-// Rerender re renders all enqueued dirty components.
+// Rerender re renders all enqueued dirty components async.
 func (q *queuedRender) Rerender() {
 	go q.rerender()
 }

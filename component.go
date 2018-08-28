@@ -3,6 +3,7 @@ package vected
 import (
 	"context"
 	"reflect"
+	"strings"
 
 	"github.com/gernest/vected/vdom/value"
 
@@ -33,7 +34,13 @@ func (v *Vected) createComponent(ctx context.Context, cmp Component, props prop.
 		if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
 			panic("component must be pointer to struct")
 		}
-		ncmp = reflect.New(v.Elem().Type()).Interface().(Component)
+		e := v.Elem().Type()
+		ncmp = reflect.New(e).Interface().(Component)
+		constructor := cmp.core().constructor
+		if constructor == "" {
+			constructor = strings.ToLower(e.Name())
+		}
+		ncmp.core().constructor = constructor
 	}
 	core := ncmp.core()
 	core.context = ctx

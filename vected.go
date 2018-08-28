@@ -199,28 +199,28 @@ type WithContext interface {
 	WithContext(context.Context) context.Context
 }
 
-type QueuedRender struct {
+type queuedRender struct {
 	components *list.List
 	mu         sync.RWMutex
 	closed     bool
 	r          *Vected
 }
 
-func newQueuedRender(v *Vected) *QueuedRender {
-	return &QueuedRender{
+func newQueuedRender(v *Vected) *queuedRender {
+	return &queuedRender{
 		components: list.New(),
 		r:          v,
 	}
 }
 
-func (q *QueuedRender) Push(v Component) {
+func (q *queuedRender) Push(v Component) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	q.components.PushBack(v)
 }
 
 // Pop returns the last added component and removes it from the queue.
-func (q *QueuedRender) Pop() Component {
+func (q *queuedRender) Pop() Component {
 	e := q.pop()
 	if e != nil {
 		return e.Value.(Component)
@@ -228,7 +228,7 @@ func (q *QueuedRender) Pop() Component {
 	return nil
 }
 
-func (q *QueuedRender) pop() *list.Element {
+func (q *queuedRender) pop() *list.Element {
 	e := q.last()
 	q.mu.Lock()
 	if e != nil {
@@ -238,7 +238,7 @@ func (q *QueuedRender) pop() *list.Element {
 	return e
 }
 
-func (q *QueuedRender) last() *list.Element {
+func (q *queuedRender) last() *list.Element {
 	q.mu.RLock()
 	e := q.components.Back()
 	q.mu.RUnlock()
@@ -246,12 +246,25 @@ func (q *QueuedRender) last() *list.Element {
 }
 
 // Last returns the last added component to the queue.
-func (q *QueuedRender) Last() Component {
+func (q *queuedRender) Last() Component {
 	e := q.last()
 	if e != nil {
 		return e.Value.(Component)
 	}
 	return nil
+}
+
+// Rerender re renders all enqueued dirty components.
+func (q *queuedRender) Rerender() {
+	go q.rerender()
+}
+
+func (q *queuedRender) rerender() {
+	for cmp := q.Pop(); cmp != nil; cmp = q.Pop() {
+		if cmp.core().dirty {
+			q.r.renderComponent(cmp, 0, false, false)
+		}
+	}
 }
 
 // Vected this is the ultimate struct that ports preact to work with go/was.
@@ -262,7 +275,7 @@ type Vected struct {
 
 	// queue this is q queue of components that are supposed to be rendered
 	// asynchronously.
-	queue *QueuedRender
+	queue *queuedRender
 
 	// Component this is a mapping of component name to component instance. The
 	// name is not case sensitive and must not be the same as the standard html
@@ -306,19 +319,6 @@ func (v *Vected) enqueueRender(cmp Component) {
 	if cmp.core().dirty {
 		v.queue.Push(cmp)
 		v.queue.Rerender()
-	}
-}
-
-// Rerender re renders all enqueued dirty components.
-func (q *QueuedRender) Rerender() {
-	go q.rerender()
-}
-
-func (q *QueuedRender) rerender() {
-	for cmp := q.Pop(); cmp != nil; cmp = q.Pop() {
-		if cmp.core().dirty {
-			q.r.renderComponent(cmp, 0, false, false)
-		}
 	}
 }
 

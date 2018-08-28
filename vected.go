@@ -254,12 +254,6 @@ func (q *QueuedRender) Last() Component {
 	return nil
 }
 
-func NeqQueueRenderer() *QueuedRender {
-	return &QueuedRender{
-		components: list.New(),
-	}
-}
-
 // Vected this is the ultimate struct that ports preact to work with go/was.
 // This is not a direct port, the two languages are different. Although some
 // portion of the methods are a direct translation, the working differs from

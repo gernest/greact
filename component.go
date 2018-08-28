@@ -91,7 +91,7 @@ func (v *Vected) setProps(ctx context.Context, cmp Component, props prop.Props, 
 
 func (v *Vected) isHigherOrder(node *vdom.Node) bool {
 	if node.Type == vdom.ElementNode {
-		if _, ok := v.Components[node.Data]; ok {
+		if _, ok := v.components[node.Data]; ok {
 			return true
 		}
 	}
@@ -99,7 +99,7 @@ func (v *Vected) isHigherOrder(node *vdom.Node) bool {
 }
 
 func (v *Vected) getComponent(node *vdom.Node) Component {
-	return v.Components[node.Data]
+	return v.components[node.Data]
 }
 
 func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, isChild bool) {

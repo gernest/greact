@@ -266,9 +266,9 @@ func NeqQueueRenderer() *QueuedRender {
 // preact.
 type Vected struct {
 
-	// Queue this is q queue of components that are supposed to be rendered
+	// queue this is q queue of components that are supposed to be rendered
 	// asynchronously.
-	Queue *QueuedRender
+	queue *QueuedRender
 
 	// Component this is a mapping of component name to component instance. The
 	// name is not case sensitive and must not be the same as the standard html
@@ -283,10 +283,10 @@ type Vected struct {
 	// The registered components won't be used as is, instead new instance will be
 	// created so please don't pass component's which have state in them
 	// (initialized field values etc) here, because they will be ignored.
-	Components map[string]Component
+	components map[string]Component
 
-	// Mounts is a list of components ready to be mounted.
-	Mounts *list.List
+	// mounts is a list of components ready to be mounted.
+	mounts *list.List
 
 	isSVGMode bool
 	hydrating bool
@@ -301,17 +301,17 @@ func New() *Vected {
 	v := &Vected{
 		cache:      make(map[int]Component),
 		refs:       make(map[int]int),
-		Mounts:     list.New(),
-		Components: make(map[string]Component),
+		mounts:     list.New(),
+		components: make(map[string]Component),
 	}
-	v.Queue = newQueuedRender(v)
+	v.queue = newQueuedRender(v)
 	return v
 }
 
 func (v *Vected) enqueueRender(cmp Component) {
 	if cmp.core().dirty {
-		v.Queue.Push(cmp)
-		v.Queue.Rerender()
+		v.queue.Push(cmp)
+		v.queue.Rerender()
 	}
 }
 
@@ -329,13 +329,13 @@ func (q *QueuedRender) rerender() {
 }
 
 func (v *Vected) flushMounts() {
-	for c := v.Mounts.Back(); c != nil; c = v.Mounts.Back() {
+	for c := v.mounts.Back(); c != nil; c = v.mounts.Back() {
 		if cmp, ok := c.Value.(Component); ok {
 			if m, ok := cmp.(DidMount); ok {
 				m.ComponentDidMount()
 			}
 		}
-		v.Mounts.Remove(c)
+		v.mounts.Remove(c)
 	}
 }
 

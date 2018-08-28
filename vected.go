@@ -77,7 +77,8 @@ var idPool = &sync.Pool{
 // 	}
 //
 // The second way is to implement Render method. I recommend you stick with only
-// implementing Templater interface,
+// implementing Templater interface which is less error prone and reduces
+// verbosity.
 type Component interface {
 	Render(context.Context, prop.Props, state.State) *vdom.Node
 	core() *Core

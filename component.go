@@ -46,6 +46,7 @@ func (v *Vected) createComponent(ctx context.Context, cmp Component, props prop.
 	core.context = ctx
 	core.props = props
 	core.id = idPool.Get().(int)
+	core.enqueue = v.queue
 	v.cache[core.id] = ncmp
 	return ncmp
 }

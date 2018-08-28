@@ -116,6 +116,8 @@ type Core struct {
 	// priority this is a number indicating how important this component is in the
 	// re rendering queue. The higher the number the more urgent re renders.
 	priority int
+
+	enqueue *queuedRender
 }
 
 func (c *Core) core() *Core { return c }
@@ -128,7 +130,7 @@ func (c *Core) SetState(newState state.State, callback ...func()) {
 	if len(callback) > 0 {
 		c.renderCallbacks = append(c.renderCallbacks, callback...)
 	}
-	//TODO enqueue this for re rendering.
+	c.enqueue.enqueueCore(c)
 }
 
 // Props returns current props.s
@@ -217,13 +219,13 @@ type queuedRender struct {
 	components *list.List
 	mu         sync.RWMutex
 	closed     bool
-	r          *Vected
+	v          *Vected
 }
 
 func newQueuedRender(v *Vected) *queuedRender {
 	return &queuedRender{
 		components: list.New(),
-		r:          v,
+		v:          v,
 	}
 }
 
@@ -273,10 +275,27 @@ func (q *queuedRender) Rerender() {
 	go q.rerender()
 }
 
+func (q *queuedRender) enqueue(cmp Component) {
+	if !cmp.core().dirty {
+		cmp.core().dirty = true
+	}
+	q.Push(cmp)
+	q.Rerender()
+}
+
+func (q *queuedRender) enqueueCore(core *Core) {
+	cmp := q.v.cache[core.id]
+	if !cmp.core().dirty {
+		cmp.core().dirty = true
+	}
+	q.Push(cmp)
+	q.Rerender()
+}
+
 func (q *queuedRender) rerender() {
 	for cmp := q.Pop(); cmp != nil; cmp = q.Pop() {
 		if cmp.core().dirty {
-			q.r.renderComponent(cmp, 0, false, false)
+			q.v.renderComponent(cmp, 0, false, false)
 		}
 	}
 }

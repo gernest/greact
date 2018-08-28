@@ -22,6 +22,7 @@ func (*A) Template() string {
 func (a *A) Render(context.Context, prop.Props, state.State) *vdom.Node {
 	return nil
 }
+
 func (a *A) ComponentDidMount() {
 	if a.cb != nil {
 		a.cb()

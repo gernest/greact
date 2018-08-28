@@ -53,16 +53,43 @@ var idPool = &sync.Pool{
 	},
 }
 
-// Component is an interface which defines a unit of user interface.
+// Component is an interface which defines a unit of user interface.There are
+// two ways to satisfy this interface.
+//
+// You can define a struct that embeds Core and implements Templater interface
+// like this.
+// 	type Foo struct {
+// 		vected.Core
+// 	}
+//
+// 	func (f Foo) Template() string {
+// 		return `<div />`
+// 	}
+//
+// Then run
+//	vected render /path/to/foo package
+// The command will automatically generate the Render method for you. For the
+// example above it will generate something like this.
+//
+// 	var H = vdom.New
+// 	func (f Foo) Render(ctx context.Context, props prop.Props, state state.State) *vdom.Node {
+// 		return H(3, "", "div", nil)
+// 	}
+//
+// The second way is to implement Render method. I recommend you stick with only
+// implementing Templater interface,
 type Component interface {
 	Render(context.Context, prop.Props, state.State) *vdom.Node
 	core() *Core
 }
 
+// Templater is an interface for describing components with xml like markup. The
+// markup is similar to jsx but tailored towards go constructs.
 type Templater interface {
 	Template() string
 }
 
+// Constructor is an interface for creating new component instance.
 type Constructor interface {
 	New() Component
 }

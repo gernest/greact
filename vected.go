@@ -87,6 +87,8 @@ type Component interface {
 // Templater is an interface for describing components with xml like markup. The
 // markup is similar to jsx but tailored towards go constructs.
 type Templater interface {
+	// Template returns jsx like string template. The template is compiled to
+	// Render method of the struct that implements this interface..
 	Template() string
 }
 

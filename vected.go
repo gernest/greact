@@ -206,6 +206,13 @@ type QueuedRender struct {
 	r          *Vected
 }
 
+func newQueuedRender(v *Vected) *QueuedRender {
+	return &QueuedRender{
+		components: list.New(),
+		r:          v,
+	}
+}
+
 func (q *QueuedRender) Push(v Component) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
@@ -287,6 +294,18 @@ type Vected struct {
 
 	cache map[int]Component
 	refs  map[int]int
+}
+
+// New returns an initialized Vected instance.
+func New() *Vected {
+	v := &Vected{
+		cache:      make(map[int]Component),
+		refs:       make(map[int]int),
+		Mounts:     list.New(),
+		Components: make(map[string]Component),
+	}
+	v.Queue = newQueuedRender(v)
+	return v
 }
 
 func (v *Vected) enqueueRender(cmp Component) {

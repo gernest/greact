@@ -72,16 +72,25 @@ type Constructor interface {
 //
 // This is used to make Props available to the component.
 type Core struct {
-	id              int
-	constructor     string
-	props           prop.Props
-	state           state.State
-	prevProps       prop.Props
-	prevState       state.State
-	disable         bool
+	id int
+
+	// constructor is the name of the higher order component. This is can be
+	// defined when registering components with Vected.Register. This library uses
+	// golang.org/x/net/html for parsing component template, which defaults all
+	// elements to lower case, so the constructor name must be lower case.
+	constructor string
+
+	context context.Context
+	props   prop.Props
+	state   state.State
+
+	prevContext context.Context
+	prevProps   prop.Props
+	prevState   state.State
+
+	// A list of functions that will be called after the component has been
+	// rendered.
 	renderCallbacks []func()
-	context         context.Context
-	prevContext     context.Context
 
 	// This is the instance of the child component.
 	component       Component
@@ -92,8 +101,13 @@ type Core struct {
 	// rendered yet.
 	base     dom.Element
 	nextBase dom.Element
-	dirty    bool
-	key      prop.NullString
+
+	dirty   bool
+	disable bool
+
+	// Optional prop that must be unique among child components for efficient
+	// rendering of lists.
+	key prop.NullString
 
 	// This is a callback used to receive instance of Component or the Dom element.
 	// after they have been mounted.

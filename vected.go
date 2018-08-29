@@ -1,16 +1,9 @@
 // Package vected is a component based frontend framework for golang. This
-// framework delivers high performance and sleek ui's, that works both on the
-// serverside and the frontend.
+// framework delivers high performance and responsive ui.
 //
-// Go templates are used as the main templating system. The framework is
-// inspired by react, especially preact which I used to learn more about how
-// react works.
-//
-// Also, this borrows from vue js. The templates are just normal go templates so
-// no need to learn a different syntax.
-//
-// The user intrface styles is ant design
-// see https://github.com/ant-design/ant-design to learn more about ant design.
+// This relies on the experimental wasm api to interact with dom. This started
+// as a port of preact to go, but has since evolved. It still borrows a similar
+// API from react/preact.
 package vected
 
 import (

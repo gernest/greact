@@ -51,6 +51,13 @@ func (v *Vected) createComponent(ctx context.Context, cmp Component, props prop.
 	return ncmp
 }
 
+func (v *Vected) createComponentByName(ctx context.Context, name string, props prop.Props) Component {
+	if c, ok := v.components[name]; ok {
+		return v.createComponent(ctx, c, props)
+	}
+	return nil
+}
+
 // setProps sets cmp props and possibly re renders. Props can contain key,ref
 // props where key will be registered as the component key and ref is a function
 // receiving an interface{}, the ref function is a callback which will be passed

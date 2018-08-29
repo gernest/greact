@@ -344,8 +344,8 @@ type Vected struct {
 	// name is not case sensitive and must not be the same as the standard html
 	// elements.
 	//
-	// This means you cant have a component with name div,p,h1 etc. Remener that it
-	// is case insensitive so Div is also not allowed.
+	// This means you cant have a component with name div,p,h1 etc. Remember that
+	// it  is case insensitive so Div is also not allowed.
 	//
 	// In case you are not so sure, use the github.com/gernest/elements package to
 	// check if the name is a valid component.

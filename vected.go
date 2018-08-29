@@ -553,7 +553,7 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 func (v *Vected) buildComponentFromVNode(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, componentRoot bool) dom.Element {
 	c := v.findComponent(elem)
 	originalComponent := c
-	// oldElem := elem
+	oldElem := elem
 	isDirectOwner := c != nil && c.core().constructor == node.Data
 	isOwner := isDirectOwner
 	props := getNodeProps(node)
@@ -574,7 +574,19 @@ func (v *Vected) buildComponentFromVNode(ctx context.Context, elem dom.Element, 
 		if originalComponent != nil && !isDirectOwner {
 			v.unmountComponent(originalComponent)
 			elem = nil
-			// oldElem = nil
+			oldElem = nil
+		}
+		c = v.createComponentByName(ctx, node.Data, props)
+		if elem != nil && !dom.Valid(c.core().nextBase) {
+			c.core().nextBase = elem
+			oldElem = nil
+		}
+		v.setProps(ctx, c, props, Sync, mountAll)
+		elem = c.core().base
+		if oldElem != nil && !dom.IsEqual(elem, oldElem) {
+			//TODO dereference the component.
+			oldElem.Set(componentKey, 0)
+			v.recollectNodeTree(oldElem, false)
 		}
 	}
 	return elem

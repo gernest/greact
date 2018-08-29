@@ -550,11 +550,34 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 	}
 }
 
-func buildComponentFromVNode(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, componentRoot bool) dom.Element {
-	//TODO
-	//
-	// port buildComponentFromVNode
-	return nil
+func (v *Vected) buildComponentFromVNode(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, componentRoot bool) dom.Element {
+	c := v.findComponent(elem)
+	originalComponent := c
+	// oldElem := elem
+	isDirectOwner := c != nil && c.core().constructor == node.Data
+	isOwner := isDirectOwner
+	props := getNodeProps(node)
+	for {
+		if c != nil && !isOwner {
+			c = c.core().parentComponent
+			if c != nil {
+				isOwner = c.core().constructor == node.Data
+				continue
+			}
+		}
+		break
+	}
+	if c != nil && isOwner && (!mountAll || c.core().component != nil) {
+		v.setProps(ctx, c, props, Async, mountAll)
+		elem = c.core().base
+	} else {
+		if originalComponent != nil && !isDirectOwner {
+			v.unmountComponent(originalComponent)
+			elem = nil
+			// oldElem = nil
+		}
+	}
+	return elem
 }
 
 func (v *Vected) innerDiffMode(ctx context.Context, elem dom.Element, vchildrens []*vdom.Node, mountAll, isHydrating bool) {

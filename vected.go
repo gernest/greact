@@ -491,6 +491,9 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 		out.Set(AttrKey, true)
 		return out
 	case vdom.ElementNode:
+		if v.isHigherOrder(node) {
+			return v.buildComponentFromVNode(ctx, elem, node, mountAll, false)
+		}
 		if !elements.Valid(node.Data) {
 			if node.Data == "svg" {
 				v.isSVGMode = true

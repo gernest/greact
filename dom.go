@@ -2,14 +2,12 @@ package vected
 
 import (
 	"strings"
-
-	"github.com/gernest/vected/vdom/value"
 )
 
-var Document value.Value
+var Document Value
 
 // Element is an alias for the dom node.
-type Element value.Value
+type Element Value
 
 // HasProperty returns true if e has property.
 func HasProperty(e Element, v string) bool {
@@ -20,7 +18,7 @@ func HasProperty(e Element, v string) bool {
 func CreateNode(name string) Element {
 	return createNode(Document, name)
 }
-func createNode(doc value.Value, name string) Element {
+func createNode(doc Value, name string) Element {
 	node := doc.Call("createElement", name)
 	node.Set("normalizedNodeName", name)
 	return node
@@ -29,25 +27,25 @@ func createNode(doc value.Value, name string) Element {
 const svg = "http://www.w3.org/2000/svg'"
 
 // CreateSVGNode creates svg dom element.
-func CreateSVGNode(doc value.Value, name string) Element {
+func CreateSVGNode(doc Value, name string) Element {
 	node := doc.Call("createElementNS", svg, name)
 	node.Set("normalizedNodeName", name)
 	return node
 }
 
 // returns true if value is not null or undefined.
-func Valid(v value.Value) bool {
+func Valid(v Value) bool {
 	if v == nil {
 		return false
 	}
-	if v.Type() == value.TypeUndefined {
+	if v.Type() == TypeUndefined {
 		return false
 	}
-	return v.Type() != value.TypeNull
+	return v.Type() != TypeNull
 }
 
 // RemoveNode removes node from its parent if attached.
-func RemoveNode(node value.Value) {
+func RemoveNode(node Value) {
 	parent := node.Get("parentNode")
 	if Valid(parent) {
 		parent.Call("removeChild", node)
@@ -98,7 +96,7 @@ func SetAccessor(gen CallbackGenerator, node Element, name string, old, val inte
 		case strings.HasPrefix(name, "on"):
 			useCapture := name != strings.TrimSuffix(name, "Capture")
 			name = eventName(name)
-			if ev, ok := val.(func([]value.Value)); ok {
+			if ev, ok := val.(func([]Value)); ok {
 				cb := gen(ev)
 				if old == nil {
 					node.Call("addEventListener", name, cb, useCapture)
@@ -106,14 +104,14 @@ func SetAccessor(gen CallbackGenerator, node Element, name string, old, val inte
 					// callbacks added to this node.
 					//
 					// These can be later removed by calling the functions.
-					var release value.Callback
-					release = gen(func(args []value.Value) {
+					var release Callback
+					release = gen(func(args []Value) {
 						node.Call("removeEventListener", name, cb, useCapture)
 						cb.Release()
 						release.Release()
 					})
 					releaseList := node.Get("_listeners")
-					if releaseList.Type() == value.TypeUndefined {
+					if releaseList.Type() == TypeUndefined {
 						node.Set("_listeners", make(map[string]interface{}))
 						releaseList = node.Get("_listeners")
 					}
@@ -150,7 +148,7 @@ func SetAccessor(gen CallbackGenerator, node Element, name string, old, val inte
 }
 
 // CallbackGenerator is a function that returns callbacks.
-type CallbackGenerator func(fn func([]value.Value)) value.Callback
+type CallbackGenerator func(fn func([]Value)) Callback
 
 func toBool(v interface{}) bool {
 	if v, ok := v.(bool); ok {

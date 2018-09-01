@@ -13,7 +13,6 @@ import (
 	"sync"
 
 	"github.com/gernest/vected/elements"
-	"github.com/gernest/vected/vdom/value"
 
 	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
@@ -403,7 +402,7 @@ func (v *Vected) recollectNodeTree(node Element, unmountOnly bool) {
 }
 
 // UndefinedFunc is a function  that returns a javascript undefined value.
-type UndefinedFunc func() value.Value
+type UndefinedFunc func() Value
 
 // Undefined is a work around to allow the library to work with/without wasm
 // support.
@@ -441,7 +440,7 @@ func (v *Vected) diff(ctx context.Context, elem Element, node *vdom.Node, parent
 	if v.diffLevel == 0 {
 		v.diffLevel++
 		// when first starting the diff, check if we're diffing an SVG or within an SVG
-		v.isSVGMode = parent != nil && parent.Type() != value.TypeNull &&
+		v.isSVGMode = parent != nil && parent.Type() != TypeNull &&
 			Valid(parent.Get("ownerSVGElement"))
 
 		// hydration is indicated by the existing element to be diffed not having a
@@ -517,7 +516,7 @@ func (v *Vected) idiff(ctx context.Context, elem Element, node *vdom.Node, mount
 		var old []vdom.Attribute
 		if !Valid(props) {
 			a := elem.Get("attributes")
-			for _, v := range value.Keys(a) {
+			for _, v := range Keys(a) {
 				old = append(old, vdom.Attribute{
 					Key: v,
 					Val: a.Get(v).String(),
@@ -527,7 +526,7 @@ func (v *Vected) idiff(ctx context.Context, elem Element, node *vdom.Node, mount
 		if !v.hydrating && len(node.Children) == 1 &&
 			node.Children[0].Type == vdom.TextNode && Valid(fc) &&
 			Valid(fc.Get("splitText")) &&
-			fc.Get("nextSibling").Type() == value.TypeNull {
+			fc.Get("nextSibling").Type() == TypeNull {
 			nv := node.Children[0].Data
 			fv := fc.Get("nodeValue").String()
 			if fv != nv {
@@ -646,7 +645,7 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem Element, vchildrens []*
 		child = v.idiff(ctx, child, vchild, mountAll, false)
 		f := original.Index(i)
 		if Valid(child) && !IsEqual(child, elem) && !IsEqual(child, f) {
-			if f.Type() == value.TypeNull {
+			if f.Type() == TypeNull {
 				elem.Call("appendChild", child)
 			} else if IsEqual(child, f.Get("nextSibling")) {
 				RemoveNode(f)

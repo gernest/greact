@@ -1,4 +1,4 @@
-package testutil
+package vected
 
 import "testing"
 

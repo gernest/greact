@@ -5,8 +5,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gernest/vected/vdom/value"
-
 	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
 	"github.com/gernest/vected/vdom"
@@ -321,7 +319,7 @@ func sameConstructor(a, b Component) bool {
 func (v *Vected) findComponent(node Element) Component {
 	if Valid(node) {
 		id := node.Get(componentKey)
-		if id.Type() == value.TypeNumber {
+		if id.Type() == TypeNumber {
 			i := id.Int()
 			if c, ok := v.cache[i]; ok {
 				return c
@@ -335,7 +333,7 @@ func (v *Vected) findComponent(node Element) Component {
 func (v *Vected) removeComponentRef(e Element) {
 	if Valid(e) {
 		id := e.Get(componentKey)
-		if id.Type() == value.TypeNumber {
+		if id.Type() == TypeNumber {
 			i := id.Int()
 			v.refs[i]--
 		}

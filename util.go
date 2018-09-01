@@ -1,43 +1,28 @@
-package testutil
+package vected
 
-import (
-	"sync"
-
-	"github.com/gernest/vected/vdom/value"
-)
-
-var idx int64
-
-var idPool = &sync.Pool{
-	New: func() interface{} {
-		idx++
-		return idx
-	},
-}
-
-type CallbackHandle func([]value.Value)
+type CallbackHandle func([]Value)
 
 func (CallbackHandle) Release() {}
 
 type Object struct {
-	id        int64
+	id        int
 	name      string
 	namespace string
 	text      bool
 	parent    *Object
 	props     map[string]*Object
 	value     interface{}
-	typ       value.Type
+	typ       Type
 	nodeValue string
-	cache     map[string]value.Value
+	cache     map[string]Value
 	children  []*Object
 }
 
 func NewObject() *Object {
 	return &Object{
-		id:    idPool.Get().(int64),
+		id:    idPool.Get().(int),
 		props: defaultProps(),
-		typ:   value.TypeObject,
+		typ:   TypeObject,
 	}
 }
 
@@ -56,7 +41,7 @@ func (o *Object) String() string {
 	return o.value.(string)
 }
 
-func (o *Object) Type() value.Type {
+func (o *Object) Type() Type {
 	return o.typ
 }
 
@@ -66,19 +51,19 @@ func (o *Object) Set(k string, v interface{}) {
 	}
 	switch e := v.(type) {
 	case bool:
-		o.props[k] = &Object{typ: value.TypeBoolean, value: e}
+		o.props[k] = &Object{typ: TypeBoolean, value: e}
 	case string:
-		o.props[k] = &Object{typ: value.TypeString, value: e}
+		o.props[k] = &Object{typ: TypeString, value: e}
 	case float64:
-		o.props[k] = &Object{typ: value.TypeNumber, value: e}
+		o.props[k] = &Object{typ: TypeNumber, value: e}
 	case nil:
-		o.props[k] = &Object{typ: value.TypeNull, value: e}
-	case value.Value:
-		o.props[k] = &Object{typ: value.TypeObject, value: e}
+		o.props[k] = &Object{typ: TypeNull, value: e}
+	case Value:
+		o.props[k] = &Object{typ: TypeObject, value: e}
 	}
 }
 
-func (o *Object) Get(k string) value.Value {
+func (o *Object) Get(k string) Value {
 	switch k {
 	case "parentNode":
 		if o.parent != nil {
@@ -115,48 +100,48 @@ func (o *Object) Get(k string) value.Value {
 		}
 		return undefined()
 	case "childNodes":
-		var children []value.Value
+		var children []Value
 		for _, ch := range o.children {
 			children = append(children, ch)
 		}
 		return &Object{
 			value: children,
-			typ:   value.TypeObject,
+			typ:   TypeObject,
 		}
 	case "length":
-		if o.typ != value.TypeObject {
+		if o.typ != TypeObject {
 			return undefined()
 		}
 		switch e := o.value.(type) {
-		case []value.Value:
-			return &Object{typ: value.TypeNumber, value: len(e)}
+		case []Value:
+			return &Object{typ: TypeNumber, value: len(e)}
 		}
 		return undefined()
 	case "splitText":
 		if o.text {
-			return &Object{typ: value.TypeFunction}
+			return &Object{typ: TypeFunction}
 		}
 		return undefined()
 	case "nodeValue":
-		return &Object{typ: value.TypeString, value: o.nodeValue}
+		return &Object{typ: TypeString, value: o.nodeValue}
 	}
 	if m, ok := o.props[k]; ok {
 		return m
 	}
-	return &Object{typ: value.TypeUndefined}
+	return &Object{typ: TypeUndefined}
 }
 
-func (o *Object) Call(k string, args ...interface{}) value.Value {
+func (o *Object) Call(k string, args ...interface{}) Value {
 	switch k {
 	case "hasOwnProperty":
 		if len(args) > 0 {
 			a := args[0]
 			if av, ok := a.(string); ok {
 				_, ok = o.props[av]
-				return &Object{typ: value.TypeBoolean, value: ok}
+				return &Object{typ: TypeBoolean, value: ok}
 			}
 		}
-		return &Object{typ: value.TypeBoolean, value: false}
+		return &Object{typ: TypeBoolean, value: false}
 	case "createElement":
 		// element name must be provided.
 		name := args[0].(string)
@@ -261,25 +246,25 @@ func (o *Object) insertBefore(a, b *Object) *Object {
 }
 
 func undefined() *Object {
-	return &Object{typ: value.TypeUndefined}
+	return &Object{typ: TypeUndefined}
 }
 func null() *Object {
-	return &Object{typ: value.TypeNull}
+	return &Object{typ: TypeNull}
 }
 
-func (o *Object) Index(n int) value.Value {
-	if v, ok := o.value.([]value.Value); ok {
+func (o *Object) Index(n int) Value {
+	if v, ok := o.value.([]Value); ok {
 		return v[n]
 	}
-	return &Object{typ: value.TypeUndefined}
+	return &Object{typ: TypeUndefined}
 }
 
-func (o *Object) Invoke(args ...interface{}) value.Value {
-	return &Object{typ: value.TypeUndefined}
+func (o *Object) Invoke(args ...interface{}) Value {
+	return &Object{typ: TypeUndefined}
 }
 
 func defaultProps() map[string]*Object {
 	return map[string]*Object{
-		"style": &Object{typ: value.TypeObject},
+		"style": &Object{typ: TypeObject},
 	}
 }

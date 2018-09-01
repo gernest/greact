@@ -1,4 +1,4 @@
-package value
+package vected
 
 type Type int
 

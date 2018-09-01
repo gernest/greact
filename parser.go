@@ -64,8 +64,6 @@ package {{.pkg}}
 
 import (
 	"github.com/gernest/vected"
-	"github.com/gernest/vected/prop"
-	"github.com/gernest/vected/state"
 	"context"
 )
 
@@ -75,7 +73,7 @@ var HAT= vected.Attrs
 
 {{range .ctx}}
 // Render implements vected.Renderer interface.
-func ({{.Recv}} {{.StructName}})Render(ctx context.Context, props prop.Props, state state.State)*vected.Node{
+func ({{.Recv}} {{.StructName}})Render(ctx context.Context, props vected.Props, state vected.State)*vected.Node{
 	return {{text .Node -}}
 }
 {{end}}

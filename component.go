@@ -4,9 +4,6 @@ import (
 	"context"
 	"reflect"
 	"strings"
-
-	"github.com/gernest/vected/prop"
-	"github.com/gernest/vected/state"
 )
 
 const (
@@ -20,7 +17,7 @@ const (
 // caching is important because we can't pass object references to the dom yet,
 // instead we will pass  the id which will be used to reference the
 // component.
-func (v *Vected) createComponent(ctx context.Context, cmp Component, props prop.Props) Component {
+func (v *Vected) createComponent(ctx context.Context, cmp Component, props Props) Component {
 	var ncmp Component
 	if in, ok := cmp.(Constructor); ok {
 		ncmp = in.New()
@@ -47,7 +44,7 @@ func (v *Vected) createComponent(ctx context.Context, cmp Component, props prop.
 	return ncmp
 }
 
-func (v *Vected) createComponentByName(ctx context.Context, name string, props prop.Props) Component {
+func (v *Vected) createComponentByName(ctx context.Context, name string, props Props) Component {
 	if c, ok := v.components[name]; ok {
 		return v.createComponent(ctx, c, props)
 	}
@@ -61,7 +58,7 @@ func (v *Vected) createComponentByName(ctx context.Context, name string, props p
 // if it is a regular dom node.
 //
 // Disabled components are ignored.
-func (v *Vected) setProps(ctx context.Context, cmp Component, props prop.Props, mode RenderMode, mountAll bool) {
+func (v *Vected) setProps(ctx context.Context, cmp Component, props Props, mode RenderMode, mountAll bool) {
 	core := cmp.core()
 	if core.disable {
 		return
@@ -146,7 +143,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 		cbase Element
 	)
 	if c, ok := cmp.(DerivedState); ok {
-		xstate = state.Merge(xstate, c.DeriveState(props, xstate))
+		xstate = MergeState(xstate, c.DeriveState(props, xstate))
 		core.state = xstate
 	}
 	if isUpdate != nil {
@@ -277,8 +274,8 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 	}
 }
 
-func getNodeProps(node *Node) prop.Props {
-	props := make(prop.Props)
+func getNodeProps(node *Node) Props {
+	props := make(Props)
 	for _, v := range node.Attr {
 		props[v.Key] = v.Val
 	}

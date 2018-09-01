@@ -1,6 +1,4 @@
-// Package prop exposes structs and functions for manipulating of properties.
-// properties are values that can be passed around to components.
-package prop
+package vected
 
 import (
 	"fmt"
@@ -14,7 +12,7 @@ import (
 type Props map[interface{}]interface{}
 
 // Merge returns new Props with values from b added to a.
-func Merge(a, b Props) Props {
+func MergeProps(a, b Props) Props {
 	m := make(Props)
 	for k, v := range a {
 		m[k] = v
@@ -137,7 +135,7 @@ func (p Props) Eval(v string) string {
 // Type defines supported prop kinds to offer basic type safety. Props are
 // passed on interface{} value which can be anything, this allows components to
 // state what kind of prop they expect.
-type Type = reflect.Kind
+type PropType = reflect.Kind
 
 // supported prop types
 const (
@@ -185,8 +183,8 @@ type NullBool struct {
 const verifyErr = "key: %s, has wrong prop value expected %s got %s instead"
 
 // Verify verifies that the prop value for key is of kind typ. This offers basic
-// type safety of the passed props.
-func Verify(key string, typ Type, props Props) error {
+// type safety of the passedro props.
+func Verify(key string, typ PropType, props Props) error {
 	if v, ok := props[key]; ok {
 		kind := reflect.TypeOf(v).Kind()
 		if kind != typ {

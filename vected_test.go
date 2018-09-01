@@ -3,9 +3,6 @@ package vected
 import (
 	"context"
 	"testing"
-
-	"github.com/gernest/vected/prop"
-	"github.com/gernest/vected/state"
 )
 
 var _ Component = (*A)(nil)
@@ -18,7 +15,7 @@ type A struct {
 func (*A) Template() string {
 	return ``
 }
-func (a *A) Render(context.Context, prop.Props, state.State) *Node {
+func (a *A) Render(context.Context, Props, State) *Node {
 	return nil
 }
 
@@ -31,7 +28,7 @@ func (a *A) ComponentDidMount() {
 func TestVected_createComponent(t *testing.T) {
 	t.Run("must assign ctx ,props and id", func(ts *testing.T) {
 		v := New()
-		cmp := v.createComponent(context.Background(), &A{}, prop.Props{
+		cmp := v.createComponent(context.Background(), &A{}, Props{
 			"key": "value",
 		})
 		core := cmp.core()
@@ -47,7 +44,7 @@ func TestVected_createComponent(t *testing.T) {
 	})
 	t.Run("must set default constructor", func(ts *testing.T) {
 		v := New()
-		cmp := v.createComponent(context.Background(), &A{}, prop.Props{
+		cmp := v.createComponent(context.Background(), &A{}, Props{
 			"key": "value",
 		})
 		core := cmp.core()
@@ -61,7 +58,7 @@ func TestVected_createComponent(t *testing.T) {
 		a := &A{}
 		constructor := "A"
 		a.core().constructor = constructor
-		cmp := v.createComponent(context.Background(), a, prop.Props{
+		cmp := v.createComponent(context.Background(), a, Props{
 			"key": "value",
 		})
 		core := cmp.core()

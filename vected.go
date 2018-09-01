@@ -13,9 +13,6 @@ import (
 	"sync"
 
 	"github.com/gernest/vected/elements"
-
-	"github.com/gernest/vected/prop"
-	"github.com/gernest/vected/state"
 )
 
 // RenderMode is a flag determining how a component is rendered.
@@ -62,7 +59,7 @@ var idPool = &sync.Pool{
 // example above it will generate something like this.
 //
 // 	var H = New
-// 	func (f Foo) Render(ctx context.Context, props prop.Props, state state.State) *Node {
+// 	func (f Foo) Render(ctx context.Context, props Props, state state.State) *Node {
 // 		return H(3, "", "div", nil)
 // 	}
 //
@@ -70,7 +67,7 @@ var idPool = &sync.Pool{
 // implementing Templater interface which is less error prone and reduces
 // verbosity.
 type Component interface {
-	Render(context.Context, prop.Props, state.State) *Node
+	Render(context.Context, Props, State) *Node
 	core() *Core
 }
 
@@ -101,12 +98,12 @@ type Core struct {
 	constructor string
 
 	context context.Context
-	props   prop.Props
-	state   state.State
+	props   Props
+	state   State
 
 	prevContext context.Context
-	prevProps   prop.Props
-	prevState   state.State
+	prevProps   Props
+	prevState   State
 
 	// A list of functions that will be called after the component has been
 	// rendered.
@@ -127,7 +124,7 @@ type Core struct {
 
 	// Optional prop that must be unique among child components for efficient
 	// rendering of lists.
-	key prop.NullString
+	key NullString
 
 	// This is a callback used to receive instance of Component or the Dom element.
 	// after they have been mounted.
@@ -143,10 +140,10 @@ type Core struct {
 func (c *Core) core() *Core { return c }
 
 // SetState updates component state and schedule re rendering.
-func (c *Core) SetState(newState state.State, callback ...func()) {
+func (c *Core) SetState(newState State, callback ...func()) {
 	prev := c.prevState
 	c.prevState = newState
-	c.state = state.Merge(prev, newState)
+	c.state = MergeState(prev, newState)
 	if len(callback) > 0 {
 		c.renderCallbacks = append(c.renderCallbacks, callback...)
 	}
@@ -154,12 +151,12 @@ func (c *Core) SetState(newState state.State, callback ...func()) {
 }
 
 // Props returns current props.s
-func (c *Core) Props() prop.Props {
+func (c *Core) Props() Props {
 	return c.props
 }
 
 // State returns current state.
-func (c *Core) State() state.State {
+func (c *Core) State() State {
 	return c.state
 }
 
@@ -172,13 +169,13 @@ func (c *Core) Context() context.Context {
 // Component should implement this interface if they want to set initial state
 // when the component is first created before being rendered.
 type InitState interface {
-	InitState() state.State
+	InitState() State
 }
 
 // InitProps is an interface for exposing default props. This will be merged
 // with other props before being sent to render.
 type InitProps interface {
-	InitProps() prop.Props
+	InitProps() Props
 }
 
 // WillMount is an interface defining a callback which is invoked before the
@@ -202,31 +199,31 @@ type WillUnmount interface {
 // WillReceiveProps is an interface defining a callback that will be called with
 // the new props before they are accepted and passed to be rendered.
 type WillReceiveProps interface {
-	ComponentWillReceiveProps(context.Context, prop.Props)
+	ComponentWillReceiveProps(context.Context, Props)
 }
 
 // ShouldUpdate is an interface defining callback that is called before render
 // determine if re render is necessary.
 type ShouldUpdate interface {
 	// If this returns false then re rendering for the component is skipped.
-	ShouldComponentUpdate(context.Context, prop.Props, state.State) bool
+	ShouldComponentUpdate(context.Context, Props, State) bool
 }
 
 // WillUpdate is an interface defining a callback that is called before rendering
 type WillUpdate interface {
 	// If returned props are not nil, then it will be merged with nextprops then
 	// passed to render for rendering.
-	ComponentWillUpdate(context.Context, prop.Props, state.State) prop.Props
+	ComponentWillUpdate(context.Context, Props, State) Props
 }
 
 // DidUpdate defines a callback that is invoked after rendering.
 type DidUpdate interface {
-	ComponentDidUpdate(prevProps prop.Props, prevState state.State)
+	ComponentDidUpdate(prevProps Props, prevState State)
 }
 
 // DerivedState is an interface which can be used to derive state from props.
 type DerivedState interface {
-	DeriveState(prop.Props, state.State) state.State
+	DeriveState(Props, State) State
 }
 
 // WithContext is an interface used to update the context that is passed to
@@ -594,7 +591,7 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem Element, vchildrens []*
 		for i := 0; i < length; i++ {
 			child := original.Index(i)
 			cmp := v.findComponent(child)
-			var key prop.NullString
+			var key NullString
 			if cmp != nil {
 				key = cmp.core().key
 			}

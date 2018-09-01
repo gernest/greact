@@ -691,3 +691,12 @@ func isNamedNode(elem Element, vnode *Node) bool {
 	}
 	return false
 }
+
+// Render renders vected component
+func (v *Vected) Render(vnode *Node, parent Element, merge ...Element) Element {
+	var elem Element
+	if len(merge) > 0 {
+		elem = merge[0]
+	}
+	return v.diff(context.Background(), elem, vnode, parent, false, false)
+}

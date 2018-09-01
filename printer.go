@@ -1,4 +1,4 @@
-package parser
+package vected
 
 import (
 	"bytes"
@@ -7,15 +7,13 @@ import (
 	"go/printer"
 	"go/token"
 	"strings"
-
-	"github.com/gernest/vected/vdom"
 )
 
-func printAttr(a vdom.Attribute) string {
+func printAttr(a Attribute) string {
 	return fmt.Sprintf("HA(%q,%q,%v)", a.Namespace, a.Key, interpret(a.Val))
 }
 
-func printNode(n *vdom.Node, level int) string {
+func printNode(n *Node, level int) string {
 	v := indent((fmt.Sprintf("H(%d,%q,%q",
 		n.Type, n.Namespace, n.Data)), level)
 	if len(n.Attr) > 0 {
@@ -36,12 +34,12 @@ func printNode(n *vdom.Node, level int) string {
 		v += ","
 		for _, ch := range n.Children {
 			switch ch.Type {
-			case vdom.TextNode:
+			case TextNode:
 				x := strings.TrimSpace(ch.Data)
 				if x == "" {
 					continue
 				}
-			case vdom.CommentNode:
+			case CommentNode:
 				continue
 			}
 			v += "\n"

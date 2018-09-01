@@ -1,10 +1,8 @@
-package parser
+package vected
 
 import (
 	"io/ioutil"
 	"testing"
-
-	"github.com/gernest/vected/vdom"
 )
 
 func TestClear(t *testing.T) {
@@ -29,8 +27,8 @@ func TestClear(t *testing.T) {
 		if err != nil {
 			ts.Fatal(err)
 		}
-		if n.Data != vdom.ContainerNode {
-			t.Errorf("expected %s got %s", vdom.ContainerNode, n.Data)
+		if n.Data != ContainerNode {
+			t.Errorf("expected %s got %s", ContainerNode, n.Data)
 		}
 	})
 }
@@ -64,9 +62,9 @@ func TestGenerate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// ioutil.WriteFile("test/test.gen.go", v, 0600)
+	// ioutil.WriteFile("fixture/parser/gen0/test.gen.go", v, 0600)
 	s := string(v)
-	b, err := ioutil.ReadFile("test/test.gen.go")
+	b, err := ioutil.ReadFile("fixture/parser/gen0/test.gen.go")
 	if err != nil {
 		t.Fatal(err)
 	}

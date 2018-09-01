@@ -1,9 +1,9 @@
-package vdom
+package vected
 
 import "testing"
 
 func TestVNode(t *testing.T) {
-	h := New
+	h := NewNode
 	t.Run("merges adjacent text child nodes", func(ts *testing.T) {
 		x := h(ElementNode, "", "foo", nil,
 			h(TextNode, "", "one", nil),

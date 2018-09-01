@@ -1,4 +1,4 @@
-package vdom
+package vected
 
 const (
 	// ContainerNode this is tha name of a node which acts as a container to a
@@ -54,7 +54,7 @@ type Node struct {
 }
 
 // New is a wrapper for creating new node
-func New(typ NodeType, ns, name string, attrs []Attribute, children ...*Node) *Node {
+func NewNode(typ NodeType, ns, name string, attrs []Attribute, children ...*Node) *Node {
 	return &Node{
 		Type:      typ,
 		Namespace: ns,

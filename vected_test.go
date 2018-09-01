@@ -6,7 +6,6 @@ import (
 
 	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
-	"github.com/gernest/vected/vdom"
 )
 
 var _ Component = (*A)(nil)
@@ -19,7 +18,7 @@ type A struct {
 func (*A) Template() string {
 	return ``
 }
-func (a *A) Render(context.Context, prop.Props, state.State) *vdom.Node {
+func (a *A) Render(context.Context, prop.Props, state.State) *Node {
 	return nil
 }
 

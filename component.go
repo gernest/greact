@@ -7,7 +7,6 @@ import (
 
 	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
-	"github.com/gernest/vected/vdom"
 )
 
 const (
@@ -101,8 +100,8 @@ func (v *Vected) setProps(ctx context.Context, cmp Component, props prop.Props, 
 	}
 }
 
-func (v *Vected) isHigherOrder(node *vdom.Node) bool {
-	if node.Type == vdom.ElementNode {
+func (v *Vected) isHigherOrder(node *Node) bool {
+	if node.Type == ElementNode {
 		if _, ok := v.components[node.Data]; ok {
 			return true
 		}
@@ -110,7 +109,7 @@ func (v *Vected) isHigherOrder(node *vdom.Node) bool {
 	return false
 }
 
-func (v *Vected) getComponent(node *vdom.Node) Component {
+func (v *Vected) getComponent(node *Node) Component {
 	return v.components[node.Data]
 }
 
@@ -278,7 +277,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 	}
 }
 
-func getNodeProps(node *vdom.Node) prop.Props {
+func getNodeProps(node *Node) prop.Props {
 	props := make(prop.Props)
 	for _, v := range node.Attr {
 		props[v.Key] = v.Val

@@ -58,8 +58,34 @@ func New(typ NodeType, ns, name string, attrs []Attribute, children ...*Node) *N
 		Namespace: ns,
 		Data:      name,
 		Attr:      attrs,
-		Children:  children,
+		Children:  newChildren(children...),
 	}
+}
+
+// newChildren processes n nodes.
+//
+// Adjacent text nodes are merged.
+func newChildren(n ...*Node) []*Node {
+	if len(n) > 0 {
+		var o []*Node
+		var lastText *Node
+		for _, v := range n {
+			switch v.Type {
+			case TextNode:
+				if lastText != nil {
+					lastText.Data += v.Data
+				} else {
+					lastText = v
+					o = append(o, lastText)
+				}
+			default:
+				lastText = nil
+				o = append(o, v)
+			}
+		}
+		return o
+	}
+	return nil
 }
 
 func Attr(ns, key string, val interface{}) Attribute {

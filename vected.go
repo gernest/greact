@@ -18,7 +18,6 @@ import (
 	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
 	"github.com/gernest/vected/vdom"
-	"github.com/gernest/vected/vdom/dom"
 )
 
 // RenderMode is a flag determining how a component is rendered.
@@ -122,8 +121,8 @@ type Core struct {
 	// The base dom node on which the component was rendered. When this is set it
 	// signals for an update, this will be nil if the component hasn't been
 	// rendered yet.
-	base     dom.Element
-	nextBase dom.Element
+	base     Element
+	nextBase Element
 
 	dirty   bool
 	disable bool
@@ -357,6 +356,8 @@ type Vected struct {
 
 	cache map[int]Component
 	refs  map[int]int
+
+	cb CallbackGenerator
 }
 
 // New returns an initialized Vected instance.
@@ -389,13 +390,13 @@ func (v *Vected) flushMounts() {
 	}
 }
 
-func (v *Vected) recollectNodeTree(node dom.Element, unmountOnly bool) {
+func (v *Vected) recollectNodeTree(node Element, unmountOnly bool) {
 	cmp := v.findComponent(node)
 	if cmp != nil {
 		v.unmountComponent(cmp)
 	} else {
-		if !unmountOnly || !dom.Valid(node.Get(AttrKey)) {
-			dom.RemoveNode(node)
+		if !unmountOnly || !Valid(node.Get(AttrKey)) {
+			RemoveNode(node)
 		}
 		v.removeChildren(node)
 	}
@@ -410,15 +411,12 @@ type UndefinedFunc func() value.Value
 // TODO: find a better way to handle this.
 var Undefined UndefinedFunc
 
-// Callback this is supposed to be defined by the package consumers.
-var Callback dom.CallbackGenerator
-
-func (v *Vected) diffAttributes(node dom.Element, attrs, old []vdom.Attribute) {
+func (v *Vected) diffAttributes(node Element, attrs, old []vdom.Attribute) {
 	a := mapAtts(attrs)
 	b := mapAtts(old)
 	for k, val := range b {
 		if _, ok := a[k]; !ok {
-			dom.SetAccessor(Callback, node, k, val, Undefined(), v.isSVGMode)
+			SetAccessor(v.cb, node, k, val, Undefined(), v.isSVGMode)
 		}
 	}
 	for k := range a {
@@ -426,7 +424,7 @@ func (v *Vected) diffAttributes(node dom.Element, attrs, old []vdom.Attribute) {
 		case "children", "innerHTML":
 			continue
 		default:
-			dom.SetAccessor(Callback, node, k, b[k], a[k], v.isSVGMode)
+			SetAccessor(v.cb, node, k, b[k], a[k], v.isSVGMode)
 		}
 	}
 }
@@ -439,22 +437,22 @@ func mapAtts(attrs []vdom.Attribute) map[string]vdom.Attribute {
 	return m
 }
 
-func (v *Vected) diff(ctx context.Context, elem dom.Element, node *vdom.Node, parent dom.Element, mountAll, componentRoot bool) dom.Element {
+func (v *Vected) diff(ctx context.Context, elem Element, node *vdom.Node, parent Element, mountAll, componentRoot bool) Element {
 	if v.diffLevel == 0 {
 		v.diffLevel++
 		// when first starting the diff, check if we're diffing an SVG or within an SVG
 		v.isSVGMode = parent != nil && parent.Type() != value.TypeNull &&
-			dom.Valid(parent.Get("ownerSVGElement"))
+			Valid(parent.Get("ownerSVGElement"))
 
 		// hydration is indicated by the existing element to be diffed not having a
 		// prop cache
-		v.hydrating = dom.Valid(elem) && dom.Valid(elem.Get(AttrKey))
+		v.hydrating = Valid(elem) && Valid(elem.Get(AttrKey))
 	}
 	ret := v.idiff(ctx, elem, node, mountAll, componentRoot)
 
 	// append the element if its a new parent
-	if dom.Valid(parent) &&
-		!dom.IsEqual(ret.Get("parentNode"), parent) {
+	if Valid(parent) &&
+		!IsEqual(ret.Get("parentNode"), parent) {
 		parent.Call("appendChild", ret)
 	}
 	v.diffLevel--
@@ -467,22 +465,22 @@ func (v *Vected) diff(ctx context.Context, elem dom.Element, node *vdom.Node, pa
 	return ret
 }
 
-func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, componentRoot bool) dom.Element {
+func (v *Vected) idiff(ctx context.Context, elem Element, node *vdom.Node, mountAll, componentRoot bool) Element {
 	out := elem
 	prevSVGMode := v.isSVGMode
 	switch node.Type {
 	case vdom.TextNode:
-		if dom.Valid(elem) && dom.Valid(elem.Get("splitText")) &&
-			dom.Valid(elem.Get("parentNode")) {
+		if Valid(elem) && Valid(elem.Get("splitText")) &&
+			Valid(elem.Get("parentNode")) {
 			v := elem.Get("nodeValue").String()
 			if v != node.Data {
 				elem.Set("nodeValue", node.Data)
 			}
 
 		} else {
-			out = dom.Document.Call("createTextNode", node.Data)
-			if dom.Valid(elem) {
-				if dom.Valid(elem.Get("parentNode")) {
+			out = Document.Call("createTextNode", node.Data)
+			if Valid(elem) {
+				if Valid(elem.Get("parentNode")) {
 					elem.Get("parentNode").Call("replaceChild", out, elem)
 				}
 				v.recollectNodeTree(elem, true)
@@ -502,13 +500,13 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 			}
 		}
 		nodeName := node.Data
-		if !dom.Valid(elem) || !isNamedNode(elem, node) {
-			out = dom.CreateNode(nodeName)
-			if dom.Valid(elem) {
-				if dom.Valid(elem.Get("firstChild")) {
+		if !Valid(elem) || !isNamedNode(elem, node) {
+			out = CreateNode(nodeName)
+			if Valid(elem) {
+				if Valid(elem.Get("firstChild")) {
 					out.Call("appendChild", elem.Get("firstChild"))
 				}
-				if e := elem.Get("parentNode"); dom.Valid(e) {
+				if e := elem.Get("parentNode"); Valid(e) {
 					elem.Get("parentNode").Call("replaceChild", out, elem)
 				}
 				v.recollectNodeTree(elem, true)
@@ -517,7 +515,7 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 		fc := out.Get("firstChild")
 		props := out.Get(AttrKey)
 		var old []vdom.Attribute
-		if !dom.Valid(props) {
+		if !Valid(props) {
 			a := elem.Get("attributes")
 			for _, v := range value.Keys(a) {
 				old = append(old, vdom.Attribute{
@@ -527,15 +525,15 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 			}
 		}
 		if !v.hydrating && len(node.Children) == 1 &&
-			node.Children[0].Type == vdom.TextNode && dom.Valid(fc) &&
-			dom.Valid(fc.Get("splitText")) &&
+			node.Children[0].Type == vdom.TextNode && Valid(fc) &&
+			Valid(fc.Get("splitText")) &&
 			fc.Get("nextSibling").Type() == value.TypeNull {
 			nv := node.Children[0].Data
 			fv := fc.Get("nodeValue").String()
 			if fv != nv {
 				fc.Set("nodeValue", nv)
 			}
-		} else if len(node.Children) > 0 || dom.Valid(fc) {
+		} else if len(node.Children) > 0 || Valid(fc) {
 			v.innerDiffMode(ctx, out, node.Children, mountAll, v.hydrating)
 		}
 		v.diffAttributes(out, node.Attr, old)
@@ -546,7 +544,7 @@ func (v *Vected) idiff(ctx context.Context, elem dom.Element, node *vdom.Node, m
 	}
 }
 
-func (v *Vected) buildComponentFromVNode(ctx context.Context, elem dom.Element, node *vdom.Node, mountAll, componentRoot bool) dom.Element {
+func (v *Vected) buildComponentFromVNode(ctx context.Context, elem Element, node *vdom.Node, mountAll, componentRoot bool) Element {
 	c := v.findComponent(elem)
 	originalComponent := c
 	oldElem := elem
@@ -573,13 +571,13 @@ func (v *Vected) buildComponentFromVNode(ctx context.Context, elem dom.Element, 
 			oldElem = nil
 		}
 		c = v.createComponentByName(ctx, node.Data, props)
-		if elem != nil && !dom.Valid(c.core().nextBase) {
+		if elem != nil && !Valid(c.core().nextBase) {
 			c.core().nextBase = elem
 			oldElem = nil
 		}
 		v.setProps(ctx, c, props, Sync, mountAll)
 		elem = c.core().base
-		if oldElem != nil && !dom.IsEqual(elem, oldElem) {
+		if oldElem != nil && !IsEqual(elem, oldElem) {
 			//TODO dereference the component.
 			oldElem.Set(componentKey, 0)
 			v.recollectNodeTree(oldElem, false)
@@ -588,11 +586,11 @@ func (v *Vected) buildComponentFromVNode(ctx context.Context, elem dom.Element, 
 	return elem
 }
 
-func (v *Vected) innerDiffMode(ctx context.Context, elem dom.Element, vchildrens []*vdom.Node, mountAll, isHydrating bool) {
+func (v *Vected) innerDiffMode(ctx context.Context, elem Element, vchildrens []*vdom.Node, mountAll, isHydrating bool) {
 	original := elem.Get("childNodes")
 	length := original.Get("length").Int()
-	keys := make(map[string]dom.Element)
-	var children []dom.Element
+	keys := make(map[string]Element)
+	var children []Element
 	var min int
 	if length > 0 {
 		for i := 0; i < length; i++ {
@@ -606,7 +604,7 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem dom.Element, vchildrens
 				keys[key.Value] = child
 			} else {
 				var x bool
-				if cmp != nil || dom.Valid(child.Get("splitText")) {
+				if cmp != nil || Valid(child.Get("splitText")) {
 					v := child.Get("nodeValue").String()
 					v = strings.TrimSpace(v)
 					if isHydrating {
@@ -626,7 +624,7 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem dom.Element, vchildrens
 	for i := 0; i < len(vchildrens); i++ {
 		vchild := vchildrens[i]
 		key := vchild.Key()
-		var child dom.Element
+		var child Element
 		if key != "" {
 			if ch, ok := keys[key]; ok {
 				delete(keys, key)
@@ -635,7 +633,7 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem dom.Element, vchildrens
 		} else if min < len(children) {
 			for j := min; j < len(children); j++ {
 				c := children[j]
-				if c != nil && dom.Valid(c) && isSameNodeType(c, vchild, isHydrating) {
+				if c != nil && Valid(c) && isSameNodeType(c, vchild, isHydrating) {
 					child = c
 					children[j] = nil
 					if j == min {
@@ -647,11 +645,11 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem dom.Element, vchildrens
 		}
 		child = v.idiff(ctx, child, vchild, mountAll, false)
 		f := original.Index(i)
-		if dom.Valid(child) && !dom.IsEqual(child, elem) && !dom.IsEqual(child, f) {
+		if Valid(child) && !IsEqual(child, elem) && !IsEqual(child, f) {
 			if f.Type() == value.TypeNull {
 				elem.Call("appendChild", child)
-			} else if dom.IsEqual(child, f.Get("nextSibling")) {
-				dom.RemoveNode(f)
+			} else if IsEqual(child, f.Get("nextSibling")) {
+				RemoveNode(f)
 			} else {
 				elem.Call("insertBefore", child, f)
 			}
@@ -674,10 +672,10 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem dom.Element, vchildrens
 // type.
 //
 // There are only two types of nodes supported , TextNode and ElementNode.
-func isSameNodeType(elem dom.Element, vnode *vdom.Node, isHydrating bool) bool {
+func isSameNodeType(elem Element, vnode *vdom.Node, isHydrating bool) bool {
 	switch vnode.Type {
 	case vdom.TextNode:
-		return dom.Valid(elem.Get("splitText"))
+		return Valid(elem.Get("splitText"))
 	case vdom.ElementNode:
 		return isNamedNode(elem, vnode)
 	default:
@@ -687,9 +685,9 @@ func isSameNodeType(elem dom.Element, vnode *vdom.Node, isHydrating bool) bool {
 
 // isNamedNode compares elem to vnode to see if elem was created from the
 // virtual node of the same type as vnode..
-func isNamedNode(elem dom.Element, vnode *vdom.Node) bool {
+func isNamedNode(elem Element, vnode *vdom.Node) bool {
 	v := elem.Get("normalizedNodeName")
-	if dom.Valid(v) {
+	if Valid(v) {
 		name := v.String()
 		return name == vnode.Data
 	}

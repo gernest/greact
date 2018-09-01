@@ -10,7 +10,6 @@ import (
 	"github.com/gernest/vected/prop"
 	"github.com/gernest/vected/state"
 	"github.com/gernest/vected/vdom"
-	"github.com/gernest/vected/vdom/dom"
 )
 
 const (
@@ -147,7 +146,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 	var (
 		skip  bool
 		inst  Component
-		cbase dom.Element
+		cbase Element
 	)
 	if c, ok := cmp.(DerivedState); ok {
 		xstate = state.Merge(xstate, c.DeriveState(props, xstate))
@@ -182,7 +181,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 		}
 		childComponent := v.getComponent(rendered)
 		var toUnmount Component
-		var base dom.Element
+		var base Element
 		if v.isHigherOrder(rendered) {
 			childProps := getNodeProps(rendered)
 			inst = initialChildComponent
@@ -226,20 +225,20 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 				if cbase != nil {
 					cbase.Set(componentKey, 0)
 				}
-				var parent dom.Element
-				if dom.Valid(initialBase) {
+				var parent Element
+				if Valid(initialBase) {
 					parent = initialBase.Get("parentNode")
 				}
-				base = v.diff(context, cbase, rendered, parent, mountAll || !dom.Valid(isUpdate), true)
+				base = v.diff(context, cbase, rendered, parent, mountAll || !Valid(isUpdate), true)
 			}
 		}
-		if dom.Valid(initialBase) &&
-			!dom.IsEqual(base, initialBase) {
+		if Valid(initialBase) &&
+			!IsEqual(base, initialBase) {
 			// TODO: add inst!==initialChildComponent to the if condition
 			// Go doesnt support that operation on structs so I will need to use
 			// reflection for that or comeup with something else.
 			baseParent := initialBase.Get("parentNode")
-			if dom.Valid(baseParent) && !dom.IsEqual(base, baseParent) {
+			if Valid(baseParent) && !IsEqual(base, baseParent) {
 				baseParent.Call("replaceChild", base, initialBase)
 				if toUnmount == nil {
 					v.removeComponentRef(initialBase)
@@ -251,7 +250,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 			v.unmountComponent(toUnmount)
 		}
 		core.base = base
-		if dom.Valid(base) && !isChild {
+		if Valid(base) && !isChild {
 			componentRef := cmp
 			t := cmp
 			for {
@@ -265,7 +264,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 			v.addComponentRef(base, componentRef)
 		}
 	}
-	if !dom.Valid(isUpdate) || mountAll {
+	if !Valid(isUpdate) || mountAll {
 		//TODO mounts.unshift(component);
 	} else if !skip {
 		// Ensure that pending componentDidMount() hooks of child components
@@ -319,8 +318,8 @@ func sameConstructor(a, b Component) bool {
 //
 // To work around this, a simple reference counting is used to decide what
 // componen's to keep around long enough.
-func (v *Vected) findComponent(node dom.Element) Component {
-	if dom.Valid(node) {
+func (v *Vected) findComponent(node Element) Component {
+	if Valid(node) {
 		id := node.Get(componentKey)
 		if id.Type() == value.TypeNumber {
 			i := id.Int()
@@ -333,8 +332,8 @@ func (v *Vected) findComponent(node dom.Element) Component {
 }
 
 // removeComponentRef removes the reference to a component from the dom element.
-func (v *Vected) removeComponentRef(e dom.Element) {
-	if dom.Valid(e) {
+func (v *Vected) removeComponentRef(e Element) {
+	if Valid(e) {
 		id := e.Get(componentKey)
 		if id.Type() == value.TypeNumber {
 			i := id.Int()
@@ -344,8 +343,8 @@ func (v *Vected) removeComponentRef(e dom.Element) {
 	}
 }
 
-func (v *Vected) addComponentRef(e dom.Element, cmp Component) {
-	if dom.Valid(e) {
+func (v *Vected) addComponentRef(e Element, cmp Component) {
+	if Valid(e) {
 		e.Set(componentKey, cmp.core().id)
 		e.Set(componentConstructor, cmp.core().constructor)
 		v.refs[cmp.core().id]++
@@ -364,15 +363,15 @@ func (v *Vected) unmountComponent(cmp Component) {
 		v.unmountComponent(core.component)
 	} else if base != nil {
 		core.nextBase = base
-		dom.RemoveNode(base)
+		RemoveNode(base)
 		v.removeChildren(base)
 	}
 }
 
-func (v *Vected) removeChildren(node dom.Element) {
+func (v *Vected) removeChildren(node Element) {
 	node = node.Get("lastChild")
 	for {
-		if !dom.Valid(node) {
+		if !Valid(node) {
 			break
 		}
 		next := node.Get("previousSibling")

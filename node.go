@@ -51,7 +51,7 @@ type Node struct {
 	Children  []*Node
 }
 
-// New is a wrapper for creating new node
+// NewNode is a wrapper for creating new node
 func NewNode(typ NodeType, ns, name string, attrs []Attribute, children ...*Node) *Node {
 	return &Node{
 		Type:      typ,

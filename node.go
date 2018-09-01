@@ -44,9 +44,7 @@ type Attribute struct {
 }
 
 type Node struct {
-	Type NodeType
-	// string for html element or Component
-	NodeName  interface{}
+	Type      NodeType
 	Data      string
 	Namespace string
 	Attr      []Attribute

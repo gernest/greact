@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	vparser "github.com/gernest/vected/vdom/parser"
+	"github.com/gernest/vected"
 	"github.com/urfave/cli"
 )
 
@@ -62,7 +62,7 @@ func renderFile(ctx *cli.Context) error {
 }
 
 func processPackage(path string, pkg *ast.Package) error {
-	ctxs := make(map[string]vparser.Context)
+	ctxs := make(map[string]vected.Context)
 
 	// First we collect all structs that implements that emebds vected.Core. Then
 	// we check for the Template method which we then use to generate the render
@@ -82,7 +82,7 @@ func processPackage(path string, pkg *ast.Package) error {
 									if id, ok := x.X.(*ast.Ident); ok {
 										if f.Names == nil && id.Name == "vected" &&
 											x.Sel.Name == "Core" {
-											ctx := vparser.Context{
+											ctx := vected.Context{
 												StructName: vs.Name.Name,
 											}
 											ctxs[ctx.StructName] = ctx
@@ -120,7 +120,7 @@ func processPackage(path string, pkg *ast.Package) error {
 												v := strings.TrimPrefix(ret.Value, "`")
 												v = strings.TrimSuffix(v, "`")
 												fmt.Println(v)
-												n, err := vparser.ParseString(v)
+												n, err := vected.ParseString(v)
 												if err != nil {
 													return err
 												}
@@ -137,14 +137,14 @@ func processPackage(path string, pkg *ast.Package) error {
 			}
 		}
 	}
-	var c []vparser.Context
+	var c []vected.Context
 	for _, v := range ctxs {
 		c = append(c, v)
 	}
 	sort.Slice(c, func(i, j int) bool {
 		return c[i].StructName < c[j].StructName
 	})
-	v, err := vparser.GenerateRenderMethod(pkg.Name, c...)
+	v, err := vected.GenerateRenderMethod(pkg.Name, c...)
 	if err != nil {
 		return err
 	}

@@ -127,6 +127,14 @@ func GetBool(p Props, key interface{}) NullBool {
 	return NullBool{IsNull: true}
 }
 
+// Children returns child components stored in props.
+func (p Props) Children() []*Node {
+	if c, ok := p["children"]; ok {
+		return c.([]*Node)
+	}
+	return nil
+}
+
 // PropType defines supported prop kinds to offer basic type safety. Props are
 // passed on interface{} value which can be anything, this allows components to
 // state what kind of prop they expect.

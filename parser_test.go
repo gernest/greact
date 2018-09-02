@@ -88,3 +88,33 @@ func TestInterpret(t *testing.T) {
 		}
 	}
 }
+
+func TestInterpretText(t *testing.T) {
+	t.Run("must do nothing if there is no templates", func(ts *testing.T) {
+		n := "hello"
+		v := interpretText(n)
+		if v != n {
+			ts.Errorf("expected %s got %s", n, v)
+		}
+	})
+	t.Run("must transform templates", func(ts *testing.T) {
+		sample := []struct {
+			src, expect string
+		}{
+			{
+				src:    `hello, {props.String("name")}`,
+				expect: `fmt.Sprintf("%v%v","hello, ",props.String("name"))`,
+			},
+			{
+				src:    `{props.String("initialName")}/{s.State().String("name)}`,
+				expect: `fmt.Sprintf("%v%v%s%v","",props.String("initialName"),"/",s.State().String("name))`,
+			},
+		}
+		for _, v := range sample {
+			x := interpretText(v.src)
+			if x != v.expect {
+				t.Errorf("expected %s got %s", v.expect, x)
+			}
+		}
+	})
+}

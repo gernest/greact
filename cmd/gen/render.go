@@ -101,7 +101,6 @@ func processPackage(path string, pkg *ast.Package) error {
 			if fn, ok := v.(*ast.FuncDecl); ok {
 				if fn.Recv != nil && fn.Name.Name == "Template" &&
 					fn.Recv.NumFields() == 1 {
-					// pretty.Println(fn)
 					fd := fn.Recv.List[0]
 					recv := ""
 					if fd.Names != nil {

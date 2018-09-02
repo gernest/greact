@@ -127,12 +127,7 @@ func GetBool(p Props, key interface{}) NullBool {
 	return NullBool{IsNull: true}
 }
 
-// Eval tries to find the value v in p.
-func (p Props) Eval(v string) string {
-	return ""
-}
-
-// Type defines supported prop kinds to offer basic type safety. Props are
+// PropType defines supported prop kinds to offer basic type safety. Props are
 // passed on interface{} value which can be anything, this allows components to
 // state what kind of prop they expect.
 type PropType = reflect.Kind

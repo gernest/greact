@@ -81,7 +81,7 @@ type Templater interface {
 
 // Constructor is an interface for creating new component instance.
 type Constructor interface {
-	New() Component
+	New(Props) Component
 }
 
 // Core is th base struct that every struct that wants to implement Component

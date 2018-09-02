@@ -20,7 +20,7 @@ const (
 func (v *Vected) createComponent(ctx context.Context, cmp Component, props Props) Component {
 	var ncmp Component
 	if in, ok := cmp.(Constructor); ok {
-		ncmp = in.New()
+		ncmp = in.New(props)
 	} else {
 		// we use reflection to create a new component
 		v := reflect.ValueOf(cmp)

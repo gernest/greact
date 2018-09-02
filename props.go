@@ -76,7 +76,11 @@ func Verify(key string, typ PropType, props Props) error {
 }
 
 func (p Props) String(key string) string {
-	if v, ok := p[key]; ok {
+	return getString(p, key)
+}
+
+func getString(v map[string]interface{}, key string) string {
+	if v, ok := v[key]; ok {
 		return v.(string)
 	}
 	return ""

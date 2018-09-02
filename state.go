@@ -14,3 +14,7 @@ func MergeState(a, b State) State {
 	}
 	return m
 }
+
+func (s State) String(key string) string {
+	return getString(s, key)
+}

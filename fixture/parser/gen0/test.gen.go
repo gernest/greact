@@ -3,6 +3,7 @@ package test
 
 import (
 	"context"
+
 	"github.com/gernest/vected"
 )
 
@@ -17,24 +18,24 @@ func (t Hello) Render(ctx context.Context, props vected.Props, state vected.Stat
 		HA("", "key", "value")),
 		H(3, "", "ul", nil,
 			H(3, "", "li", nil,
-				H(1, "", "1", nil)),
+				H(1, "", 1, nil)),
 			H(3, "", "li", nil,
-				H(1, "", "2", nil)),
+				H(1, "", 2, nil)),
 			H(3, "", "li", nil,
-				H(1, "", "3", nil)),
+				H(1, "", 3, nil)),
 			H(3, "", "li", nil,
-				H(1, "", "4", nil)),
+				H(1, "", 4, nil)),
 			H(3, "", "li", nil,
-				H(1, "", "5", nil))),
+				H(1, "", 5, nil))),
 		H(3, "", "ol", nil,
 			H(3, "", "li", nil,
-				H(1, "", "1", nil)),
+				H(1, "", 1, nil)),
 			H(3, "", "li", nil,
-				H(1, "", "2", nil)),
+				H(1, "", 2, nil)),
 			H(3, "", "li", nil,
-				H(1, "", "3", nil)),
+				H(1, "", 3, nil)),
 			H(3, "", "li", nil,
-				H(1, "", "4", nil)),
+				H(1, "", 4, nil)),
 			H(3, "", "li", nil,
-				H(1, "", "5", nil))))
+				H(1, "", 5, nil))))
 }

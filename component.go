@@ -184,7 +184,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 				if inst != nil && sameConstructor(inst, childComponent) {
 					key := childProps.String("key")
 					ikey := inst.core().key
-					if !key.IsNull && ikey.IsNull && key.Value == ikey.Value {
+					if key != "" && ikey != "" && key == ikey {
 						return true
 					}
 				}

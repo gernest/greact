@@ -62,7 +62,7 @@ func TestGenerate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// ioutil.WriteFile("fixture/parser/gen0/test.gen.go", v, 0600)
+	ioutil.WriteFile("fixture/parser/gen0/test.gen.go", v, 0600)
 	s := string(v)
 	b, err := ioutil.ReadFile("fixture/parser/gen0/test.gen.go")
 	if err != nil {

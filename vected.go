@@ -124,7 +124,7 @@ type Core struct {
 
 	// Optional prop that must be unique among child components for efficient
 	// rendering of lists.
-	key NullString
+	key string
 
 	// This is a callback used to receive instance of Component or the Dom element.
 	// after they have been mounted.
@@ -591,12 +591,12 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem Element, vchildrens []*
 		for i := 0; i < length; i++ {
 			child := original.Index(i)
 			cmp := v.findComponent(child)
-			var key NullString
+			var key string
 			if cmp != nil {
 				key = cmp.core().key
 			}
-			if !key.IsNull {
-				keys[key.Value] = child
+			if key != "" {
+				keys[key] = child
 			} else {
 				var x bool
 				if cmp != nil || Valid(child.Get("splitText")) {

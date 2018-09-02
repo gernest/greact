@@ -19,6 +19,9 @@ import (
 // Clone traverse n and copies the tree to e.
 func Clone(n *html.Node, e *Node) {
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		if c.Type == html.TextNode && c.Data == "" {
+			continue
+		}
 		ch := &Node{
 			Type:      NodeType(uint32(c.Type)),
 			Data:      c.Data,

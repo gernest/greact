@@ -43,6 +43,7 @@ type Attribute struct {
 	Val            interface{}
 }
 
+// Node represents a virtual dom node.
 type Node struct {
 	Type      NodeType
 	Data      string

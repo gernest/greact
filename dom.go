@@ -4,8 +4,6 @@ import (
 	"strings"
 )
 
-var Document Value
-
 // Element is an alias for the dom node.
 type Element Value
 
@@ -15,11 +13,8 @@ func HasProperty(e Element, v string) bool {
 }
 
 // CreateNode creates a dom element.
-func CreateNode(name string) Element {
-	return createNode(Document, name)
-}
-func createNode(doc Value, name string) Element {
-	node := doc.Call("createElement", name)
+func (v *Vected) CreateNode(name string) Element {
+	node := v.Document.Call("createElement", name)
 	node.Set("normalizedNodeName", name)
 	return node
 }
@@ -27,8 +22,8 @@ func createNode(doc Value, name string) Element {
 const svg = "http://www.w3.org/2000/svg'"
 
 // CreateSVGNode creates svg dom element.
-func CreateSVGNode(doc Value, name string) Element {
-	node := doc.Call("createElementNS", svg, name)
+func (v *Vected) CreateSVGNode(doc Value, name string) Element {
+	node := v.Document.Call("createElementNS", svg, name)
 	node.Set("normalizedNodeName", name)
 	return node
 }

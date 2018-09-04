@@ -342,6 +342,10 @@ type Vected struct {
 	// (initialized field values etc) here, because they will be ignored.
 	components map[string]Component
 
+	// Is the browser's document object. New document elements will be created from
+	// this.
+	Document Element
+
 	// mounts is a list of components ready to be mounted.
 	mounts *list.List
 
@@ -473,7 +477,7 @@ func (v *Vected) idiff(ctx context.Context, elem Element, node *Node, mountAll, 
 			}
 
 		} else {
-			out = Document.Call("createTextNode", node.Data)
+			out = v.Document.Call("createTextNode", node.Data)
 			if Valid(elem) {
 				if Valid(elem.Get("parentNode")) {
 					elem.Get("parentNode").Call("replaceChild", out, elem)
@@ -496,7 +500,7 @@ func (v *Vected) idiff(ctx context.Context, elem Element, node *Node, mountAll, 
 		}
 		nodeName := node.Data
 		if !Valid(elem) || !isNamedNode(elem, node) {
-			out = CreateNode(nodeName)
+			out = v.CreateNode(nodeName)
 			if Valid(elem) {
 				if Valid(elem.Get("firstChild")) {
 					out.Call("appendChild", elem.Get("firstChild"))

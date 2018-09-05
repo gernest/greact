@@ -2,6 +2,7 @@ package vected
 
 import (
 	"context"
+	"fmt"
 	"testing"
 )
 
@@ -16,7 +17,9 @@ func (*A) Template() string {
 	return ``
 }
 func (a *A) Render(context.Context, Props, State) *Node {
-	return nil
+	return NewNode(ElementNode, "", "div", nil,
+		NewNode(TextNode, "", "Hello,World", nil),
+	)
 }
 
 func (a *A) ComponentDidMount() {
@@ -66,4 +69,30 @@ func TestVected_createComponent(t *testing.T) {
 			t.Errorf("expected %s got %s", constructor, core.constructor)
 		}
 	})
+}
+
+func TestVected_Render(t *testing.T) {
+	v := New()
+	v.Document = NewObject()
+	hello := NewNode(ElementNode, "", "div", nil,
+		NewNode(TextNode, "", "Hello,World", nil),
+	)
+	el := NewObject()
+	err := wrapPanic(func() {
+		v.Render(hello, el)
+	})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func wrapPanic(fn func()) (err error) {
+	defer func() {
+		v := recover()
+		if v != nil {
+			err = fmt.Errorf("%v", v)
+		}
+	}()
+	fn()
+	return
 }

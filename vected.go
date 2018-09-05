@@ -701,3 +701,20 @@ func (v *Vected) Render(vnode *Node, parent Element, merge ...Element) Element {
 	}
 	return v.diff(context.Background(), elem, vnode, parent, false, false)
 }
+
+// Register add cmp instance to a map of known higher order components There is
+// no other way the Vected instance can know about Higher orrder components.
+//
+// So, components must be registered before being used. For technical reason the
+// name is case insensitive, so you can register somecomponent and use
+// SomeComponent in your templates and it will work like a charm.
+//
+// The reason behind this because the x/html library used to parse the templates
+// resolves or element names to lowercase.
+func (v *Vected) Register(name string, cmp Component) {
+	name = strings.ToLower(name)
+	if v.components == nil {
+		v.components = make(map[string]Component)
+	}
+	v.components[name] = cmp
+}

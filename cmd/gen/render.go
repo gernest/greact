@@ -118,7 +118,6 @@ func processPackage(path string, pkg *ast.Package) error {
 											if ret, ok := rs.Results[0].(*ast.BasicLit); ok {
 												v := strings.TrimPrefix(ret.Value, "`")
 												v = strings.TrimSuffix(v, "`")
-												fmt.Println(v)
 												n, err := vected.ParseString(v)
 												if err != nil {
 													return err

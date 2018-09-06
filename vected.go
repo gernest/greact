@@ -515,7 +515,7 @@ func (v *Vected) idiff(ctx context.Context, elem Element, node *Node, mountAll, 
 		props := out.Get(AttrKey)
 		var old []Attribute
 		if !Valid(props) {
-			a := elem.Get("attributes")
+			a := out.Get("attributes")
 			for _, v := range Keys(a) {
 				old = append(old, Attribute{
 					Key: v,

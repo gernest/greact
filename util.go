@@ -156,12 +156,10 @@ func (o *Object) Call(k string, args ...interface{}) Value {
 		b.name = name
 		return b
 	case "createTextNode":
-		ns := args[0].(string)
-		text := args[1].(string)
+		text := args[0].(string)
 		b := NewObject()
 		b.text = true
 		b.nodeValue = text
-		b.namespace = ns
 		return b
 	case "replaceChild":
 		if len(args) == 2 {
@@ -213,6 +211,15 @@ func (o *Object) Call(k string, args ...interface{}) Value {
 			}
 			return o.insertBefore(a, b)
 		}
+	case "isEqualNode":
+		if len(args) == 1 {
+			a, ok := args[0].(*Object)
+			if !ok {
+				return undefined()
+			}
+			return &Object{typ: TypeBoolean, value: o.id == a.id}
+		}
+		return &Object{typ: TypeBoolean, value: false}
 	}
 	return undefined()
 }
@@ -254,7 +261,9 @@ func null() *Object {
 
 func (o *Object) Index(n int) Value {
 	if v, ok := o.value.([]Value); ok {
-		return v[n]
+		if n < len(v) {
+			return v[n]
+		}
 	}
 	return &Object{typ: TypeUndefined}
 }

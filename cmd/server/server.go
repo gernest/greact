@@ -31,7 +31,9 @@ func serve(ctx *cli.Context) error {
 	out := filepath.Join(a, "main.wasm")
 	cmd := exec.Command("go", "build", "-o", out, a)
 	gopath := os.Getenv("GOPATH")
+	cache := os.Getenv("GOCACHE")
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOPATH=%s", gopath))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("GOCACHE=%s", cache))
 	cmd.Env = append(cmd.Env, "GOARCH=wasm")
 	cmd.Env = append(cmd.Env, "GOOS=js")
 	cmd.Stdout = os.Stdout

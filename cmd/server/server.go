@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -51,7 +52,12 @@ func serve(ctx *cli.Context) error {
 		case "/main.wasm":
 			http.ServeFile(w, r, filepath.Join(a, "main.wasm"))
 		default:
-			http.Error(w, r.URL.Path, http.StatusNotFound)
+			v, err := httputil.DumpRequest(r, true)
+			if err != nil {
+				fmt.Printf("error: %v\n", err)
+			} else {
+				fmt.Println(string(v))
+			}
 		}
 	})
 	msg := fmt.Sprint("serving main.wasm from http://localhost:8099")

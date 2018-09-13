@@ -16,28 +16,28 @@ import (
 	"golang.org/x/net/html/atom"
 )
 
-// Clone traverse n and copies the tree to e.
-func Clone(n *html.Node, e *Node) {
+// ToNode recursively transform n to a *Node.
+func ToNode(n *html.Node) *Node {
+	node := &Node{
+		Type:      NodeType(uint32(n.Type)),
+		Data:      n.Data,
+		Namespace: n.Namespace,
+		Attr:      make([]Attribute, len(n.Attr)),
+	}
+	for _, v := range node.Attr {
+		node.Attr = append(node.Attr, Attribute{
+			Namespace: v.Namespace,
+			Key:       v.Key,
+			Val:       v.Val,
+		})
+	}
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		if c.Type == html.TextNode && c.Data == "" {
+		if c.Type == html.TextNode && strings.TrimSpace(c.Data) == "" {
 			continue
 		}
-		ch := &Node{
-			Type:      NodeType(uint32(c.Type)),
-			Data:      c.Data,
-			Namespace: c.Namespace,
-			Attr:      make([]Attribute, len(c.Attr)),
-		}
-		for _, v := range c.Attr {
-			ch.Attr = append(ch.Attr, Attribute{
-				Namespace: v.Namespace,
-				Key:       v.Key,
-				Val:       v.Val,
-			})
-		}
-		e.Children = append(e.Children, ch)
-		Clone(c, ch)
+		node.Children = append(node.Children, ToNode(c))
 	}
+	return node
 }
 
 // Clear removes nodes injected by the parser.
@@ -126,20 +126,29 @@ func GenerateRenderMethod(pkg string, ctx ...Context) ([]byte, error) {
 }
 
 // Parse parses src
-func Parse(r io.Reader) (*Node, error) {
-	doc, err := html.Parse(r)
+func Parse(r io.Reader) ([]*Node, error) {
+	base := root()
+	n, err := html.ParseFragment(r, base)
 	if err != nil {
 		return nil, err
 	}
-	o := &Node{
-		Data: doc.Data,
+	var rst []*Node
+	for _, v := range n {
+		rst = append(rst, ToNode(v))
 	}
-	Clone(doc, o)
-	return Clear(o), nil
+	return rst, nil
+}
+
+func root() *html.Node {
+	return &html.Node{
+		DataAtom: atom.Div,
+		Type:     html.ElementNode,
+		Data:     "div",
+	}
 }
 
 // ParseString helper that wraps s to io.Reader.
-func ParseString(s string) (*Node, error) {
+func ParseString(s string) ([]*Node, error) {
 	return Parse(strings.NewReader(s))
 }
 

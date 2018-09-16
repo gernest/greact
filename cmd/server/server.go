@@ -57,6 +57,7 @@ func serve(ctx *cli.Context) error {
 				fmt.Printf("error: %v\n", err)
 			} else {
 				fmt.Println(string(v))
+				w.Write(v)
 			}
 		}
 	})

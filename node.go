@@ -1,11 +1,5 @@
 package vected
 
-const (
-	// ContainerNode this is tha name of a node which acts as a container to a
-	// slice of other nodes.
-	ContainerNode = "__internal_container___"
-)
-
 // A NodeType is the type of a Node.
 type NodeType uint32
 

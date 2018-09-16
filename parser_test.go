@@ -27,8 +27,11 @@ func TestClear(t *testing.T) {
 		if err != nil {
 			ts.Fatal(err)
 		}
-		if n.Data != ContainerNode {
-			t.Errorf("expected %s got %s", ContainerNode, n.Data)
+		if n.Data != "div" {
+			t.Errorf("expected div got %s", n.Data)
+		}
+		if len(n.Children) != 2 {
+			t.Errorf("expected 2 children got %d", len(n.Children))
 		}
 	})
 }
@@ -118,3 +121,27 @@ func TestInterpretText(t *testing.T) {
 		}
 	})
 }
+
+// func TestFrags(t *testing.T) {
+// 	sample := `<div className={props["classNames"]} key=value>
+// 	<ul>
+// 		<li>1</li>
+// 		<li>2</li>
+// 		<li>3</li>
+// 		<li>4</li>
+// 		<li>5</li>
+// 	</ul>
+// 	<ol>
+// 		<li>1</li>
+// 		<li>2</li>
+// 		<li>3</li>
+// 		<li>4</li>
+// 		<li>5</li>
+// 	</ol>
+// </div>`
+// 	n, err := ParseString(sample)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	t.Error(pretty.Sprint(n.Attr))
+// }

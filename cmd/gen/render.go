@@ -122,10 +122,7 @@ func processPackage(path string, pkg *ast.Package) error {
 												if err != nil {
 													return err
 												}
-												//TODO:
-												// fix this , use ast instead
-												ctx.Node = n[0]
-
+												ctx.Node = n
 												ctxs[ctx.StructName] = ctx
 											}
 										}

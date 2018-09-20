@@ -29,7 +29,7 @@ func Wrap(args ...ast.Expr) ast.Expr {
 				Name: "fmt",
 			},
 			Sel: &ast.Ident{
-				Name: "Println",
+				Name: "Print",
 			},
 		},
 		Args: args,

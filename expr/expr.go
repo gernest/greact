@@ -50,6 +50,11 @@ type Expression struct {
 	Plain bool
 }
 
+// Expr returns ast of the Text field.
+func (e Expression) Expr() (ast.Expr, error) {
+	return parser.ParseExpr(e.Text)
+}
+
 // ExtractExpressions given a src string. This will find text that is within
 // begin and end marker returning it as Expression.
 //

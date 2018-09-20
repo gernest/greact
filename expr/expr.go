@@ -22,6 +22,7 @@ func Parse(src string) (ast.Expr, error) {
 	return a, nil
 }
 
+// Wrap returns ast for fmt.Println(args...)
 func Wrap(args ...ast.Expr) ast.Expr {
 	return &ast.CallExpr{
 		Fun: &ast.SelectorExpr{

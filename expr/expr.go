@@ -16,13 +16,13 @@ func Parse(src string) (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	a = wrap(a)
+	a = Wrap(a)
 	fset := token.NewFileSet()
 	ast.Print(fset, a)
 	return a, nil
 }
 
-func wrap(args ...ast.Expr) ast.Expr {
+func Wrap(args ...ast.Expr) ast.Expr {
 	return &ast.CallExpr{
 		Fun: &ast.SelectorExpr{
 			X: &ast.Ident{
@@ -53,6 +53,10 @@ type Expression struct {
 // Expr returns ast of the Text field.
 func (e Expression) Expr() (ast.Expr, error) {
 	return parser.ParseExpr(e.Text)
+}
+
+func (e Expression) QuoteExpr() (ast.Expr, error) {
+	return parser.ParseExpr(fmt.Sprintf("%q", e.Text))
 }
 
 // ExtractExpressions given a src string. This will find text that is within

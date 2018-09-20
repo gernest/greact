@@ -1,7 +1,7 @@
 package vected
 
 import (
-	"io/ioutil"
+	"fmt"
 	"testing"
 )
 
@@ -53,28 +53,11 @@ func TestGenerate(t *testing.T) {
 			<li>5</li>
 		</ol>
 	</div>`
-	n, err := ParseString(sample)
+	_, err := ParseString(sample)
 	if err != nil {
 		t.Fatal(err)
 	}
-	v, err := GenerateRenderMethod("test", Context{
-		Recv:       "t",
-		StructName: "Hello",
-		Node:       n,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	// ioutil.WriteFile("fixture/parser/gen0/test.gen.go", v, 0600)
-	s := string(v)
-	b, err := ioutil.ReadFile("fixture/parser/gen0/test.gen.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-	expected1 := string(b)
-	if s != expected1 {
-		t.Errorf("got wrong generated output")
-	}
+
 }
 
 func TestInterpret(t *testing.T) {
@@ -85,7 +68,10 @@ func TestInterpret(t *testing.T) {
 		{"{props.class}", "props.class"},
 	}
 	for _, v := range sample {
-		got := interpret(v.expr)
+		got, err := interpret(v.expr)
+		if err != nil {
+			t.Fatal(err)
+		}
 		if got != v.expect {
 			t.Errorf("expected %s got %s", v.expect, got)
 		}
@@ -95,9 +81,13 @@ func TestInterpret(t *testing.T) {
 func TestInterpretText(t *testing.T) {
 	t.Run("must do nothing if there is no templates", func(ts *testing.T) {
 		n := "hello"
-		v := interpretText(n)
-		if v != n {
-			ts.Errorf("expected %s got %s", n, v)
+		v, err := interpretText(n)
+		if err != nil {
+			ts.Fatal(err)
+		}
+		expect := `fmt.Println("hello")`
+		if v != expect {
+			ts.Errorf("expected %s got %s", expect, v)
 		}
 	})
 	t.Run("must transform templates", func(ts *testing.T) {
@@ -106,20 +96,25 @@ func TestInterpretText(t *testing.T) {
 		}{
 			{
 				src:    `hello, {props.String("name")}`,
-				expect: `fmt.Sprintf("%v%v","hello, ",props.String("name"))`,
+				expect: `fmt.Println("hello,", props.String("name"))`,
 			},
 			{
-				src:    `{props.String("initialName")}/{s.State().String("name)}`,
-				expect: `fmt.Sprintf("%v%v%s%v","",props.String("initialName"),"/",s.State().String("name))`,
+				src:    `{props.String("initialName")}/{s.State().String("name")}`,
+				expect: `fmt.Println(props.String("initialName"), "/", s.State().String("name"))`,
 			},
 		}
 		for _, v := range sample {
-			x := interpretText(v.src)
+			x, err := interpretText(v.src)
+			if err != nil {
+				ts.Fatal(err)
+			}
 			if x != v.expect {
 				t.Errorf("expected %s got %s", v.expect, x)
 			}
 		}
 	})
+	fmt.Println(1, 2, 3)
+	t.Error("yay")
 }
 
 // func TestFrags(t *testing.T) {

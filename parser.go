@@ -4,14 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
-	"go/format"
-	"go/parser"
 	"go/printer"
 	"go/token"
 	"io"
 	"strings"
-	"text/template"
 
+	"github.com/gernest/vected/expr"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -67,44 +65,6 @@ func ({{.Recv}} {{.StructName}})Render(ctx context.Context, props vected.Props, 
 
 `
 
-type Context struct {
-	Recv       string
-	StructName string
-	Node       *Node
-}
-
-// GenerateRenderMethod using the given context, this returns a new go file with
-// the Render method attached to the struct defined in ctx.
-func GenerateRenderMethod(pkg string, ctx ...Context) ([]byte, error) {
-	tpl, err := template.New("n").Funcs(template.FuncMap{
-		"text": func(n *Node) string {
-			return printNode(n, 0)
-		},
-	}).Parse(fnTpl)
-	if err != nil {
-		return nil, err
-	}
-	var buf bytes.Buffer
-	buf.Reset()
-	var hasFmt bool
-	for k := range ctx {
-		if strings.Contains(printNode(ctx[k].Node, 0), "fmt.Sprintf") {
-			hasFmt = true
-			break
-		}
-	}
-	err = tpl.Execute(&buf, map[string]interface{}{
-		"pkg":    pkg,
-		"ctx":    ctx,
-		"hasFmt": hasFmt,
-	})
-	if err != nil {
-		return nil, err
-	}
-	// ioutil.WriteFile("test/test.gen.go", buf.Bytes(), 0600)
-	return format.Source(buf.Bytes())
-}
-
 // Parse parses src
 func Parse(r io.Reader) (*Node, error) {
 	base := root()
@@ -148,119 +108,76 @@ func ParseString(s string) (*Node, error) {
 	return Parse(strings.NewReader(s))
 }
 
-func parseExpression(x string) (ast.Expr, error) {
-	return parser.ParseExpr(x)
-}
+// process templates in text nodes
+func interpretText(v string) (string, error) {
+	parts, err := expr.ExtractExpressions(v, '{', '}')
+	if err != nil {
+		return "", err
+	}
 
-func printAttr(a Attribute) string {
-	return fmt.Sprintf("HA(%q,%q,%v)", a.Namespace, a.Key, interpret(a.Val))
-}
-
-func interpretText(v string) string {
-	x := strings.Index(v, "{")
-	if x != -1 {
-		p := strings.Split(v, "{")
-		s := ""
-		var args []string
-		for _, i := range p {
-			s += "%v"
-			ei := strings.Index(i, "}")
-			if ei != -1 {
-				if ei < len(i)-1 {
-					args = append(args, i[:ei])
-					s += "%s"
-					args = append(args, fmt.Sprintf("%q", i[ei+1:]))
-					continue
-				}
-				i = i[:ei]
-			} else {
-				i = fmt.Sprintf("%q", i)
+	// for text all plain nodes are strings
+	var args []ast.Expr
+	for _, v := range parts {
+		if v.Plain {
+			a, err := v.QuoteExpr()
+			if err != nil {
+				return "", err
 			}
-			args = append(args, i)
-		}
-		return fmt.Sprintf("fmt.Sprintf(%q,%s)", s, strings.Join(args, ","))
-	}
-	return v
-}
-func printNode(n *Node, level int) string {
-	var v string
-	if n.Type == TextNode {
-		x := interpretText(n.Data)
-		v = indent((fmt.Sprintf("H(%d,%q,%s",
-			n.Type, n.Namespace, x)), level)
-	} else {
-		v = indent((fmt.Sprintf("H(%d,%q,%q",
-			n.Type, n.Namespace, n.Data)), level)
-	}
-	if len(n.Attr) > 0 {
-		v += indent(",HAT(", level+2)
-		for _, attr := range n.Attr {
-			if attr.Key == "" {
-				continue
+			args = append(args, a)
+		} else {
+			a, err := v.Expr()
+			if err != nil {
+				return "", err
 			}
-			v += "\n"
-			v += indent(printAttr(attr), level+4)
-			v += ","
+			args = append(args, a)
 		}
-		v += indent(")", level+2)
-	} else {
-		v += ",nil"
 	}
-	if len(n.Children) > 0 {
-		v += ","
-		for _, ch := range n.Children {
-			switch ch.Type {
-			case TextNode:
-				x := strings.TrimSpace(ch.Data)
-				if x == "" {
-					continue
-				}
-			case CommentNode:
-				continue
-			}
-			v += "\n"
-			v += printNode(ch, level+4)
-			v += ","
-		}
-
-	}
-	v += indent(")", level)
-	return v
+	e := expr.Wrap(args...)
+	var buf bytes.Buffer
+	printer.Fprint(&buf, token.NewFileSet(), e)
+	return buf.String(), nil
 }
 
-func interpret(v interface{}) string {
+// interpret   attributes templates.
+func interpret(v interface{}) (string, error) {
 	switch e := v.(type) {
 	case nil:
-		return "nil"
+		return "nil", nil
 	case string:
 		e = strings.TrimSpace(e)
 		if strings.HasPrefix(e, "{") {
-			// We remove prefix { and suffix }, pick what is left and evaluate if it is a
-			// valid go expression.
-			//
-			// TODO handle errors when given wrong expressions.
-			x := strings.TrimPrefix(e, "{")
-			x = strings.TrimSuffix(x, "}")
-			x = strings.TrimSpace(x)
-			v, err := parser.ParseExpr(x)
+			parts, err := expr.ExtractExpressions(e, '{', '}')
 			if err != nil {
-				return "nil"
+				return "", err
+			}
+			var args []ast.Expr
+			for _, v := range parts {
+				if v.Plain && strings.Contains(v.Text, "\"") {
+					a, err := v.QuoteExpr()
+					if err != nil {
+						return "", err
+					}
+					args = append(args, a)
+				} else {
+					a, err := v.Expr()
+					if err != nil {
+						return "", err
+					}
+					args = append(args, a)
+				}
+			}
+			var e ast.Expr
+			if len(args) == 1 {
+				e = args[0]
+			} else {
+				e = expr.Wrap(args...)
 			}
 			var buf bytes.Buffer
-			fset := token.NewFileSet()
-			printer.Fprint(&buf, fset, v)
-			return buf.String()
+			printer.Fprint(&buf, token.NewFileSet(), e)
+			return buf.String(), nil
 		}
-		return fmt.Sprintf("%q", e)
+		return fmt.Sprintf("%q", e), nil
 	default:
-		return "nil"
+		return "nil", nil
 	}
-}
-
-func indent(v string, n int) string {
-	s := " "
-	for i := 0; i < n; i++ {
-		s += " "
-	}
-	return s + v
 }

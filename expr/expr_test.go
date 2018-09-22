@@ -5,22 +5,6 @@ import (
 	"testing"
 )
 
-func TestExpression(t *testing.T) {
-	sample := []struct {
-		src string
-	}{
-		{src: `func(){}`},
-	}
-	for _, v := range sample {
-		e, err := Parse(v.src)
-		if err != nil {
-			t.Error(err)
-		}
-		printExpr(e)
-	}
-	t.Error("yay")
-}
-
 func TestExtractExpression(t *testing.T) {
 	sample := []struct {
 		src    string

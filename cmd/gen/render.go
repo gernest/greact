@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -62,7 +63,7 @@ func renderFile(ctx *cli.Context) error {
 }
 
 func processPackage(path string, pkg *ast.Package) error {
-	ctxs := make(map[string]vected.Context)
+	ctxs := make(map[string]vected.GeneratorContext)
 
 	// First we collect all structs that implements that emebds vected.Core. Then
 	// we check for the Template method which we then use to generate the render
@@ -82,7 +83,7 @@ func processPackage(path string, pkg *ast.Package) error {
 									if id, ok := x.X.(*ast.Ident); ok {
 										if f.Names == nil && id.Name == "vected" &&
 											x.Sel.Name == "Core" {
-											ctx := vected.Context{
+											ctx := vected.GeneratorContext{
 												StructName: vs.Name.Name,
 											}
 											ctxs[ctx.StructName] = ctx
@@ -106,6 +107,7 @@ func processPackage(path string, pkg *ast.Package) error {
 					if fd.Names != nil {
 						recv = fd.Names[0].Name
 					}
+
 					if typ, ok := fd.Type.(*ast.Ident); ok {
 						if ctx, ok := ctxs[typ.Name]; ok {
 							ctx.Recv = recv
@@ -135,17 +137,18 @@ func processPackage(path string, pkg *ast.Package) error {
 			}
 		}
 	}
-	var c []vected.Context
+	var c []vected.GeneratorContext
 	for _, v := range ctxs {
 		c = append(c, v)
 	}
 	sort.Slice(c, func(i, j int) bool {
 		return c[i].StructName < c[j].StructName
 	})
-	v, err := vected.GenerateRenderMethod(pkg.Name, c...)
+	var buf bytes.Buffer
+	err := vected.Generate(&buf, pkg.Name, c...)
 	if err != nil {
 		return err
 	}
-	n := filepath.Join(path, fmt.Sprintf("%s_render_gen.go", pkg.Name))
-	return ioutil.WriteFile(n, v, 0600)
+	n := filepath.Join(path, fmt.Sprintf("%s_vected_render_gen.go", pkg.Name))
+	return ioutil.WriteFile(n, buf.Bytes(), 0600)
 }

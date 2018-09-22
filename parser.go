@@ -160,8 +160,8 @@ func interpret(v interface{}) (string, error) {
 }
 
 type GeneratorContext struct {
-	StructType string
-	Receiver   string
+	StructName string
+	Recv       string
 	Node       *Node
 }
 
@@ -188,7 +188,7 @@ func Generate(w io.Writer, pkg string, ctx ...GeneratorContext) error {
 		},
 	}
 	for _, v := range ctx {
-		e, err := render("Render", v.Receiver, v.StructType, v.Node)
+		e, err := render("Render", v.Recv, v.StructName, v.Node)
 		if err != nil {
 			return err
 		}

@@ -16,6 +16,12 @@ import (
 	"golang.org/x/net/html/atom"
 )
 
+const (
+	newNode  = "vH"
+	newAttr  = "vHA"
+	newAttrs = "vHAT"
+)
+
 // ToNode recursively transform n to a *Node.
 func ToNode(n *html.Node) *Node {
 	node := &Node{
@@ -182,9 +188,9 @@ func Generate(w io.Writer, pkg string, ctx ...GeneratorContext) error {
 			importDecl(
 				importSpec("github.com/gernest/vected"),
 			),
-			declareAlias("H", "vected", "NewNode"),
-			declareAlias("HA", "vected", "Attr"),
-			declareAlias("HAT", "vected", "Attrs"),
+			declareAlias(newNode, "vected", "NewNode"),
+			declareAlias(newAttr, "vected", "Attr"),
+			declareAlias(newAttrs, "vected", "Attrs"),
 		},
 	}
 	for _, v := range ctx {
@@ -347,7 +353,7 @@ func render(name, recv, typ string, node *Node) (*ast.FuncDecl, error) {
 func ha(ns, key string, val ast.Expr) *ast.CallExpr {
 	return &ast.CallExpr{
 		Fun: &ast.Ident{
-			Name: "HA",
+			Name: newAttr,
 		},
 		Args: []ast.Expr{
 			&ast.BasicLit{
@@ -371,7 +377,7 @@ func hat(expr ...ast.Expr) ast.Expr {
 	}
 	return &ast.CallExpr{
 		Fun: &ast.Ident{
-			Name: "HAT",
+			Name: newAttrs,
 		},
 		Args: expr,
 	}
@@ -418,7 +424,7 @@ func h(node *Node) (*ast.CallExpr, error) {
 	}
 	return &ast.CallExpr{
 		Fun: &ast.Ident{
-			Name: "H",
+			Name: newNode,
 		},
 		Args: args,
 	}, nil

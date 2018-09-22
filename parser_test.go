@@ -1,7 +1,9 @@
 package vected
 
 import (
+	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -34,30 +36,6 @@ func TestClear(t *testing.T) {
 			t.Errorf("expected 2 children got %d", len(n.Children))
 		}
 	})
-}
-
-func TestGenerate(t *testing.T) {
-	sample := `<div className={props["classNames"]} key=value>
-		<ul>
-			<li>1</li>
-			<li>2</li>
-			<li>3</li>
-			<li>4</li>
-			<li>5</li>
-		</ul>
-		<ol>
-			<li>1</li>
-			<li>2</li>
-			<li>3</li>
-			<li>4</li>
-			<li>5</li>
-		</ol>
-	</div>`
-	_, err := ParseString(sample)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 }
 
 func TestInterpret(t *testing.T) {
@@ -117,26 +95,60 @@ func TestInterpretText(t *testing.T) {
 	t.Error("yay")
 }
 
-// func TestFrags(t *testing.T) {
-// 	sample := `<div className={props["classNames"]} key=value>
-// 	<ul>
-// 		<li>1</li>
-// 		<li>2</li>
-// 		<li>3</li>
-// 		<li>4</li>
-// 		<li>5</li>
-// 	</ul>
-// 	<ol>
-// 		<li>1</li>
-// 		<li>2</li>
-// 		<li>3</li>
-// 		<li>4</li>
-// 		<li>5</li>
-// 	</ol>
-// </div>`
-// 	n, err := ParseString(sample)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	t.Error(pretty.Sprint(n.Attr))
-// }
+func TestSomeShit(t *testing.T) {
+
+	genSample := `<div className={props["classNames"]} key=value>
+	<ul>
+		<li>1</li>
+		<li>2</li>
+		<li>3</li>
+		<li>4</li>
+		<li>5</li>
+	</ul>
+	<ol>
+		<li>1</li>
+		<li>2</li>
+		<li>3</li>
+		<li>4</li>
+		<li>5</li>
+	</ol>
+</div>`
+	expect := `package hello
+
+import "context"
+import "fmt"
+import "github.com/gernest/vected"
+
+var H = vected.NewNode
+var HA = vected.Attr
+var HAT = vected.Attrs
+
+func (t *Hello) Render(ctx context.Context, props vected.Props, state vected.State) *vected.Node {
+	return H(3, "", "div", HAT(HA("", "classname", props["classNames"]), HA("", "key", "value")), H(3, "", "ul", nil, H(3, "", "li", nil, H(1, "", "1", nil)), H(3, "", "li", nil, H(1, "", "2", nil)), H(3, "", "li", nil, H(1, "", "3", nil)), H(3, "", "li", nil, H(1, "", "4", nil)), H(3, "", "li", nil, H(1, "", "5", nil))), H(3, "", "ol", nil, H(3, "", "li", nil, H(1, "", "1", nil)), H(3, "", "li", nil, H(1, "", "2", nil)), H(3, "", "li", nil, H(1, "", "3", nil)), H(3, "", "li", nil, H(1, "", "4", nil)), H(3, "", "li", nil, H(1, "", "5", nil))))
+}
+`
+	n, err := ParseString(genSample)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := GeneratorContext{
+		StructType: "Hello",
+		Receiver:   "t",
+		Node:       n,
+	}
+
+	var out bytes.Buffer
+	err = Generate(&out, "hello", ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := out.String()
+	expect = strings.TrimSpace(expect)
+	got = strings.TrimSpace(got)
+	if got != expect {
+		t.Error("got wrong output")
+	}
+	// ioutil.WriteFile("./tmp/hello/hello_render_gen.go", out.Bytes(), 0600)
+	// printer.Fprint(os.Stdout, token.NewFileSet(), file)
+}

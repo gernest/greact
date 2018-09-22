@@ -393,10 +393,22 @@ func h(node *Node) (*ast.CallExpr, error) {
 			Kind:  token.STRING,
 			Value: fmt.Sprintf("%q", node.Namespace),
 		},
-		&ast.BasicLit{
+	}
+	if node.Type == TextNode {
+		e, err := interpretText(node.Data)
+		if err != nil {
+			return nil, err
+		}
+		x, err := parser.ParseExpr(e)
+		if err != nil {
+			return nil, err
+		}
+		args = append(args, x)
+	} else {
+		args = append(args, &ast.BasicLit{
 			Kind:  token.STRING,
 			Value: fmt.Sprintf("%q", node.Data),
-		},
+		})
 	}
 	var attrs []ast.Expr
 	for _, v := range node.Attr {

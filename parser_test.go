@@ -2,8 +2,6 @@ package vected
 
 import (
 	"bytes"
-	"fmt"
-	"strings"
 	"testing"
 )
 
@@ -63,7 +61,7 @@ func TestInterpretText(t *testing.T) {
 		if err != nil {
 			ts.Fatal(err)
 		}
-		expect := `fmt.Println("hello")`
+		expect := `fmt.Sprint("hello")`
 		if v != expect {
 			ts.Errorf("expected %s got %s", expect, v)
 		}
@@ -74,11 +72,11 @@ func TestInterpretText(t *testing.T) {
 		}{
 			{
 				src:    `hello, {props.String("name")}`,
-				expect: `fmt.Println("hello,", props.String("name"))`,
+				expect: `fmt.Sprint("hello,", props.String("name"))`,
 			},
 			{
 				src:    `{props.String("initialName")}/{s.State().String("name")}`,
-				expect: `fmt.Println(props.String("initialName"), "/", s.State().String("name"))`,
+				expect: `fmt.Sprint(props.String("initialName"), "/", s.State().String("name"))`,
 			},
 		}
 		for _, v := range sample {
@@ -91,11 +89,9 @@ func TestInterpretText(t *testing.T) {
 			}
 		}
 	})
-	fmt.Println(1, 2, 3)
-	t.Error("yay")
 }
 
-func TestSomeShit(t *testing.T) {
+func TestGenerate(t *testing.T) {
 
 	genSample := `<div className={props["classNames"]} key=value>
 	<ul>
@@ -113,28 +109,14 @@ func TestSomeShit(t *testing.T) {
 		<li>5</li>
 	</ol>
 </div>`
-	expect := `package hello
-
-import "context"
-import "fmt"
-import "github.com/gernest/vected"
-
-var H = vected.NewNode
-var HA = vected.Attr
-var HAT = vected.Attrs
-
-func (t *Hello) Render(ctx context.Context, props vected.Props, state vected.State) *vected.Node {
-	return H(3, "", "div", HAT(HA("", "classname", props["classNames"]), HA("", "key", "value")), H(3, "", "ul", nil, H(3, "", "li", nil, H(1, "", "1", nil)), H(3, "", "li", nil, H(1, "", "2", nil)), H(3, "", "li", nil, H(1, "", "3", nil)), H(3, "", "li", nil, H(1, "", "4", nil)), H(3, "", "li", nil, H(1, "", "5", nil))), H(3, "", "ol", nil, H(3, "", "li", nil, H(1, "", "1", nil)), H(3, "", "li", nil, H(1, "", "2", nil)), H(3, "", "li", nil, H(1, "", "3", nil)), H(3, "", "li", nil, H(1, "", "4", nil)), H(3, "", "li", nil, H(1, "", "5", nil))))
-}
-`
 	n, err := ParseString(genSample)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	ctx := GeneratorContext{
-		StructType: "Hello",
-		Receiver:   "t",
+		StructName: "Hello",
+		Recv:       "t",
 		Node:       n,
 	}
 
@@ -143,12 +125,4 @@ func (t *Hello) Render(ctx context.Context, props vected.Props, state vected.Sta
 	if err != nil {
 		t.Fatal(err)
 	}
-	got := out.String()
-	expect = strings.TrimSpace(expect)
-	got = strings.TrimSpace(got)
-	if got != expect {
-		t.Error("got wrong output")
-	}
-	// ioutil.WriteFile("./tmp/hello/hello_render_gen.go", out.Bytes(), 0600)
-	// printer.Fprint(os.Stdout, token.NewFileSet(), file)
 }

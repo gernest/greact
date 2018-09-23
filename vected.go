@@ -9,6 +9,8 @@ package vected
 import (
 	"container/list"
 	"context"
+	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -820,6 +822,8 @@ func (v *Vected) CreateSVGNode(doc Value, name string) Element {
 	return node
 }
 
+var xlink = regexp.MustCompile(`^xlink:?`)
+
 // SetAccessor Set a named attribute on the given Node, with special behavior
 // for some names and event handlers. If `value` is `null`, the
 // attribute/handler will be removed.
@@ -910,8 +914,41 @@ func SetAccessor(gen CallbackGenerator, node Element, name string, old, val inte
 				node.Call("removeAttribute", name)
 			}
 		default:
-			//TODO handle namespace
+			ns := isSVG && (name != xlink.ReplaceAllString(name, ""))
+			isFalse := func() bool {
+				if v, ok := val.(bool); ok {
+					return !v
+				}
+				return false
+			}
+			if val == nil || isFalse() {
+				if ns {
+					name := strings.ToLower(xlink.ReplaceAllString(name, ""))
+					node.Call("removeAttributeNS", "http://www.w3.org/1999/xlink", name)
+				} else {
+					node.Call("removeAttribute", name)
+				}
+			} else {
+				e := reflect.ValueOf(val)
+				if validSVGValue(e.Kind()) {
+					if ns {
+						name := strings.ToLower(xlink.ReplaceAllString(name, ""))
+						node.Call("setAttributeNS", "http://www.w3.org/1999/xlink", name, val)
+					} else {
+						node.Call("setAttribute", name, val)
+					}
+				}
+			}
 		}
+	}
+}
+
+func validSVGValue(v reflect.Kind) bool {
+	switch v {
+	case reflect.Int, reflect.Float64, reflect.String:
+		return true
+	default:
+		return false
 	}
 }
 

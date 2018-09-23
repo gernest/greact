@@ -5,10 +5,6 @@ import (
 	"fmt"
 )
 
-type CallbackHandle func([]Value)
-
-func (CallbackHandle) Release() {}
-
 type Object struct {
 	id        int
 	name      string

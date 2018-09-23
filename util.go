@@ -140,9 +140,15 @@ func (o *object) Get(k string) Value {
 }
 
 func (o *object) Call(k string, args ...interface{}) Value {
-	o.journal = append(o.journal, []interface{}{
-		"call", k, args,
-	})
+	v := []interface{}{"call", k}
+	for _, k := range args {
+		if o, ok := k.(*object); ok {
+			v = append(v, o.Steps())
+		} else {
+			v = append(v, k)
+		}
+	}
+	o.journal = append(o.journal, v)
 	switch k {
 	case "hasOwnProperty":
 		if len(args) > 0 {
@@ -235,13 +241,14 @@ func (o *object) Call(k string, args ...interface{}) Value {
 	return undefined()
 }
 
-func (o *object) Steps() string {
+func (o object) Steps() string {
 	var buf bytes.Buffer
 	for _, v := range o.journal {
-		fmt.Fprintf(&buf, "%s : %v\n", v[0], v[1:])
+		fmt.Fprintf(&buf, "%v: %v\n", v[0], v[1:])
 	}
 	return buf.String()
 }
+
 func (o *object) replaceChild(a, b *object) *object {
 	if len(o.children) > 0 {
 		var rst []*object

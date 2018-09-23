@@ -72,8 +72,12 @@ type Component interface {
 	core() *Core
 }
 
+// Type defines a javascript object type This is an abstraction over the
+// syscall/js, allowing the library development to happen without GOARCH=wasm to
+// speed up things since tooling for wasm is lacking.
 type Type int
 
+// supported javascript object types.
 const (
 	TypeUndefined Type = iota
 	TypeNull
@@ -85,6 +89,7 @@ const (
 	TypeFunction
 )
 
+// Value is an interface for a javascript value.
 type Value interface {
 	Bool() bool
 	Call(m string, args ...interface{}) Value
@@ -98,7 +103,9 @@ type Value interface {
 	Type() Type
 }
 
-type Callback interface {
+// Resource is an interface for a resource that will need to be freed manually,
+// such as callback..
+type Resource interface {
 	Release()
 }
 
@@ -395,7 +402,7 @@ func (q *queuedRender) rerender() {
 }
 
 // CallbackGenerator is a function that returns callbacks.
-type CallbackGenerator func(fn func([]Value)) Callback
+type CallbackGenerator func(fn func([]Value)) Resource
 
 // Vected this is the ultimate struct that ports preact to work with go/was.
 // This is not a direct port, the two languages are different. Although some
@@ -865,7 +872,7 @@ func SetAccessor(gen CallbackGenerator, node Element, name string, old, val inte
 					// callbacks added to this node.
 					//
 					// These can be later removed by calling the functions.
-					var release Callback
+					var release Resource
 					release = gen(func(args []Value) {
 						node.Call("removeEventListener", name, cb, useCapture)
 						cb.Release()

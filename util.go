@@ -1,5 +1,10 @@
 package vected
 
+import (
+	"bytes"
+	"fmt"
+)
+
 type CallbackHandle func([]Value)
 
 func (CallbackHandle) Release() {}
@@ -16,6 +21,7 @@ type Object struct {
 	nodeValue string
 	cache     map[string]Value
 	children  []*Object
+	journal   [][]interface{}
 }
 
 func NewObject() *Object {
@@ -46,6 +52,9 @@ func (o *Object) Type() Type {
 }
 
 func (o *Object) Set(k string, v interface{}) {
+	o.journal = append(o.journal, []interface{}{
+		"set", k, v,
+	})
 	if o.props == nil {
 		o.props = make(map[string]*Object)
 	}
@@ -64,6 +73,9 @@ func (o *Object) Set(k string, v interface{}) {
 }
 
 func (o *Object) Get(k string) Value {
+	o.journal = append(o.journal, []interface{}{
+		"get", k,
+	})
 	switch k {
 	case "parentNode":
 		if o.parent != nil {
@@ -132,6 +144,9 @@ func (o *Object) Get(k string) Value {
 }
 
 func (o *Object) Call(k string, args ...interface{}) Value {
+	o.journal = append(o.journal, []interface{}{
+		"call", k, args,
+	})
 	switch k {
 	case "hasOwnProperty":
 		if len(args) > 0 {
@@ -222,6 +237,14 @@ func (o *Object) Call(k string, args ...interface{}) Value {
 		return &Object{typ: TypeBoolean, value: false}
 	}
 	return undefined()
+}
+
+func (o *Object) Steps() string {
+	var buf bytes.Buffer
+	for _, v := range o.journal {
+		fmt.Fprintf(&buf, "%s : %v\n", v[0], v[1:])
+	}
+	return buf.String()
 }
 func (o *Object) replaceChild(a, b *Object) *Object {
 	if len(o.children) > 0 {

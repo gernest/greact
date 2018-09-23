@@ -504,7 +504,7 @@ func (v *Vected) diffAttributes(node Element, attrs, old []Attribute) {
 	b := mapAtts(old)
 	for k, val := range b {
 		if _, ok := a[k]; !ok {
-			SetAccessor(v.cb, node, k, val, Undefined(), v.isSVGMode)
+			setAccessor(v.cb, node, k, val, Undefined(), v.isSVGMode)
 		}
 	}
 	for k := range a {
@@ -512,7 +512,7 @@ func (v *Vected) diffAttributes(node Element, attrs, old []Attribute) {
 		case "children", "innerHTML":
 			continue
 		default:
-			SetAccessor(v.cb, node, k, b[k], a[k], v.isSVGMode)
+			setAccessor(v.cb, node, k, b[k], a[k], v.isSVGMode)
 		}
 	}
 }
@@ -824,7 +824,7 @@ func (v *Vected) CreateSVGNode(doc Value, name string) Element {
 
 var xlink = regexp.MustCompile(`^xlink:?`)
 
-// SetAccessor Set a named attribute on the given Node, with special behavior
+// setAccessor Set a named attribute on the given Node, with special behavior
 // for some names and event handlers. If `value` is `null`, the
 // attribute/handler will be removed.
 // node An element to mutate
@@ -833,7 +833,7 @@ var xlink = regexp.MustCompile(`^xlink:?`)
 // old The last value that was set for this name/node pair
 // value An attribute value, such as a function to be used as an event handler
 // isSVG Are we currently diffing inside an svg?
-func SetAccessor(gen CallbackGenerator, node Element, name string, old, val interface{}, isSVG bool) {
+func setAccessor(gen CallbackGenerator, node Element, name string, old, val interface{}, isSVG bool) {
 	if name == "className" {
 		name = "class"
 	}

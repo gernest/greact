@@ -125,7 +125,7 @@ func Keys(v Value) []string {
 	return o
 }
 
-// returns true if value is not null or undefined.
+// Valid returns true if value is not null or undefined.
 func Valid(v Value) bool {
 	if v == nil {
 		return false

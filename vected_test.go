@@ -73,11 +73,11 @@ func TestVected_createComponent(t *testing.T) {
 
 func TestVected_Render(t *testing.T) {
 	v := New()
-	v.Document = NewObject()
+	v.Document = newObject()
 	hello := NewNode(ElementNode, "", "div", nil,
 		NewNode(TextNode, "", "Hello,World", nil),
 	)
-	el := NewObject()
+	el := newObject()
 	// err := wrapPanic(func() {
 	v.Render(hello, el)
 	// })
@@ -98,7 +98,7 @@ func wrapPanic(fn func()) (err error) {
 }
 func TestSetAccessor(t *testing.T) {
 	t.Run("should set classname", func(ts *testing.T) {
-		e := NewObject()
+		e := newObject()
 		setAccessor(nil, e, "className", nil, "classa", false)
 		v := e.Get("className").String()
 		if v != "classa" {
@@ -112,7 +112,7 @@ func TestSetAccessor(t *testing.T) {
 	})
 	t.Run("should set style", func(ts *testing.T) {
 		text := "color:blue;"
-		e := NewObject()
+		e := newObject()
 		setAccessor(nil, e, "style", nil, text, false)
 		v := e.Get("style").Get("cssText").String()
 		if v != text {

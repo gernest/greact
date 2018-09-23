@@ -5,70 +5,70 @@ import (
 	"fmt"
 )
 
-type Object struct {
+type object struct {
 	id        int
 	name      string
 	namespace string
 	text      bool
-	parent    *Object
-	props     map[string]*Object
+	parent    *object
+	props     map[string]*object
 	value     interface{}
 	typ       Type
 	nodeValue string
 	cache     map[string]Value
-	children  []*Object
+	children  []*object
 	journal   [][]interface{}
 }
 
-func NewObject() *Object {
-	return &Object{
+func newObject() *object {
+	return &object{
 		id:    idPool.Get().(int),
 		props: defaultProps(),
 		typ:   TypeObject,
 	}
 }
 
-func (o *Object) Bool() bool {
+func (o *object) Bool() bool {
 	return o.value.(bool)
 }
 
-func (o *Object) Float() float64 {
+func (o *object) Float() float64 {
 	return o.value.(float64)
 }
 
-func (o *Object) Int() int {
+func (o *object) Int() int {
 	return o.value.(int)
 }
-func (o *Object) String() string {
+func (o *object) String() string {
 	return o.value.(string)
 }
 
-func (o *Object) Type() Type {
+func (o *object) Type() Type {
 	return o.typ
 }
 
-func (o *Object) Set(k string, v interface{}) {
+func (o *object) Set(k string, v interface{}) {
 	o.journal = append(o.journal, []interface{}{
 		"set", k, v,
 	})
 	if o.props == nil {
-		o.props = make(map[string]*Object)
+		o.props = make(map[string]*object)
 	}
 	switch e := v.(type) {
 	case bool:
-		o.props[k] = &Object{typ: TypeBoolean, value: e}
+		o.props[k] = &object{typ: TypeBoolean, value: e}
 	case string:
-		o.props[k] = &Object{typ: TypeString, value: e}
+		o.props[k] = &object{typ: TypeString, value: e}
 	case float64:
-		o.props[k] = &Object{typ: TypeNumber, value: e}
+		o.props[k] = &object{typ: TypeNumber, value: e}
 	case nil:
-		o.props[k] = &Object{typ: TypeNull, value: e}
+		o.props[k] = &object{typ: TypeNull, value: e}
 	case Value:
-		o.props[k] = &Object{typ: TypeObject, value: e}
+		o.props[k] = &object{typ: TypeObject, value: e}
 	}
 }
 
-func (o *Object) Get(k string) Value {
+func (o *object) Get(k string) Value {
 	o.journal = append(o.journal, []interface{}{
 		"get", k,
 	})
@@ -112,7 +112,7 @@ func (o *Object) Get(k string) Value {
 		for _, ch := range o.children {
 			children = append(children, ch)
 		}
-		return &Object{
+		return &object{
 			value: children,
 			typ:   TypeObject,
 		}
@@ -122,24 +122,24 @@ func (o *Object) Get(k string) Value {
 		}
 		switch e := o.value.(type) {
 		case []Value:
-			return &Object{typ: TypeNumber, value: len(e)}
+			return &object{typ: TypeNumber, value: len(e)}
 		}
 		return undefined()
 	case "splitText":
 		if o.text {
-			return &Object{typ: TypeFunction}
+			return &object{typ: TypeFunction}
 		}
 		return undefined()
 	case "nodeValue":
-		return &Object{typ: TypeString, value: o.nodeValue}
+		return &object{typ: TypeString, value: o.nodeValue}
 	}
 	if m, ok := o.props[k]; ok {
 		return m
 	}
-	return &Object{typ: TypeUndefined}
+	return &object{typ: TypeUndefined}
 }
 
-func (o *Object) Call(k string, args ...interface{}) Value {
+func (o *object) Call(k string, args ...interface{}) Value {
 	o.journal = append(o.journal, []interface{}{
 		"call", k, args,
 	})
@@ -149,36 +149,36 @@ func (o *Object) Call(k string, args ...interface{}) Value {
 			a := args[0]
 			if av, ok := a.(string); ok {
 				_, ok = o.props[av]
-				return &Object{typ: TypeBoolean, value: ok}
+				return &object{typ: TypeBoolean, value: ok}
 			}
 		}
-		return &Object{typ: TypeBoolean, value: false}
+		return &object{typ: TypeBoolean, value: false}
 	case "createElement":
 		// element name must be provided.
 		name := args[0].(string)
-		b := NewObject()
+		b := newObject()
 		b.name = name
 		return b
 	case "createElementNS":
 		ns := args[0].(string)
 		name := args[1].(string)
-		b := NewObject()
+		b := newObject()
 		b.namespace = ns
 		b.name = name
 		return b
 	case "createTextNode":
 		text := args[0].(string)
-		b := NewObject()
+		b := newObject()
 		b.text = true
 		b.nodeValue = text
 		return b
 	case "replaceChild":
 		if len(args) == 2 {
-			a, ok := args[0].(*Object)
+			a, ok := args[0].(*object)
 			if !ok {
 				return undefined()
 			}
-			b, ok := args[0].(*Object)
+			b, ok := args[0].(*object)
 			if !ok {
 				return undefined()
 			}
@@ -186,12 +186,12 @@ func (o *Object) Call(k string, args ...interface{}) Value {
 		}
 	case "removeChild":
 		if len(args) == 1 {
-			a, ok := args[0].(*Object)
+			a, ok := args[0].(*object)
 			if !ok {
 				return undefined()
 			}
 			if len(o.children) > 0 {
-				var sv []*Object
+				var sv []*object
 				for _, v := range o.children {
 					if v.id != a.id {
 						sv = append(sv, v)
@@ -202,7 +202,7 @@ func (o *Object) Call(k string, args ...interface{}) Value {
 		}
 	case "appendChild":
 		if len(args) == 1 {
-			a, ok := args[0].(*Object)
+			a, ok := args[0].(*object)
 			if !ok {
 				return undefined()
 			}
@@ -212,11 +212,11 @@ func (o *Object) Call(k string, args ...interface{}) Value {
 		}
 	case "insertBefore":
 		if len(args) == 2 {
-			a, ok := args[0].(*Object)
+			a, ok := args[0].(*object)
 			if !ok {
 				return undefined()
 			}
-			b, ok := args[0].(*Object)
+			b, ok := args[0].(*object)
 			if !ok {
 				return undefined()
 			}
@@ -224,27 +224,27 @@ func (o *Object) Call(k string, args ...interface{}) Value {
 		}
 	case "isEqualNode":
 		if len(args) == 1 {
-			a, ok := args[0].(*Object)
+			a, ok := args[0].(*object)
 			if !ok {
 				return undefined()
 			}
-			return &Object{typ: TypeBoolean, value: o.id == a.id}
+			return &object{typ: TypeBoolean, value: o.id == a.id}
 		}
-		return &Object{typ: TypeBoolean, value: false}
+		return &object{typ: TypeBoolean, value: false}
 	}
 	return undefined()
 }
 
-func (o *Object) Steps() string {
+func (o *object) Steps() string {
 	var buf bytes.Buffer
 	for _, v := range o.journal {
 		fmt.Fprintf(&buf, "%s : %v\n", v[0], v[1:])
 	}
 	return buf.String()
 }
-func (o *Object) replaceChild(a, b *Object) *Object {
+func (o *object) replaceChild(a, b *object) *object {
 	if len(o.children) > 0 {
-		var rst []*Object
+		var rst []*object
 		for _, v := range o.children {
 			if v.id == a.id {
 				rst = append(rst, b)
@@ -256,9 +256,9 @@ func (o *Object) replaceChild(a, b *Object) *Object {
 	}
 	return undefined()
 }
-func (o *Object) insertBefore(a, b *Object) *Object {
+func (o *object) insertBefore(a, b *object) *object {
 	if len(o.children) > 0 {
-		var rst []*Object
+		var rst []*object
 		for _, v := range o.children {
 			if v.id == a.id {
 				rst = append(rst, b, a)
@@ -271,28 +271,28 @@ func (o *Object) insertBefore(a, b *Object) *Object {
 	return undefined()
 }
 
-func undefined() *Object {
-	return &Object{typ: TypeUndefined}
+func undefined() *object {
+	return &object{typ: TypeUndefined}
 }
-func null() *Object {
-	return &Object{typ: TypeNull}
+func null() *object {
+	return &object{typ: TypeNull}
 }
 
-func (o *Object) Index(n int) Value {
+func (o *object) Index(n int) Value {
 	if v, ok := o.value.([]Value); ok {
 		if n < len(v) {
 			return v[n]
 		}
 	}
-	return &Object{typ: TypeUndefined}
+	return &object{typ: TypeUndefined}
 }
 
-func (o *Object) Invoke(args ...interface{}) Value {
-	return &Object{typ: TypeUndefined}
+func (o *object) Invoke(args ...interface{}) Value {
+	return &object{typ: TypeUndefined}
 }
 
-func defaultProps() map[string]*Object {
-	return map[string]*Object{
-		"style": &Object{typ: TypeObject},
+func defaultProps() map[string]*object {
+	return map[string]*object{
+		"style": &object{typ: TypeObject},
 	}
 }

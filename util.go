@@ -18,6 +18,7 @@ type object struct {
 	cache     map[string]Value
 	children  []*object
 	journal   [][]interface{}
+	level     int
 }
 
 func newObject() *object {
@@ -143,7 +144,7 @@ func (o *object) Call(k string, args ...interface{}) Value {
 	v := []interface{}{"call", k}
 	for _, k := range args {
 		if o, ok := k.(*object); ok {
-			v = append(v, o.Steps())
+			v = append(v, o.typ)
 		} else {
 			v = append(v, k)
 		}
@@ -213,6 +214,7 @@ func (o *object) Call(k string, args ...interface{}) Value {
 				return undefined()
 			}
 			a.parent = o
+			a.level = o.level + 2
 			o.children = append(o.children, a)
 			return undefined()
 		}
@@ -244,9 +246,21 @@ func (o *object) Call(k string, args ...interface{}) Value {
 func (o object) Steps() string {
 	var buf bytes.Buffer
 	for _, v := range o.journal {
-		fmt.Fprintf(&buf, "%v: %v\n", v[0], v[1:])
+		fmt.Fprintf(&buf, "%s%v\n", indent(o.level), v)
+		if len(o.children) > 0 {
+			for _, ch := range o.children {
+				buf.WriteString(ch.Steps())
+			}
+		}
 	}
 	return buf.String()
+}
+
+func indent(n int) (out string) {
+	for i := 0; i < n; i++ {
+		out += " "
+	}
+	return
 }
 
 func (o *object) replaceChild(a, b *object) *object {

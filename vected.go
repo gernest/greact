@@ -91,6 +91,29 @@ const (
 	TypeFunction
 )
 
+func (t Type) String() string {
+	switch t {
+	case TypeUndefined:
+		return "undefined"
+	case TypeNull:
+		return "null"
+	case TypeBoolean:
+		return "bool"
+	case TypeNumber:
+		return "Number"
+	case TypeString:
+		return "String"
+	case TypeSymbol:
+		return "Symbol"
+	case TypeObject:
+		return "Object"
+	case TypeFunction:
+		return "Function"
+	default:
+		return "unknown"
+	}
+}
+
 // Value is an interface for a javascript value.
 type Value interface {
 	Bool() bool

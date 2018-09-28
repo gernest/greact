@@ -3,6 +3,7 @@ package vected
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 type object struct {
@@ -145,6 +146,10 @@ func (o *object) Call(k string, args ...interface{}) Value {
 	for _, k := range args {
 		if o, ok := k.(*object); ok {
 			v = append(v, o.typ)
+			s := strings.TrimSpace(o.Steps())
+			if s != "" {
+				v = append(v, s)
+			}
 		} else {
 			v = append(v, k)
 		}

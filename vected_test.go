@@ -78,12 +78,9 @@ func TestVected_Render(t *testing.T) {
 		NewNode(TextNode, "", "Hello,World", nil),
 	)
 	el := newObject()
-	// err := wrapPanic(func() {
 	v.Render(hello, el)
-	// })
-	// if err != nil {
-	// 	t.Error(err)
-	// }
+	fmt.Println(el.Steps())
+	// t.Error("yay")
 }
 
 func wrapPanic(fn func()) (err error) {

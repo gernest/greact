@@ -314,7 +314,7 @@ func (o *object) Index(n int) Value {
 			return v[n]
 		}
 	}
-	return &object{typ: TypeUndefined}
+	return &object{typ: TypeNull}
 }
 
 func (o *object) Invoke(args ...interface{}) Value {

@@ -9,6 +9,8 @@ package vected
 import (
 	"container/list"
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
@@ -135,9 +137,14 @@ type Resource interface {
 }
 
 // Keys is like Object.keys, this returns nil if v is not an object.
-func Keys(v Value) []string {
+func Keys(v Value) (keys []string, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = fmt.Errorf("%v", e)
+		}
+	}()
 	if v.Type() != TypeObject {
-		return nil
+		return nil, errors.New("can't call keys on " + v.Type().String())
 	}
 	k := v.Call("keys")
 	var o []string
@@ -145,7 +152,7 @@ func Keys(v Value) []string {
 	for i := 0; i < size; i++ {
 		o = append(o, k.Index(i).String())
 	}
-	return o
+	return o, nil
 }
 
 // Valid returns true if value is not null or undefined.
@@ -628,11 +635,13 @@ func (v *Vected) idiff(ctx context.Context, elem Element, node *Node, mountAll, 
 		var old []Attribute
 		if !Valid(props) {
 			a := out.Get("attributes")
-			for _, v := range Keys(a) {
-				old = append(old, Attribute{
-					Key: v,
-					Val: a.Get(v).String(),
-				})
+			if keys, err := Keys(a); err == nil {
+				for _, v := range keys {
+					old = append(old, Attribute{
+						Key: v,
+						Val: a.Get(v).String(),
+					})
+				}
 			}
 		}
 		if !v.hydrating && len(node.Children) == 1 &&

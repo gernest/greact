@@ -1,6 +1,7 @@
 package vected
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"testing"
@@ -79,8 +80,15 @@ func TestVected_Render(t *testing.T) {
 	)
 	el := newObject()
 	v.Render(hello, el)
-	fmt.Println(el.Steps())
-	// t.Error("yay")
+	// fmt.Println(el.Steps())
+	// pretty.Println(el)
+	var buf bytes.Buffer
+	err := renderObject(&buf, el.children[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(buf.String())
+	t.Error("yay")
 }
 
 func wrapPanic(fn func()) (err error) {

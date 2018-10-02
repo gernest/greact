@@ -843,6 +843,7 @@ func (v *Vected) Register(name string, cmp Component) {
 
 // CreateNode creates a dom element.
 func (v *Vected) CreateNode(name string) Element {
+	fmt.Printf("creating a new node %s\n", name)
 	node := v.Document.Call("createElement", name)
 	node.Set("normalizedNodeName", name)
 	return node

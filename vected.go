@@ -184,6 +184,9 @@ func HasProperty(e Element, v string) bool {
 
 // IsEqual returns true if the ywo elements are equal
 func IsEqual(a, b Element) bool {
+	if !Valid(a) || !Valid(b) {
+		return false
+	}
 	return a.Call("isEqualNode", b).Bool()
 }
 

@@ -607,6 +607,7 @@ func (v *Vected) idiff(ctx context.Context, elem Element, node *Node, mountAll, 
 		out.Set(AttrKey, true)
 		return out
 	case ElementNode:
+		fmt.Printf("rendering %s\n", node.Data)
 		if v.isHigherOrder(node) {
 			return v.buildComponentFromVNode(ctx, elem, node, mountAll, false)
 		}

@@ -770,7 +770,7 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem Element, vchildrens []*
 		child = v.idiff(ctx, child, vchild, mountAll, false)
 		f := original.Index(i)
 		if Valid(child) && !IsEqual(child, elem) && !IsEqual(child, f) {
-			if f.Type() == TypeNull {
+			if f.Type() == TypeNull || f.Type() == TypeUndefined {
 				elem.Call("appendChild", child)
 			} else if IsEqual(child, f.Get("nextSibling")) {
 				RemoveNode(f)

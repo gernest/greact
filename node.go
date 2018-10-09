@@ -3,6 +3,7 @@ package vected
 // A NodeType is the type of a Node.
 type NodeType uint32
 
+// common HTML node types
 const (
 	ErrorNode NodeType = iota
 	TextNode
@@ -83,6 +84,8 @@ func newChildren(n ...*Node) []*Node {
 	return nil
 }
 
+// Attr returns Attribute from the arguments. This doesn't do much appart from
+// wrapping the arguments.
 func Attr(ns, key string, val interface{}) Attribute {
 	return Attribute{
 		Namespace: ns,
@@ -91,10 +94,16 @@ func Attr(ns, key string, val interface{}) Attribute {
 	}
 }
 
+// Attrs is a wrapper/shortcut for optionally providing Attributes. Due tto the
+// nature of composition for components, this saves space and improves
+// readability.
 func Attrs(attr ...Attribute) []Attribute {
 	return attr
 }
 
+// Key returns the value of the key attribute of the node as a string. Key
+// attributes can be set to allow easily identifying lists nodes for faster re
+// re rendering.
 func (v *Node) Key() string {
 	for _, v := range v.Attr {
 		if v.Key == "key" {

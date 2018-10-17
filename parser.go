@@ -48,7 +48,9 @@ func ToNode(n *html.Node) *Node {
 	return node
 }
 
-// Parse parses src
+// Parse parses src as html component definition and returns their *Node
+// representation. r must be reading from a subset of xml/html document that is
+// going to processed and compiled to *Node.
 func Parse(r io.Reader) (*Node, error) {
 	base := root()
 	n, err := html.ParseFragment(r, base)

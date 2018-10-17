@@ -818,13 +818,22 @@ func isNamedNode(elem Element, vnode *Node) bool {
 	return false
 }
 
-// Render renders vected component
+// Render renders vected component.
 func (v *Vected) Render(vnode *Node, parent Element, merge ...Element) Element {
 	var elem Element
 	if len(merge) > 0 {
 		elem = merge[0]
 	}
 	return v.diff(context.Background(), elem, vnode, parent, false, false)
+}
+
+// RenderComponent compiles component cmp and renders it.
+func (v *Vected) RenderComponent(cmp string, parent Element, merge ...Element) (Element, error) {
+	node, err := ParseString(cmp)
+	if err != nil {
+		return nil, err
+	}
+	return v.Render(node, parent, merge...), nil
 }
 
 // Register add cmp instance to a map of known higher order components There is

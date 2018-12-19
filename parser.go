@@ -11,7 +11,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/gernest/vected/expr"
+	"github.com/gernest/greact/expr"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -188,7 +188,7 @@ func Generate(w io.Writer, pkg string, ctx ...GeneratorContext) error {
 				importSpec("fmt"),
 			),
 			importDecl(
-				importSpec("github.com/gernest/vected"),
+				importSpec("github.com/gernest/greact"),
 			),
 			declareAlias(newNode, "vected", "NewNode"),
 			declareAlias(newAttr, "vected", "Attr"),

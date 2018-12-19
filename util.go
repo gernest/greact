@@ -9,7 +9,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/gernest/vected/attribute"
+	"github.com/gernest/greact/attribute"
 )
 
 type object struct {

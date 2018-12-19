@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gernest/vected/cmd/gen"
-	"github.com/gernest/vected/cmd/server"
+	"github.com/gernest/greact/cmd/gen"
+	"github.com/gernest/greact/cmd/server"
 	"github.com/urfave/cli"
 )
 

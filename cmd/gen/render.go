@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gernest/vected"
+	"github.com/gernest/greact"
 	"github.com/urfave/cli"
 )
 
@@ -63,9 +63,9 @@ func renderFile(ctx *cli.Context) error {
 }
 
 func processPackage(path string, pkg *ast.Package) error {
-	ctxs := make(map[string]vected.GeneratorContext)
+	ctxs := make(map[string]greact.GeneratorContext)
 
-	// First we collect all structs that implements that emebds vected.Core. Then
+	// First we collect all structs that implements that emebds greact.Core. Then
 	// we check for the Template method which we then use to generate the render
 	// functions.
 	//
@@ -83,7 +83,7 @@ func processPackage(path string, pkg *ast.Package) error {
 									if id, ok := x.X.(*ast.Ident); ok {
 										if f.Names == nil && id.Name == "vected" &&
 											x.Sel.Name == "Core" {
-											ctx := vected.GeneratorContext{
+											ctx := greact.GeneratorContext{
 												StructName: vs.Name.Name,
 											}
 											ctxs[ctx.StructName] = ctx
@@ -120,7 +120,7 @@ func processPackage(path string, pkg *ast.Package) error {
 											if ret, ok := rs.Results[0].(*ast.BasicLit); ok {
 												v := strings.TrimPrefix(ret.Value, "`")
 												v = strings.TrimSuffix(v, "`")
-												n, err := vected.ParseString(v)
+												n, err := greact.ParseString(v)
 												if err != nil {
 													return err
 												}
@@ -137,7 +137,7 @@ func processPackage(path string, pkg *ast.Package) error {
 			}
 		}
 	}
-	var c []vected.GeneratorContext
+	var c []greact.GeneratorContext
 	for _, v := range ctxs {
 		c = append(c, v)
 	}
@@ -145,7 +145,7 @@ func processPackage(path string, pkg *ast.Package) error {
 		return c[i].StructName < c[j].StructName
 	})
 	var buf bytes.Buffer
-	err := vected.Generate(&buf, pkg.Name, c...)
+	err := greact.Generate(&buf, pkg.Name, c...)
 	if err != nil {
 		return err
 	}

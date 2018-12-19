@@ -16,7 +16,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gernest/vected/elements"
+	"github.com/gernest/greact/elements"
 )
 
 // RenderMode is a flag determining how a component is rendered.
@@ -51,7 +51,7 @@ var idPool = &sync.Pool{
 // You can define a struct that embeds Core and implements Templater interface
 // like this.
 // 	type Foo struct {
-// 		vected.Core
+// 		greact.Core
 // 	}
 //
 // 	func (f Foo) Template() string {
@@ -211,7 +211,7 @@ type Core struct {
 	id int
 
 	// constructor is the name of the higher order component. This is can be
-	// defined when registering components with Vected.Register. This library uses
+	// defined when registering components with greact.Register. This library uses
 	// golang.org/x/net/html for parsing component template, which defaults all
 	// elements to lower case, so the constructor name must be lower case.
 	constructor string

@@ -1,4 +1,4 @@
-package vected
+package greact
 
 // A NodeType is the type of a Node.
 type NodeType uint32

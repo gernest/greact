@@ -1,10 +1,10 @@
-// Package vected is a component based frontend framework for golang. This
+// package greact is a component based frontend framework for golang. This
 // framework delivers high performance and responsive ui.
 //
 // This relies on the experimental wasm api to interact with dom. The project
 // started as a port of preact to go, but has since evolved. It still borrows a
 // similar API from react/preact.
-package vected
+package greact
 
 import (
 	"container/list"

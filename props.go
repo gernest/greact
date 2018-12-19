@@ -1,4 +1,4 @@
-package vected
+package greact
 
 import (
 	"fmt"

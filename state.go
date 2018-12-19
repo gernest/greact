@@ -1,4 +1,4 @@
-package vected
+package greact
 
 // State stores values to be used as state.
 type State map[string]interface{}

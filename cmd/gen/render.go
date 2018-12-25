@@ -83,7 +83,7 @@ func processPackage(path string, pkg *ast.Package) error {
 							for _, f := range typ.Fields.List {
 								if x, ok := f.Type.(*ast.SelectorExpr); ok {
 									if id, ok := x.X.(*ast.Ident); ok {
-										if f.Names == nil && id.Name == "vected" &&
+										if f.Names == nil && id.Name == greact.ID &&
 											x.Sel.Name == "Core" {
 											ctx := greact.GeneratorContext{
 												StructName: vs.Name.Name,
@@ -102,7 +102,7 @@ func processPackage(path string, pkg *ast.Package) error {
 	for _, file := range pkg.Files {
 		for _, v := range file.Decls {
 			if fn, ok := v.(*ast.FuncDecl); ok {
-				if fn.Recv != nil && fn.Name.Name == "Template" &&
+				if fn.Recv != nil && fn.Name.Name == greact.TemplateFn &&
 					fn.Recv.NumFields() == 1 {
 					fd := fn.Recv.List[0]
 					recv := ""

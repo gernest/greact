@@ -203,9 +203,9 @@ func Generate(w io.Writer, pkg string, ctx ...GeneratorContext) error {
 			importDecl(
 				importSpec("github.com/gernest/greact"),
 			),
-			declareAlias(newNode, "vected", "NewNode"),
-			declareAlias(newAttr, "vected", "Attr"),
-			declareAlias(newAttrs, "vected", "Attrs"),
+			declareAlias(newNode, ID, "NewNode"),
+			declareAlias(newAttr, ID, "Attr"),
+			declareAlias(newAttrs, ID, "Attrs"),
 		},
 	}
 	for _, v := range ctx {

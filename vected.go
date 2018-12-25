@@ -19,6 +19,12 @@ import (
 	"github.com/gernest/greact/elements"
 )
 
+// used in code generation
+const (
+	ID         = "greact"
+	TemplateFn = "Template"
+)
+
 // RenderMode is a flag determining how a component is rendered.
 type RenderMode uint
 

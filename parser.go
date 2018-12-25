@@ -167,10 +167,23 @@ func interpret(v interface{}) (string, error) {
 	}
 }
 
+// GeneratorContext stores info about the node that we want to generate the
+// Render function for.
 type GeneratorContext struct {
+	// StructName the name of the struct that implements the Component interface.
 	StructName string
-	Recv       string
-	Node       *Node
+
+	// This is a receiver name that will be used for the generated output. This is
+	// important because we intend to generate code that the linting tools will be
+	// happy with.
+	//
+	// For instance if StructName is Hello and Recv is h the generated method will
+	// have signature like
+	//	func (h *Hello)Render
+	Recv string
+
+	// The actual node we want to generate go ast for.
+	Node *Node
 }
 
 // Generate writes a g file that contains generated Render methods for struct

@@ -16,6 +16,8 @@ import (
 	"github.com/urfave/cli"
 )
 
+// RenderCMD is a cli command for generating go code for rendering greact
+// components.
 func RenderCMD() cli.Command {
 	return cli.Command{
 		Name:   "render",

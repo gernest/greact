@@ -11,8 +11,8 @@ import (
 
 func main() {
 	a := cli.NewApp()
-	a.Name = "vected_gen"
-	a.Usage = "provides various commands that generate code for vected project"
+	a.Name = "greact_gen"
+	a.Usage = "provides various commands that generate code for greact project"
 	a.Commands = []cli.Command{
 		gen.AttrCMD(),
 		gen.RenderCMD(),

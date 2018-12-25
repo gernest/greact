@@ -907,6 +907,9 @@ func setAccessor(gen CallbackGenerator, node Element, name string, old, val inte
 				style.Set(k, v)
 			}
 		}
+	case "ref":
+		applyRef(old, nil)
+		applyRef(val, node)
 	case "dangerouslySetInnerHTML":
 		node.Set("innerHTML", val)
 	default:
@@ -986,6 +989,12 @@ func setAccessor(gen CallbackGenerator, node Element, name string, old, val inte
 				}
 			}
 		}
+	}
+}
+
+func applyRef(ref, value interface{}) {
+	if r, ok := ref.(Element); ok {
+		r.Set("current", value)
 	}
 }
 

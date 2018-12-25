@@ -18,7 +18,7 @@ import (
 const mozAttributeReference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes"
 
 func downloadAttrs(dest string) error {
-	res, err := http.Get("https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes")
+	res, err := http.Get(mozAttributeReference)
 	if err != nil {
 		return err
 	}

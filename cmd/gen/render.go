@@ -139,6 +139,9 @@ func processPackage(path string, pkg *ast.Package) error {
 			}
 		}
 	}
+	if len(ctxs) == 0 {
+		return nil
+	}
 	var c []greact.GeneratorContext
 	for _, v := range ctxs {
 		c = append(c, v)

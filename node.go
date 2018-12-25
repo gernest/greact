@@ -38,7 +38,8 @@ type Attribute struct {
 	Val            interface{}
 }
 
-// Node represents a virtual dom node.
+// Node represents a virtual dom node. This is a go object that represents a dom
+// object.
 type Node struct {
 	Type      NodeType
 	Data      string
@@ -47,41 +48,31 @@ type Node struct {
 	Children  []*Node
 }
 
-// NewNode is a wrapper for creating new node
+// NewNode is a wrapper for creating new node. If children are provided adjacent
+// text nodes will be merged to a single node.
 func NewNode(typ NodeType, ns, name string, attrs []Attribute, children ...*Node) *Node {
-	return &Node{
+	n := &Node{
 		Type:      typ,
 		Namespace: ns,
 		Data:      name,
 		Attr:      attrs,
-		Children:  newChildren(children...),
 	}
-}
-
-// newChildren processes n nodes.
-//
-// Adjacent text nodes are merged.
-func newChildren(n ...*Node) []*Node {
-	if len(n) > 0 {
-		var o []*Node
-		var lastText *Node
-		for _, v := range n {
-			switch v.Type {
-			case TextNode:
-				if lastText != nil {
-					lastText.Data += v.Data
-				} else {
-					lastText = v
-					o = append(o, lastText)
-				}
-			default:
-				lastText = nil
-				o = append(o, v)
+	var lastText *Node
+	for _, v := range children {
+		switch v.Type {
+		case TextNode:
+			if lastText != nil {
+				lastText.Data += v.Data
+			} else {
+				lastText = v
+				n.Children = append(n.Children, lastText)
 			}
+		default:
+			lastText = nil
+			n.Children = append(n.Children, v)
 		}
-		return o
 	}
-	return nil
+	return n
 }
 
 // Attr returns Attribute from the arguments. This doesn't do much appart from

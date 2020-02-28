@@ -16,6 +16,9 @@ import (
 	"golang.org/x/net/html/atom"
 )
 
+const packageName = "greact"
+const packageImport = "github.com/gernest/greact"
+
 const (
 	newNode  = "vH"
 	newAttr  = "vHA"
@@ -201,11 +204,12 @@ func Generate(w io.Writer, pkg string, ctx ...GeneratorContext) error {
 				importSpec("fmt"),
 			),
 			importDecl(
-				importSpec("github.com/gernest/greact"),
+				importSpec(packageImport),
 			),
 			declareAlias(newNode, ID, "NewNode"),
 			declareAlias(newAttr, ID, "Attr"),
 			declareAlias(newAttrs, ID, "Attrs"),
+			declareAlias("_", "fmt", "Print"),
 		},
 	}
 	for _, v := range ctx {
@@ -314,7 +318,7 @@ func render(name, recv, typ string, node *Node) (*ast.FuncDecl, error) {
 						},
 						Type: &ast.SelectorExpr{
 							X: &ast.Ident{
-								Name: "vected",
+								Name: packageName,
 							},
 							Sel: &ast.Ident{
 								Name: "Props",
@@ -329,7 +333,7 @@ func render(name, recv, typ string, node *Node) (*ast.FuncDecl, error) {
 						},
 						Type: &ast.SelectorExpr{
 							X: &ast.Ident{
-								Name: "vected",
+								Name: packageName,
 							},
 							Sel: &ast.Ident{
 								Name: "State",
@@ -344,7 +348,7 @@ func render(name, recv, typ string, node *Node) (*ast.FuncDecl, error) {
 						Type: &ast.StarExpr{
 							X: &ast.SelectorExpr{
 								X: &ast.Ident{
-									Name: "vected",
+									Name: packageName,
 								},
 								Sel: &ast.Ident{
 									Name: "Node",

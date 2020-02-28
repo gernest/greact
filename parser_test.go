@@ -2,6 +2,7 @@ package greact
 
 import (
 	"bytes"
+	"io/ioutil"
 	"testing"
 )
 
@@ -92,37 +93,37 @@ func TestInterpretText(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
+	geneateTest(t, "fixture/generate/basic.html")
+}
 
-	genSample := `<div className={props["classNames"]} key=value>
-	<ul>
-		<li>1</li>
-		<li>2</li>
-		<li>3</li>
-		<li>4</li>
-		<li>5</li>
-	</ul>
-	<ol>
-		<li>1</li>
-		<li>2</li>
-		<li>3</li>
-		<li>4</li>
-		<li>5</li>
-	</ol>
-</div>`
-	n, err := ParseString(genSample)
-	if err != nil {
-		t.Fatal(err)
-	}
+func geneateTest(t *testing.T, file string) {
+	t.Run(file, func(t *testing.T) {
+		b, err := ioutil.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		n, err := ParseString(string(b))
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx := GeneratorContext{
+			StructName: "Hello",
+			Recv:       "t",
+			Node:       n,
+		}
 
-	ctx := GeneratorContext{
-		StructName: "Hello",
-		Recv:       "t",
-		Node:       n,
-	}
-
-	var out bytes.Buffer
-	err = Generate(&out, "hello", ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+		var buf bytes.Buffer
+		err = Generate(&buf, "generate", ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		output := file + ".go"
+		o, err := ioutil.ReadFile(output)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Equal(buf.Bytes(), o) {
+			t.Errorf("expected:\n %s \n got:\n%s", string(o), buf.String())
+		}
+	})
 }

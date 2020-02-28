@@ -26,7 +26,11 @@ var Map = map[string]Attribute{
 	},
 	"align": Attribute{
 		Name:     "align",
-		Elements: []string{"applet", "caption", "col", "colgroup", " hr", "iframe", "img", "table", "tbody", " td", " tfoot", "th", "thead", "tr"},
+		Elements: []string{"applet", "caption", "col", "colgroup", "hr", "iframe", "img", "table", "tbody", "td", "tfoot", "th", "thead", "tr"},
+	},
+	"allow": Attribute{
+		Name:     "allow",
+		Elements: []string{"iframe"},
 	},
 	"alt": Attribute{
 		Name:     "alt",
@@ -42,7 +46,7 @@ var Map = map[string]Attribute{
 	},
 	"autocomplete": Attribute{
 		Name:     "autocomplete",
-		Elements: []string{"form", "input", "textarea"},
+		Elements: []string{"form", "input", " select", "textarea"},
 	},
 	"autofocus": Attribute{
 		Name:     "autofocus",
@@ -51,6 +55,10 @@ var Map = map[string]Attribute{
 	"autoplay": Attribute{
 		Name:     "autoplay",
 		Elements: []string{"audio", "video"},
+	},
+	"background": Attribute{
+		Name:     "background",
+		Elements: []string{"body", "table", "td", "th"},
 	},
 	"bgcolor": Attribute{
 		Name:     "bgcolor",
@@ -63,6 +71,10 @@ var Map = map[string]Attribute{
 	"buffered": Attribute{
 		Name:     "buffered",
 		Elements: []string{"audio", "video"},
+	},
+	"capture": Attribute{
+		Name:     "capture",
+		Elements: []string{"input"},
 	},
 	"challenge": Attribute{
 		Name:     "challenge",
@@ -128,6 +140,10 @@ var Map = map[string]Attribute{
 		Name:     "crossorigin",
 		Elements: []string{"audio", "img", "link", "script", "video"},
 	},
+	"csp  ": Attribute{
+		Name:     "csp  ",
+		Elements: []string{"iframe"},
+	},
 	"data": Attribute{
 		Name:     "data",
 		Elements: []string{"object"},
@@ -139,6 +155,10 @@ var Map = map[string]Attribute{
 	"datetime": Attribute{
 		Name:     "datetime",
 		Elements: []string{"del", "ins", "time"},
+	},
+	"decoding": Attribute{
+		Name:     "decoding",
+		Elements: []string{"img"},
 	},
 	"default": Attribute{
 		Name:     "default",
@@ -176,6 +196,10 @@ var Map = map[string]Attribute{
 		Name:     "enctype",
 		Elements: []string{"form"},
 	},
+	"enterkeyhint  ": Attribute{
+		Name:     "enterkeyhint  ",
+		Elements: []string{"textarea", "contenteditable"},
+	},
 	"for": Attribute{
 		Name:     "for",
 		Elements: []string{"label", "output"},
@@ -187,6 +211,22 @@ var Map = map[string]Attribute{
 	"formaction": Attribute{
 		Name:     "formaction",
 		Elements: []string{"input", "button"},
+	},
+	"formenctype": Attribute{
+		Name:     "formenctype",
+		Elements: []string{"button", "input"},
+	},
+	"formmethod": Attribute{
+		Name:     "formmethod",
+		Elements: []string{"button", "input"},
+	},
+	"formnovalidate": Attribute{
+		Name:     "formnovalidate",
+		Elements: []string{"button", "input"},
+	},
+	"formtarget": Attribute{
+		Name:     "formtarget",
+		Elements: []string{"button", "input"},
 	},
 	"headers": Attribute{
 		Name:     "headers",
@@ -224,9 +264,21 @@ var Map = map[string]Attribute{
 		Name:     "id",
 		Elements: []string{"Globalattribute"},
 	},
+	"importance  ": Attribute{
+		Name:     "importance  ",
+		Elements: []string{"iframe", "img", "link", "script"},
+	},
 	"integrity": Attribute{
 		Name:     "integrity",
-		Elements: []string{"link", "script "},
+		Elements: []string{"link", "script"},
+	},
+	"intrinsicsize  ": Attribute{
+		Name:     "intrinsicsize  ",
+		Elements: []string{"img"},
+	},
+	"inputmode": Attribute{
+		Name:     "inputmode",
+		Elements: []string{"textarea", "contenteditable"},
 	},
 	"ismap": Attribute{
 		Name:     "ismap",
@@ -246,7 +298,7 @@ var Map = map[string]Attribute{
 	},
 	"label": Attribute{
 		Name:     "label",
-		Elements: []string{"track"},
+		Elements: []string{"optgroup", " option", " track"},
 	},
 	"lang": Attribute{
 		Name:     "lang",
@@ -255,6 +307,10 @@ var Map = map[string]Attribute{
 	"language": Attribute{
 		Name:     "language",
 		Elements: []string{"script"},
+	},
+	"loading  ": Attribute{
+		Name:     "loading  ",
+		Elements: []string{"img", "iframe"},
 	},
 	"list": Attribute{
 		Name:     "list",
@@ -348,6 +404,10 @@ var Map = map[string]Attribute{
 		Name:     "readonly",
 		Elements: []string{"input", "textarea"},
 	},
+	"referrerpolicy": Attribute{
+		Name:     "referrerpolicy",
+		Elements: []string{"a", "area", "iframe", "img", "link", "script"},
+	},
 	"rel": Attribute{
 		Name:     "rel",
 		Elements: []string{"a", "area", "link"},
@@ -422,7 +482,7 @@ var Map = map[string]Attribute{
 	},
 	"srcset": Attribute{
 		Name:     "srcset",
-		Elements: []string{"img"},
+		Elements: []string{"img", "source"},
 	},
 	"start": Attribute{
 		Name:     "start",
@@ -462,11 +522,11 @@ var Map = map[string]Attribute{
 	},
 	"usemap": Attribute{
 		Name:     "usemap",
-		Elements: []string{"img", " input", "object"},
+		Elements: []string{"img", "input", "object"},
 	},
 	"value": Attribute{
 		Name:     "value",
-		Elements: []string{"button", "option", "input", "li", "meter", "progress", "param"},
+		Elements: []string{"button", "data", "input", "li", "meter", "option", "progress", "param"},
 	},
 	"width": Attribute{
 		Name:     "width",

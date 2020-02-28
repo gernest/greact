@@ -44,14 +44,15 @@ func extractElements(doc *goquery.Document) ([]byte, error) {
 
 	tpl, err := template.New("el").Parse(`package elements
 
-	var elems =map[string]bool{
+	var elems =map[string]struct{}{
 		{{- range .}}
-		"{{.}}":true,
+		"{{.}}":struct{}{},
 		{{- end}}
 	}
 	// Valid returns true if the name is a valid html element
 	func Valid(name string)bool  {
-		return elems[name]
+		_,ok:=elems[name]
+		return ok
 	}
 	`)
 	if err != nil {

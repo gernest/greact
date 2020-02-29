@@ -19,9 +19,9 @@ const packageName = "greact"
 const packageImport = "github.com/gernest/greact"
 
 const (
-	newNode  = "vH"
-	newAttr  = "vHA"
-	newAttrs = "vHAT"
+	newNode  = "createNode"
+	newAttr  = "createAttr"
+	newAttrs = "createAttrs"
 )
 
 // ToNode recursively transform n to a *Node.
@@ -154,15 +154,13 @@ func Generate(w io.Writer, pkg string, ctx ...GeneratorContext) error {
 		Decls: []ast.Decl{
 			importDecl(
 				importSpec("context"),
-				importSpec("fmt"),
-				importSpec(packageImport),
+				importSpec("github.com/gernest/greact"),
 				importSpec("github.com/gernest/greact/expr"),
 				importSpec("github.com/gernest/greact/node"),
 			),
 			declareAlias(newNode, "node", "New"),
-			declareAlias(newAttr, "greact", "Attr"),
-			declareAlias(newAttrs, "greact", "Attrs"),
-			declareAlias("_", "fmt", "Print"),
+			declareAlias(newAttr, "node", "Attr"),
+			declareAlias(newAttrs, "node", "Attrs"),
 			declareAlias("_", "expr", "Eval"),
 		},
 	}
@@ -302,7 +300,7 @@ func renderNode(name, recv, typ string, node *node.Node) (*ast.FuncDecl, error) 
 						Type: &ast.StarExpr{
 							X: &ast.SelectorExpr{
 								X: &ast.Ident{
-									Name: packageName,
+									Name: "node",
 								},
 								Sel: &ast.Ident{
 									Name: "Node",

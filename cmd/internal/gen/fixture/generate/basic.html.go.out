@@ -2,20 +2,18 @@ package generate
 
 import (
 	"context"
-	"fmt"
 	"github.com/gernest/greact"
 	"github.com/gernest/greact/expr"
 	"github.com/gernest/greact/node"
 )
 
-var vH = node.New
-var vHA = greact.Attr
-var vHAT = greact.Attrs
-var _ = fmt.Print
+var createNode = node.New
+var createAttr = node.Attr
+var createAttrs = node.Attrs
 var _ = expr.Eval
 
-func (t *Hello) Render(ctx context.Context, props greact.Props, state greact.State) *greact.Node {
-	return vH(3, "", "div", vHAT(vHA("", "classname", expr.Eval(func() interface{} {
+func (t *Hello) Render(ctx context.Context, props greact.Props, state greact.State) *node.Node {
+	return createNode(3, "", "div", createAttrs(createAttr("", "classname", expr.Eval(func() interface{} {
 		return props["classNames"]
-	})), vHA("", "key", expr.Eval("value"))))
+	})), createAttr("", "key", expr.Eval("value"))))
 }

@@ -52,13 +52,13 @@ const (
 	Complex128 = reflect.Complex128
 	Array      = reflect.Array
 	Chan       = reflect.Chan
-	Func       = reflect.Func
-	Interface  = reflect.Interface
-	Map        = reflect.Map
-	Ptr        = reflect.Ptr
-	Slice      = reflect.Slice
-	String     = reflect.String
-	Struct     = reflect.Struct
+	// Func       = reflect.Func
+	Interface = reflect.Interface
+	Map       = reflect.Map
+	Ptr       = reflect.Ptr
+	Slice     = reflect.Slice
+	String    = reflect.String
+	Struct    = reflect.Struct
 )
 
 const verifyErr = "key: %s, has wrong prop value expected %s got %s instead"

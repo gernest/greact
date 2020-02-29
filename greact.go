@@ -9,7 +9,6 @@ package greact
 import (
 	"container/list"
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -82,94 +81,10 @@ type Component interface {
 	core() *Core
 }
 
-// Type defines a javascript object type This is an abstraction over the
-// syscall/js, allowing the library development to happen without GOARCH=wasm to
-// speed up things since tooling for wasm is lacking.
-type Type int
-
-// supported javascript object types.
-const (
-	TypeUndefined Type = iota
-	TypeNull
-	TypeBoolean
-	TypeNumber
-	TypeString
-	TypeSymbol
-	TypeObject
-	TypeFunction
-)
-
-func (t Type) String() string {
-	switch t {
-	case TypeUndefined:
-		return "undefined"
-	case TypeNull:
-		return "null"
-	case TypeBoolean:
-		return "bool"
-	case TypeNumber:
-		return "Number"
-	case TypeString:
-		return "String"
-	case TypeSymbol:
-		return "Symbol"
-	case TypeObject:
-		return "Object"
-	case TypeFunction:
-		return "Function"
-	default:
-		return "unknown"
-	}
-}
-
-// Value is an interface for a javascript value.
-type Value interface {
-	Bool() bool
-	Call(m string, args ...interface{}) Value
-	Float() float64
-	Get(string) Value
-	Index(int) Value
-	Int() int
-	Invoke(args ...interface{}) Value
-	Set(p string, x interface{})
-	String() string
-	Type() Type
-}
-
 // Resource is an interface for a resource that will need to be freed manually,
 // such as callback..
 type Resource interface {
 	Release()
-}
-
-// Keys is like Object.keys, this returns nil if v is not an object.
-func Keys(v Value) (keys []string, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = fmt.Errorf("%v", e)
-		}
-	}()
-	if v.Type() != TypeObject {
-		return nil, errors.New("can't call keys on " + v.Type().String())
-	}
-	k := v.Call("keys")
-	var o []string
-	size := k.Get("length").Int()
-	for i := 0; i < size; i++ {
-		o = append(o, k.Index(i).String())
-	}
-	return o, nil
-}
-
-// Valid returns true if value is not null or undefined.
-func Valid(v Value) bool {
-	if v == nil {
-		return false
-	}
-	if v.Type() == TypeUndefined {
-		return false
-	}
-	return v.Type() != TypeNull
 }
 
 // RemoveNode removes node from its parent if attached.
@@ -181,19 +96,11 @@ func RemoveNode(node Value) {
 }
 
 // Element is an alias for the dom node.
-type Element Value
+type Element = Value
 
 // HasProperty returns true if e has property.
 func HasProperty(e Element, v string) bool {
 	return e.Call("hasOwnProperty", v).Bool()
-}
-
-// IsEqual returns true if the ywo elements are equal
-func IsEqual(a, b Element) bool {
-	if !Valid(a) || !Valid(b) {
-		return false
-	}
-	return a.Call("isEqualNode", b).Bool()
 }
 
 // Templater is an interface for describing components with xml like markup. The
@@ -568,7 +475,7 @@ func (v *Vected) diff(ctx context.Context, elem Element, node *Node, parent Elem
 	if v.diffLevel == 0 {
 		v.diffLevel++
 		// when first starting the diff, check if we're diffing an SVG or within an SVG
-		v.isSVGMode = parent != nil && parent.Type() != TypeNull &&
+		v.isSVGMode = parent.IsNull() && parent.IsNull() &&
 			Valid(parent.Get("ownerSVGElement"))
 
 		// hydration is indicated by the existing element to be diffed not having a
@@ -645,19 +552,17 @@ func (v *Vected) idiff(ctx context.Context, elem Element, node *Node, mountAll, 
 		var old []Attribute
 		if !Valid(props) {
 			a := out.Get("attributes")
-			if keys, err := Keys(a); err == nil {
-				for _, v := range keys {
-					old = append(old, Attribute{
-						Key: v,
-						Val: a.Get(v).String(),
-					})
-				}
+			for _, v := range Keys(a) {
+				old = append(old, Attribute{
+					Key: v,
+					Val: a.Get(v).String(),
+				})
 			}
 		}
 		if !v.hydrating && len(node.Children) == 1 &&
 			node.Children[0].Type == TextNode && Valid(fc) &&
 			Valid(fc.Get("splitText")) &&
-			fc.Get("nextSibling").Type() == TypeNull {
+			fc.Get("nextSibling").IsNull() {
 			nv := node.Children[0].Data
 			fv := fc.Get("nodeValue").String()
 			if fv != nv {
@@ -697,17 +602,17 @@ func (v *Vected) buildComponentFromVNode(ctx context.Context, elem Element, node
 	} else {
 		if originalComponent != nil && !isDirectOwner {
 			v.unmountComponent(originalComponent)
-			elem = nil
-			oldElem = nil
+			elem = Null()
+			oldElem = Null()
 		}
 		c = v.createComponentByName(ctx, node.Data, props)
-		if elem != nil && !Valid(c.core().nextBase) {
+		if !elem.IsNull() && !Valid(c.core().nextBase) {
 			c.core().nextBase = elem
-			oldElem = nil
+			oldElem = Null()
 		}
 		v.setProps(ctx, c, props, Sync, mountAll)
 		elem = c.core().base
-		if oldElem != nil && !IsEqual(elem, oldElem) {
+		if !oldElem.IsNull() && !IsEqual(elem, oldElem) {
 			//TODO dereference the component.
 			oldElem.Set(componentKey, 0)
 			v.recollectNodeTree(oldElem, false)
@@ -763,9 +668,9 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem Element, vchildrens []*
 		} else if min < len(children) {
 			for j := min; j < len(children); j++ {
 				c := children[j]
-				if c != nil && Valid(c) && isSameNodeType(c, vchild, isHydrating) {
+				if Valid(c) && isSameNodeType(c, vchild, isHydrating) {
 					child = c
-					children[j] = nil
+					children[j] = Null()
 					if j == min {
 						min++
 					}
@@ -776,7 +681,7 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem Element, vchildrens []*
 		child = v.idiff(ctx, child, vchild, mountAll, false)
 		f := original.Index(i)
 		if Valid(child) && !IsEqual(child, elem) && !IsEqual(child, f) {
-			if f.Type() == TypeNull || f.Type() == TypeUndefined {
+			if !Valid(f) {
 				elem.Call("appendChild", child)
 			} else if IsEqual(child, f.Get("nextSibling")) {
 				RemoveNode(f)
@@ -792,7 +697,7 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem Element, vchildrens []*
 	}
 	for i := min; i < len(children); i++ {
 		ch := children[i]
-		if ch != nil {
+		if !ch.IsNull() {
 			v.recollectNodeTree(ch, false)
 		}
 	}
@@ -837,7 +742,7 @@ func (v *Vected) Render(vnode *Node, parent Element, merge ...Element) Element {
 func (v *Vected) RenderComponent(cmp string, parent Element, merge ...Element) (Element, error) {
 	node, err := ParseString(cmp)
 	if err != nil {
-		return nil, err
+		return Null(), err
 	}
 	return v.Render(node, parent, merge...), nil
 }
@@ -938,7 +843,7 @@ func setAccessor(gen CallbackGenerator, node Element, name string, old, val inte
 						release.Release()
 					})
 					releaseList := node.Get("_listeners")
-					if releaseList.Type() == TypeUndefined {
+					if releaseList.IsUndefined() {
 						node.Set("_listeners", make(map[string]interface{}))
 						releaseList = node.Get("_listeners")
 					}

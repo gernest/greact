@@ -72,7 +72,7 @@ func (v *Vected) setProps(ctx context.Context, cmp Component, props Props, mode 
 	delete(props, "ref")
 	_, ok := cmp.(DerivedState)
 	if !ok {
-		if core.base == nil || mountAll {
+		if core.base.IsNull() || mountAll {
 			if m, ok := cmp.(WillMount); ok {
 				m.ComponentWillMount()
 			}
@@ -133,7 +133,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 	isUpdate := core.base
 	nextBase := core.nextBase
 	initialBase := isUpdate
-	if initialBase == nil {
+	if initialBase.IsNull() {
 		initialBase = nextBase
 	}
 	initialChildComponent := core.component
@@ -146,7 +146,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 		xstate = MergeState(xstate, c.DeriveState(props, xstate))
 		core.state = xstate
 	}
-	if isUpdate != nil {
+	if !isUpdate.IsNull() {
 		core.props = prevProps
 		core.state = prevState
 		core.context = prevContext
@@ -165,7 +165,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 	core.prevProps = nil
 	core.prevState = nil
 	core.prevContext = nil
-	core.nextBase = nil
+	core.nextBase = Null()
 	core.dirty = false
 
 	if !skip {
@@ -200,7 +200,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 				core.component = inst
 				instanceCore := inst.core()
 				instanceCore.component = inst
-				if instanceCore.nextBase == nil {
+				if instanceCore.nextBase.IsNull() {
 					instanceCore.nextBase = nextBase
 				}
 				instanceCore.parentComponent = cmp
@@ -212,11 +212,11 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 			cbase = initialBase
 			toUnmount = initialChildComponent
 			if toUnmount != nil {
-				cbase = nil
+				cbase = Null()
 				core.component = nil
 			}
-			if initialBase != nil || mode == Sync {
-				if cbase != nil {
+			if !initialBase.IsNull() || mode == Sync {
+				if !cbase.IsNull() {
 					cbase.Set(componentKey, 0)
 				}
 				var parent Element
@@ -315,7 +315,7 @@ func sameConstructor(a, b Component) bool {
 func (v *Vected) findComponent(node Element) Component {
 	if Valid(node) {
 		id := node.Get(componentKey)
-		if id.Type() == TypeNumber {
+		if IsNumber(id) {
 			i := id.Int()
 			if c, ok := v.cache[i]; ok {
 				return c
@@ -329,7 +329,7 @@ func (v *Vected) findComponent(node Element) Component {
 func (v *Vected) removeComponentRef(e Element) {
 	if Valid(e) {
 		id := e.Get(componentKey)
-		if id.Type() == TypeNumber {
+		if IsNumber(id) {
 			i := id.Int()
 			v.refs[i]--
 		}
@@ -352,10 +352,10 @@ func (v *Vected) unmountComponent(cmp Component) {
 	if wm, ok := cmp.(WillUnmount); ok {
 		wm.ComponentWillUnmount()
 	}
-	core.base = nil
+	core.base = Null()
 	if core.component != nil {
 		v.unmountComponent(core.component)
-	} else if base != nil {
+	} else if !base.IsNull() {
 		core.nextBase = base
 		RemoveNode(base)
 		v.removeChildren(base)

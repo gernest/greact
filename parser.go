@@ -1,12 +1,10 @@
 package greact
 
 import (
-	"bytes"
 	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
-	"go/printer"
 	"go/token"
 	"io"
 	"strings"
@@ -102,28 +100,8 @@ func interpretText(v string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	return expr.WrapString(parts...)
 
-	// for text all plain nodes are strings
-	var args []ast.Expr
-	for _, v := range parts {
-		if v.Plain {
-			a, err := v.QuoteExpr()
-			if err != nil {
-				return "", err
-			}
-			args = append(args, a)
-		} else {
-			a, err := v.Expr()
-			if err != nil {
-				return "", err
-			}
-			args = append(args, a)
-		}
-	}
-	e := expr.Wrap(args...)
-	var buf bytes.Buffer
-	printer.Fprint(&buf, token.NewFileSet(), e)
-	return buf.String(), nil
 }
 
 // interpret   attributes templates.
@@ -132,42 +110,18 @@ func interpret(v interface{}) (string, error) {
 	case nil:
 		return "nil", nil
 	case string:
-		e = strings.TrimSpace(e)
-		if strings.HasPrefix(e, "{") {
-			parts, err := expr.ExtractExpressions(e, '{', '}')
-			if err != nil {
-				return "", err
-			}
-			var args []ast.Expr
-			for _, v := range parts {
-				if v.Plain && strings.Contains(v.Text, "\"") {
-					a, err := v.QuoteExpr()
-					if err != nil {
-						return "", err
-					}
-					args = append(args, a)
-				} else {
-					a, err := v.Expr()
-					if err != nil {
-						return "", err
-					}
-					args = append(args, a)
-				}
-			}
-			var e ast.Expr
-			if len(args) == 1 {
-				e = args[0]
-			} else {
-				e = expr.Wrap(args...)
-			}
-			var buf bytes.Buffer
-			printer.Fprint(&buf, token.NewFileSet(), e)
-			return buf.String(), nil
+		exprs, err := expr.ExtractExpressions(e, '{', '}')
+		if err != nil {
+			return "", err
 		}
-		return fmt.Sprintf("%q", e), nil
+		return expr.WrapString(exprs...)
 	default:
 		return "nil", nil
 	}
+}
+
+func pickExpressions(src string) []expr.Expression {
+	return nil
 }
 
 // GeneratorContext stores info about the node that we want to generate the
@@ -199,17 +153,15 @@ func Generate(w io.Writer, pkg string, ctx ...GeneratorContext) error {
 		Decls: []ast.Decl{
 			importDecl(
 				importSpec("context"),
-			),
-			importDecl(
 				importSpec("fmt"),
-			),
-			importDecl(
 				importSpec(packageImport),
+				importSpec("github.com/gernest/greact/expr"),
 			),
 			declareAlias(newNode, ID, "NewNode"),
 			declareAlias(newAttr, ID, "Attr"),
 			declareAlias(newAttrs, ID, "Attrs"),
 			declareAlias("_", "fmt", "Print"),
+			declareAlias("_", "expr", "Eval"),
 		},
 	}
 	for _, v := range ctx {
@@ -231,10 +183,10 @@ func importSpec(pkg string) *ast.ImportSpec {
 	}
 }
 
-func importDecl(pkg *ast.ImportSpec) *ast.GenDecl {
+func importDecl(pkg ...ast.Spec) *ast.GenDecl {
 	return &ast.GenDecl{
 		Tok:   token.IMPORT,
-		Specs: []ast.Spec{pkg},
+		Specs: pkg,
 	}
 }
 

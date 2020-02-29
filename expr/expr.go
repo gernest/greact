@@ -7,40 +7,9 @@ import (
 	"go/parser"
 	"go/printer"
 	"go/token"
-	"os"
+	"strconv"
 	"strings"
 )
-
-func Parse(src string) (ast.Expr, error) {
-	a, err := parser.ParseExpr(src)
-	if err != nil {
-		return nil, err
-	}
-	a = Wrap(a)
-	fset := token.NewFileSet()
-	ast.Print(fset, a)
-	return a, nil
-}
-
-// Wrap returns ast for fmt.Println(args...)
-func Wrap(args ...ast.Expr) ast.Expr {
-	return &ast.CallExpr{
-		Fun: &ast.SelectorExpr{
-			X: &ast.Ident{
-				Name: "fmt",
-			},
-			Sel: &ast.Ident{
-				Name: "Sprint",
-			},
-		},
-		Args: args,
-	}
-}
-
-func printExpr(a ast.Expr) {
-	printer.Fprint(os.Stdout, token.NewFileSet(), a)
-	fmt.Print("\n")
-}
 
 // Expression represent part of text that should be evaluated. Something between
 // { }
@@ -53,10 +22,13 @@ type Expression struct {
 
 // Expr returns ast of the Text field.
 func (e Expression) Expr() (ast.Expr, error) {
-	return parser.ParseExpr(e.Text)
+	if e.Plain {
+		return parser.ParseExpr(strconv.Quote(e.Text))
+	}
+	return Parse(e.Text)
 }
 
-func (e Expression) QuoteExpr() (ast.Expr, error) {
+func (e Expression) quoteExpr() (ast.Expr, error) {
 	return parser.ParseExpr(fmt.Sprintf("%q", e.Text))
 }
 
@@ -121,4 +93,104 @@ func ExtractExpressions(src string, begin, end rune) (result []Expression, err e
 		}
 	}
 	return
+}
+
+// Parse returns ast.Expr wtih exp interpreted as function body of a
+// func()interface{} {}
+// WHich yields the last expression
+//
+// x:=1
+// y:=2
+// x+y
+//
+// will generate
+//
+// func() interface{} {
+// 	x := 1
+// 	y := 2
+// 	return x + y
+// }
+func Parse(exp string) (ast.Expr, error) {
+	s := `func() interface{}{
+		%s
+		return 1+1
+	}
+		`
+	s = fmt.Sprintf(s, exp)
+	a, err := parser.ParseExpr(s)
+	if err != nil {
+		return nil, err
+	}
+	f := a.(*ast.FuncLit)
+	n := len(f.Body.List)
+	if n > 1 {
+		// The last item is the return statement
+		ret := f.Body.List[n-1]
+		body := f.Body.List[:n-1]
+		last := body[len(body)-1]
+		stmt := ret.(*ast.ReturnStmt)
+		if e, ok := last.(*ast.ExprStmt); ok {
+			stmt.Results[0] = e.X
+			body[len(body)-1] = stmt
+			f.Body.List = body
+		}
+	}
+	return a, nil
+}
+
+func wrapExpr(exprs ...Expression) (ast.Expr, error) {
+	var args []ast.Expr
+	for _, a := range exprs {
+		e, err := a.Expr()
+		if err != nil {
+			return nil, err
+		}
+		args = append(args, e)
+	}
+	return wrap(args...), nil
+}
+
+func WrapString(exprs ...Expression) (string, error) {
+	a, err := wrapExpr(exprs...)
+	if err != nil {
+		return "", err
+	}
+	var buf bytes.Buffer
+	printer.Fprint(&buf, token.NewFileSet(), a)
+	return buf.String(), nil
+}
+
+func wrap(args ...ast.Expr) ast.Expr {
+	return &ast.CallExpr{
+		Fun: &ast.SelectorExpr{
+			X: &ast.Ident{
+				Name: "expr",
+			},
+			Sel: &ast.Ident{
+				Name: "Eval",
+			},
+		},
+		Args: args,
+	}
+}
+
+func Eval(args ...interface{}) string {
+	var buf bytes.Buffer
+	for _, a := range args {
+		switch v := a.(type) {
+		case string:
+			buf.WriteString(v)
+		case func() interface{}:
+			g := v()
+			if g != nil {
+				buf.WriteString(toValue(g))
+			}
+		}
+	}
+	return buf.String()
+}
+
+func toValue(v interface{}) string {
+	// TODO remove dependency on fmt
+	return fmt.Sprint(v)
 }

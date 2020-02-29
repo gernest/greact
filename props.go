@@ -3,6 +3,8 @@ package greact
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/gernest/greact/node"
 )
 
 // Props is a map of properties. These are used to pass values to components.
@@ -21,9 +23,9 @@ func MergeProps(a, b Props) Props {
 }
 
 // Children returns child components stored in props.
-func (p Props) Children() []*Node {
+func (p Props) Children() []*node.Node {
 	if c, ok := p["children"]; ok {
-		return c.([]*Node)
+		return c.([]*node.Node)
 	}
 	return nil
 }

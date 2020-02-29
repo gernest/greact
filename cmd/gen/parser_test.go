@@ -1,4 +1,4 @@
-package greact
+package gen
 
 import (
 	"bytes"

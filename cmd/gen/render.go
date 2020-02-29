@@ -65,7 +65,7 @@ func renderFile(ctx *cli.Context) error {
 }
 
 func processPackage(path string, pkg *ast.Package) error {
-	ctxs := make(map[string]greact.GeneratorContext)
+	ctxs := make(map[string]GeneratorContext)
 
 	// First we collect all structs that implements that emebds greact.Core. Then
 	// we check for the Template method which we then use to generate the render
@@ -85,7 +85,7 @@ func processPackage(path string, pkg *ast.Package) error {
 									if id, ok := x.X.(*ast.Ident); ok {
 										if f.Names == nil && id.Name == greact.ID &&
 											x.Sel.Name == "Core" {
-											ctx := greact.GeneratorContext{
+											ctx := GeneratorContext{
 												StructName: vs.Name.Name,
 											}
 											ctxs[ctx.StructName] = ctx
@@ -102,7 +102,7 @@ func processPackage(path string, pkg *ast.Package) error {
 	for _, file := range pkg.Files {
 		for _, v := range file.Decls {
 			if fn, ok := v.(*ast.FuncDecl); ok {
-				if fn.Recv != nil && fn.Name.Name == greact.TemplateFn &&
+				if fn.Recv != nil && fn.Name.Name == "Template" &&
 					fn.Recv.NumFields() == 1 {
 					fd := fn.Recv.List[0]
 					recv := ""
@@ -122,7 +122,7 @@ func processPackage(path string, pkg *ast.Package) error {
 											if ret, ok := rs.Results[0].(*ast.BasicLit); ok {
 												v := strings.TrimPrefix(ret.Value, "`")
 												v = strings.TrimSuffix(v, "`")
-												n, err := greact.ParseString(v)
+												n, err := ParseString(v)
 												if err != nil {
 													return err
 												}
@@ -142,7 +142,7 @@ func processPackage(path string, pkg *ast.Package) error {
 	if len(ctxs) == 0 {
 		return nil
 	}
-	var c []greact.GeneratorContext
+	var c []GeneratorContext
 	for _, v := range ctxs {
 		c = append(c, v)
 	}
@@ -150,7 +150,7 @@ func processPackage(path string, pkg *ast.Package) error {
 		return c[i].StructName < c[j].StructName
 	})
 	var buf bytes.Buffer
-	err := greact.Generate(&buf, pkg.Name, c...)
+	err := Generate(&buf, pkg.Name, c...)
 	if err != nil {
 		return err
 	}

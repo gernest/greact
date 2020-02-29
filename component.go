@@ -4,6 +4,8 @@ import (
 	"context"
 	"reflect"
 	"strings"
+
+	"github.com/gernest/greact/node"
 )
 
 const (
@@ -97,16 +99,16 @@ func (v *Vected) setProps(ctx context.Context, cmp Component, props Props, mode 
 	}
 }
 
-func (v *Vected) isHigherOrder(node *Node) bool {
-	if node.Type == ElementNode {
-		if _, ok := v.components[node.Data]; ok {
+func (v *Vected) isHigherOrder(nd *node.Node) bool {
+	if nd.Type == node.ElementNode {
+		if _, ok := v.components[nd.Data]; ok {
 			return true
 		}
 	}
 	return false
 }
 
-func (v *Vected) getComponent(node *Node) Component {
+func (v *Vected) getComponent(node *node.Node) Component {
 	return v.components[node.Data]
 }
 
@@ -274,7 +276,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 	}
 }
 
-func getNodeProps(node *Node) Props {
+func getNodeProps(node *node.Node) Props {
 	props := make(Props)
 	for _, v := range node.Attr {
 		props[v.Key] = v.Val

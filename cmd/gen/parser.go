@@ -1,4 +1,4 @@
-package greact
+package gen
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/gernest/greact/expr"
+	"github.com/gernest/greact/node"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -24,9 +25,9 @@ const (
 )
 
 // ToNode recursively transform n to a *Node.
-func ToNode(n *html.Node) *Node {
-	node := &Node{
-		Type:      NodeType(uint32(n.Type)),
+func ToNode(n *html.Node) *node.Node {
+	nd := &node.Node{
+		Type:      node.NodeType(uint32(n.Type)),
 		Data:      n.Data,
 		Namespace: n.Namespace,
 	}
@@ -34,7 +35,7 @@ func ToNode(n *html.Node) *Node {
 		if v.Key == "" {
 			continue
 		}
-		node.Attr = append(node.Attr, Attribute{
+		nd.Attr = append(nd.Attr, node.Attribute{
 			Namespace: v.Namespace,
 			Key:       v.Key,
 			Val:       v.Val,
@@ -44,30 +45,30 @@ func ToNode(n *html.Node) *Node {
 		if c.Type == html.TextNode && strings.TrimSpace(c.Data) == "" {
 			continue
 		}
-		node.Children = append(node.Children, ToNode(c))
+		nd.Children = append(nd.Children, ToNode(c))
 	}
-	return node
+	return nd
 }
 
 // Parse parses src as html component definition and returns their *Node
 // representation. r must be reading from a subset of xml/html document that is
 // going to processed and compiled to *Node.
-func Parse(r io.Reader) (*Node, error) {
+func Parse(r io.Reader) (*node.Node, error) {
 	base := root()
 	n, err := html.ParseFragment(r, base)
 	if err != nil {
 		return nil, err
 	}
-	var rst []*Node
+	var rst []*node.Node
 	for _, v := range n {
-		node := ToNode(v)
-		if node.Type == TextNode && strings.TrimSpace(node.Data) == "" {
+		nd := ToNode(v)
+		if nd.Type == node.TextNode && strings.TrimSpace(nd.Data) == "" {
 			continue
 		}
-		rst = append(rst, node)
+		rst = append(rst, nd)
 	}
-	container := &Node{
-		Type: ElementNode,
+	container := &node.Node{
+		Type: node.ElementNode,
 		Data: "div",
 	}
 	switch len(rst) {
@@ -90,7 +91,7 @@ func root() *html.Node {
 }
 
 // ParseString helper that wraps s to io.Reader.
-func ParseString(s string) (*Node, error) {
+func ParseString(s string) (*node.Node, error) {
 	return Parse(strings.NewReader(s))
 }
 
@@ -140,7 +141,7 @@ type GeneratorContext struct {
 	Recv string
 
 	// The actual node we want to generate go ast for.
-	Node *Node
+	Node *node.Node
 }
 
 // Generate writes a g file that contains generated Render methods for struct
@@ -156,16 +157,17 @@ func Generate(w io.Writer, pkg string, ctx ...GeneratorContext) error {
 				importSpec("fmt"),
 				importSpec(packageImport),
 				importSpec("github.com/gernest/greact/expr"),
+				importSpec("github.com/gernest/greact/node"),
 			),
-			declareAlias(newNode, ID, "NewNode"),
-			declareAlias(newAttr, ID, "Attr"),
-			declareAlias(newAttrs, ID, "Attrs"),
+			declareAlias(newNode, "node", "NewNode"),
+			declareAlias(newAttr, "greact", "Attr"),
+			declareAlias(newAttrs, "greact", "Attrs"),
 			declareAlias("_", "fmt", "Print"),
 			declareAlias("_", "expr", "Eval"),
 		},
 	}
 	for _, v := range ctx {
-		e, err := render("Render", v.Recv, v.StructName, v.Node)
+		e, err := renderNode("Render", v.Recv, v.StructName, v.Node)
 		if err != nil {
 			return err
 		}
@@ -219,7 +221,7 @@ func aliasVar(alias, pkg, selector string) *ast.ValueSpec {
 	}
 }
 
-func render(name, recv, typ string, node *Node) (*ast.FuncDecl, error) {
+func renderNode(name, recv, typ string, node *node.Node) (*ast.FuncDecl, error) {
 	e, err := h(node)
 	if err != nil {
 		return nil, err
@@ -354,19 +356,19 @@ func hat(expr ...ast.Expr) ast.Expr {
 	}
 }
 
-func h(node *Node) (*ast.CallExpr, error) {
+func h(nd *node.Node) (*ast.CallExpr, error) {
 	args := []ast.Expr{
 		&ast.BasicLit{
 			Kind:  token.INT,
-			Value: fmt.Sprint(uint32(node.Type)),
+			Value: fmt.Sprint(uint32(nd.Type)),
 		},
 		&ast.BasicLit{
 			Kind:  token.STRING,
-			Value: fmt.Sprintf("%q", node.Namespace),
+			Value: fmt.Sprintf("%q", nd.Namespace),
 		},
 	}
-	if node.Type == TextNode {
-		e, err := interpretText(node.Data)
+	if nd.Type == node.TextNode {
+		e, err := interpretText(nd.Data)
 		if err != nil {
 			return nil, err
 		}
@@ -378,11 +380,11 @@ func h(node *Node) (*ast.CallExpr, error) {
 	} else {
 		args = append(args, &ast.BasicLit{
 			Kind:  token.STRING,
-			Value: fmt.Sprintf("%q", node.Data),
+			Value: fmt.Sprintf("%q", nd.Data),
 		})
 	}
 	var attrs []ast.Expr
-	for _, v := range node.Attr {
+	for _, v := range nd.Attr {
 		txt, err := interpret(v.Val)
 		if err != nil {
 			return nil, err
@@ -396,8 +398,8 @@ func h(node *Node) (*ast.CallExpr, error) {
 		))
 	}
 	args = append(args, hat(attrs...))
-	if len(node.Children) > 0 {
-		for _, v := range node.Children {
+	if len(nd.Children) > 0 {
+		for _, v := range nd.Children {
 			e, err := h(v)
 			if err != nil {
 				return nil, err

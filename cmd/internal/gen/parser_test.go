@@ -118,7 +118,7 @@ func geneateTest(t *testing.T, file string) {
 			t.Fatal(err)
 		}
 		output := file + ".go.out"
-		// ioutil.WriteFile(output, buf.Bytes(), 0600)
+		ioutil.WriteFile(output, buf.Bytes(), 0600)
 		o, err := ioutil.ReadFile(output)
 		if err != nil {
 			t.Fatal(err)

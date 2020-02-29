@@ -48,9 +48,9 @@ type Node struct {
 	Children  []*Node
 }
 
-// NewNode is a wrapper for creating new node. If children are provided adjacent
+// New is a wrapper for creating new node. If children are provided adjacent
 // text nodes will be merged to a single node.
-func NewNode(typ NodeType, ns, name string, attrs []Attribute, children ...*Node) *Node {
+func New(typ NodeType, ns, name string, attrs []Attribute, children ...*Node) *Node {
 	n := &Node{
 		Type:      typ,
 		Namespace: ns,

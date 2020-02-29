@@ -159,7 +159,7 @@ func Generate(w io.Writer, pkg string, ctx ...GeneratorContext) error {
 				importSpec("github.com/gernest/greact/expr"),
 				importSpec("github.com/gernest/greact/node"),
 			),
-			declareAlias(newNode, "node", "NewNode"),
+			declareAlias(newNode, "node", "New"),
 			declareAlias(newAttr, "greact", "Attr"),
 			declareAlias(newAttrs, "greact", "Attrs"),
 			declareAlias("_", "fmt", "Print"),

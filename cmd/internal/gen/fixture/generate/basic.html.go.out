@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"github.com/gernest/greact"
 	"github.com/gernest/greact/expr"
+	"github.com/gernest/greact/node"
 )
 
-var vH = greact.NewNode
+var vH = node.New
 var vHA = greact.Attr
 var vHAT = greact.Attrs
 var _ = fmt.Print

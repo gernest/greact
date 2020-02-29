@@ -3,7 +3,7 @@ package node
 import "testing"
 
 func TestVNode(t *testing.T) {
-	h := NewNode
+	h := New
 	t.Run("merges adjacent text child nodes", func(ts *testing.T) {
 		x := h(ElementNode, "", "foo", nil,
 			h(TextNode, "", "one", nil),

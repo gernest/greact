@@ -363,7 +363,7 @@ func renderNodeType(nd *node.Node) ast.Expr {
 			Value: strconv.Itoa(int(nd.Type.(node.NodeType))),
 		}
 	}
-	return nil
+	return &ast.CompositeLit{Type: &ast.Ident{Name: nd.Data}}
 }
 
 func h(nd *node.Node) (*ast.CallExpr, error) {

@@ -40,6 +40,11 @@ type Attribute struct {
 	Val            interface{}
 }
 
+// Props attributes that are passed to components.
+type Props map[string]Attribute
+
+type State map[string]interface{}
+
 // Node represents a virtual dom node. This is a go object that represents a dom
 // object.
 type Node struct {

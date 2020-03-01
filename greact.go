@@ -6,10 +6,12 @@
 // similar API from react/preact.
 package greact
 
+import "github.com/gernest/greact/node"
+
 type Core interface {
 	core()
 }
 
-type Props map[string]interface{}
+type Props = node.Props
 
-type State map[string]interface{}
+type State = node.State

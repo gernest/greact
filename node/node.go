@@ -1,5 +1,7 @@
 package node
 
+import "github.com/gernest/greact/expr"
+
 // A NodeType is the type of a Node.
 type NodeType uint32
 
@@ -42,6 +44,7 @@ type Attribute struct {
 // object.
 type Node struct {
 	Type      NodeType
+	Key       string
 	Data      string
 	Namespace string
 	Attr      []Attribute
@@ -51,11 +54,27 @@ type Node struct {
 // New is a wrapper for creating new node. If children are provided adjacent
 // text nodes will be merged to a single node.
 func New(typ NodeType, ns, name string, attrs []Attribute, children ...*Node) *Node {
+	var norm []Attribute
+	var key string
+	for _, v := range attrs {
+		if v.Key == "key" {
+			key = expr.Eval(v.Val)
+		} else {
+			norm = append(norm, v)
+		}
+	}
+	if len(children) > 0 {
+		norm = append(norm, Attribute{
+			Key: "children",
+			Val: children,
+		})
+	}
 	n := &Node{
 		Type:      typ,
 		Namespace: ns,
+		Key:       key,
 		Data:      name,
-		Attr:      attrs,
+		Attr:      norm,
 	}
 	var lastText *Node
 	for _, v := range children {
@@ -90,16 +109,4 @@ func Attr(ns, key string, val interface{}) Attribute {
 // readability.
 func Attrs(attr ...Attribute) []Attribute {
 	return attr
-}
-
-// Key returns the value of the key attribute of the node as a string. Key
-// attributes can be set to allow easily identifying lists nodes for faster re
-// re rendering.
-func (v *Node) Key() string {
-	for _, v := range v.Attr {
-		if v.Key == "key" {
-			return v.Val.(string)
-		}
-	}
-	return ""
 }

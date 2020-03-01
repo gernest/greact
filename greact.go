@@ -660,7 +660,7 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem Element, vchildrens []*
 	}
 	for i := 0; i < len(vchildrens); i++ {
 		vchild := vchildrens[i]
-		key := vchild.Key()
+		key := vchild.Key
 		var child Element
 		if key != "" {
 			if ch, ok := keys[key]; ok {

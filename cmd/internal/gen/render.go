@@ -63,6 +63,15 @@ func renderFile(ctx *cli.Context) error {
 	return nil
 }
 
+func takeFile(f *ast.File) bool {
+	for _, i := range f.Imports {
+		if i.Path.Value == packageImport {
+			return true
+		}
+	}
+	return false
+}
+
 func processPackage(path string, pkg *ast.Package) error {
 	ctxs := make(map[string]GeneratorContext)
 
@@ -73,6 +82,9 @@ func processPackage(path string, pkg *ast.Package) error {
 	// The two iterations are important to allow the user to define the Template
 	// function in a separate file than the one which defines the component struct.
 	for _, file := range pkg.Files {
+		if !takeFile(file) {
+			continue
+		}
 		for _, v := range file.Decls {
 			if g, ok := v.(*ast.GenDecl); ok && g.Tok == token.TYPE {
 				for _, spec := range g.Specs {

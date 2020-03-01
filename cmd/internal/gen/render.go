@@ -165,6 +165,6 @@ func processPackage(path string, pkg *ast.Package) error {
 	if err != nil {
 		return err
 	}
-	n := filepath.Join(path, fmt.Sprintf("%s_vected_render_gen.go", pkg.Name))
+	n := filepath.Join(path, fmt.Sprintf("%s_render_gen.go", pkg.Name))
 	return ioutil.WriteFile(n, buf.Bytes(), 0600)
 }

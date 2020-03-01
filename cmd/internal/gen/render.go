@@ -12,7 +12,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gernest/greact"
 	"github.com/urfave/cli"
 )
 
@@ -83,7 +82,7 @@ func processPackage(path string, pkg *ast.Package) error {
 							for _, f := range typ.Fields.List {
 								if x, ok := f.Type.(*ast.SelectorExpr); ok {
 									if id, ok := x.X.(*ast.Ident); ok {
-										if f.Names == nil && id.Name == greact.ID &&
+										if f.Names == nil && id.Name == "greact" &&
 											x.Sel.Name == "Core" {
 											ctx := GeneratorContext{
 												StructName: vs.Name.Name,

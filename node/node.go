@@ -43,7 +43,7 @@ type Attribute struct {
 // Node represents a virtual dom node. This is a go object that represents a dom
 // object.
 type Node struct {
-	Type      NodeType
+	Type      interface{}
 	Key       string
 	Data      string
 	Namespace string
@@ -75,21 +75,6 @@ func New(typ NodeType, ns, name string, attrs []Attribute, children ...*Node) *N
 		Key:       key,
 		Data:      name,
 		Attr:      norm,
-	}
-	var lastText *Node
-	for _, v := range children {
-		switch v.Type {
-		case TextNode:
-			if lastText != nil {
-				lastText.Data += v.Data
-			} else {
-				lastText = v
-				n.Children = append(n.Children, lastText)
-			}
-		default:
-			lastText = nil
-			n.Children = append(n.Children, v)
-		}
 	}
 	return n
 }

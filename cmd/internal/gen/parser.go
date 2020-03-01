@@ -7,6 +7,7 @@ import (
 	"go/parser"
 	"go/token"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/gernest/greact/expr"
@@ -354,12 +355,21 @@ func hat(expr ...ast.Expr) ast.Expr {
 	}
 }
 
+func renderNodeType(typ interface{}) ast.Expr {
+	switch e := typ.(type) {
+	case node.NodeType:
+		return &ast.BasicLit{
+			Kind:  token.INT,
+			Value: strconv.Itoa(int(e)),
+		}
+	default:
+		return nil
+	}
+}
+
 func h(nd *node.Node) (*ast.CallExpr, error) {
 	args := []ast.Expr{
-		&ast.BasicLit{
-			Kind:  token.INT,
-			Value: fmt.Sprint(uint32(nd.Type)),
-		},
+		renderNodeType(nd.Type),
 		&ast.BasicLit{
 			Kind:  token.STRING,
 			Value: fmt.Sprintf("%q", nd.Namespace),

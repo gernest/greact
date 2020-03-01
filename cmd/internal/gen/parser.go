@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gernest/greact/elements"
 	"github.com/gernest/greact/expr"
 	"github.com/gernest/greact/node"
 	"golang.org/x/net/html"
@@ -330,11 +331,11 @@ func ha(ns, key string, val ast.Expr) *ast.CallExpr {
 		Args: []ast.Expr{
 			&ast.BasicLit{
 				Kind:  token.STRING,
-				Value: fmt.Sprintf("%q", ns),
+				Value: strconv.Quote(ns),
 			},
 			&ast.BasicLit{
 				Kind:  token.STRING,
-				Value: fmt.Sprintf("%q", key),
+				Value: strconv.Quote(key),
 			},
 			val,
 		},
@@ -355,24 +356,22 @@ func hat(expr ...ast.Expr) ast.Expr {
 	}
 }
 
-func renderNodeType(typ interface{}) ast.Expr {
-	switch e := typ.(type) {
-	case node.NodeType:
+func renderNodeType(nd *node.Node) ast.Expr {
+	if elements.Valid(nd.Data) {
 		return &ast.BasicLit{
 			Kind:  token.INT,
-			Value: strconv.Itoa(int(e)),
+			Value: strconv.Itoa(int(nd.Type.(node.NodeType))),
 		}
-	default:
-		return nil
 	}
+	return nil
 }
 
 func h(nd *node.Node) (*ast.CallExpr, error) {
 	args := []ast.Expr{
-		renderNodeType(nd.Type),
+		renderNodeType(nd),
 		&ast.BasicLit{
 			Kind:  token.STRING,
-			Value: fmt.Sprintf("%q", nd.Namespace),
+			Value: strconv.Quote(nd.Namespace),
 		},
 	}
 	if nd.Type == node.TextNode {
@@ -388,7 +387,7 @@ func h(nd *node.Node) (*ast.CallExpr, error) {
 	} else {
 		args = append(args, &ast.BasicLit{
 			Kind:  token.STRING,
-			Value: fmt.Sprintf("%q", nd.Data),
+			Value: strconv.Quote(nd.Data),
 		})
 	}
 	var attrs []ast.Expr

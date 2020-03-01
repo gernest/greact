@@ -95,9 +95,12 @@ func TestInterpretText(t *testing.T) {
 func TestGenerate(t *testing.T) {
 	geneateTest(t, "fixture/generate/basic.html")
 	geneateTest(t, "fixture/generate/custom.html")
+	geneateTest(t, "fixture/generate/custom_with_mapping.html", map[string]string{
+		"custom": "Custom",
+	})
 }
 
-func geneateTest(t *testing.T, file string) {
+func geneateTest(t *testing.T, file string, m ...map[string]string) {
 	t.Run(file, func(t *testing.T) {
 		b, err := ioutil.ReadFile(file)
 		if err != nil {
@@ -114,12 +117,16 @@ func geneateTest(t *testing.T, file string) {
 		}
 
 		var buf bytes.Buffer
-		err = Generate(&buf, "generate", ctx)
+		var ma map[string]string
+		if len(m) > 0 {
+			ma = m[0]
+		}
+		err = Generate(&buf, "generate", ma, ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
 		output := file + ".go.out"
-		// ioutil.WriteFile(output, buf.Bytes(), 0600)
+		ioutil.WriteFile(output, buf.Bytes(), 0600)
 		o, err := ioutil.ReadFile(output)
 		if err != nil {
 			t.Fatal(err)

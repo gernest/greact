@@ -1,0 +1,17 @@
+package generate
+
+import (
+	"context"
+	"github.com/gernest/greact"
+	"github.com/gernest/greact/expr"
+	"github.com/gernest/greact/node"
+)
+
+var createNode = node.New
+var createAttr = node.Attr
+var createAttrs = node.Attrs
+var _ = expr.Eval
+
+func (t *Hello) Render(ctx context.Context, props greact.Props, state greact.State) *node.Node {
+	return createNode(Custom{}, "", "custom", createAttrs(createAttr("", "key", expr.Eval("value"))))
+}

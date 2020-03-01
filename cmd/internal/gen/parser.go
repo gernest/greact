@@ -148,7 +148,15 @@ type GeneratorContext struct {
 
 // Generate writes a g file that contains generated Render methods for struct
 // defined in the GeneratorContext.
-func Generate(w io.Writer, pkg string, ctx ...GeneratorContext) error {
+func Generate(w io.Writer, pkg string, m map[string]string, ctx ...GeneratorContext) error {
+	if m == nil {
+		m = make(map[string]string)
+	}
+	for _, c := range ctx {
+		if _, ok := m[c.StructName]; !ok {
+			m[strings.ToLower(c.StructName)] = c.StructName
+		}
+	}
 	file := &ast.File{
 		Name: &ast.Ident{
 			Name: pkg,
@@ -167,7 +175,7 @@ func Generate(w io.Writer, pkg string, ctx ...GeneratorContext) error {
 		},
 	}
 	for _, v := range ctx {
-		e, err := renderNode("Render", v.Recv, v.StructName, v.Node)
+		e, err := renderNode("Render", v.Recv, v.StructName, v.Node, m)
 		if err != nil {
 			return err
 		}
@@ -221,8 +229,8 @@ func aliasVar(alias, pkg, selector string) *ast.ValueSpec {
 	}
 }
 
-func renderNode(name, recv, typ string, node *node.Node) (*ast.FuncDecl, error) {
-	e, err := h(node)
+func renderNode(name, recv, typ string, node *node.Node, m map[string]string) (*ast.FuncDecl, error) {
+	e, err := h(m, node)
 	if err != nil {
 		return nil, err
 	}
@@ -356,19 +364,23 @@ func hat(expr ...ast.Expr) ast.Expr {
 	}
 }
 
-func renderNodeType(nd *node.Node) ast.Expr {
+func renderNodeType(m map[string]string, nd *node.Node) ast.Expr {
 	if elements.Valid(nd.Data) {
 		return &ast.BasicLit{
 			Kind:  token.INT,
 			Value: strconv.Itoa(int(nd.Type.(node.NodeType))),
 		}
 	}
-	return &ast.CompositeLit{Type: &ast.Ident{Name: nd.Data}}
+	n := m[nd.Data]
+	if n == "" {
+		n = nd.Data
+	}
+	return &ast.CompositeLit{Type: &ast.Ident{Name: n}}
 }
 
-func h(nd *node.Node) (*ast.CallExpr, error) {
+func h(m map[string]string, nd *node.Node) (*ast.CallExpr, error) {
 	args := []ast.Expr{
-		renderNodeType(nd),
+		renderNodeType(m, nd),
 		&ast.BasicLit{
 			Kind:  token.STRING,
 			Value: strconv.Quote(nd.Namespace),
@@ -407,7 +419,7 @@ func h(nd *node.Node) (*ast.CallExpr, error) {
 	args = append(args, hat(attrs...))
 	if len(nd.Children) > 0 {
 		for _, v := range nd.Children {
-			e, err := h(v)
+			e, err := h(m, v)
 			if err != nil {
 				return nil, err
 			}

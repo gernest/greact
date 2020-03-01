@@ -161,7 +161,7 @@ func processPackage(path string, pkg *ast.Package) error {
 		return c[i].StructName < c[j].StructName
 	})
 	var buf bytes.Buffer
-	err := Generate(&buf, pkg.Name, c...)
+	err := Generate(&buf, pkg.Name, nil, c...)
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,4 @@
-package greact
+package dom
 
 import (
 	"syscall/js"

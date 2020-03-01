@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/gernest/greact/dom"
 	"github.com/gernest/greact/node"
 )
 
@@ -167,7 +168,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 	core.prevProps = nil
 	core.prevState = nil
 	core.prevContext = nil
-	core.nextBase = Null()
+	core.nextBase = dom.Null()
 	core.dirty = false
 
 	if !skip {
@@ -214,7 +215,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 			cbase = initialBase
 			toUnmount = initialChildComponent
 			if toUnmount != nil {
-				cbase = Null()
+				cbase = dom.Null()
 				core.component = nil
 			}
 			if !initialBase.IsNull() || mode == Sync {
@@ -222,19 +223,19 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 					cbase.Set(componentKey, 0)
 				}
 				var parent Element
-				if Valid(initialBase) {
+				if dom.Valid(initialBase) {
 					parent = initialBase.Get("parentNode")
 				}
-				base = v.diff(context, cbase, rendered, parent, mountAll || !Valid(isUpdate), true)
+				base = v.diff(context, cbase, rendered, parent, mountAll || !dom.Valid(isUpdate), true)
 			}
 		}
-		if Valid(initialBase) &&
-			!IsEqual(base, initialBase) {
+		if dom.Valid(initialBase) &&
+			!dom.IsEqual(base, initialBase) {
 			// TODO: add inst!==initialChildComponent to the if condition
 			// Go doesnt support that operation on structs so I will need to use
 			// reflection for that or comeup with something else.
 			baseParent := initialBase.Get("parentNode")
-			if Valid(baseParent) && !IsEqual(base, baseParent) {
+			if dom.Valid(baseParent) && !dom.IsEqual(base, baseParent) {
 				baseParent.Call("replaceChild", base, initialBase)
 				if toUnmount == nil {
 					v.removeComponentRef(initialBase)
@@ -246,7 +247,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 			v.unmountComponent(toUnmount)
 		}
 		core.base = base
-		if Valid(base) && !isChild {
+		if dom.Valid(base) && !isChild {
 			componentRef := cmp
 			t := cmp
 			for {
@@ -260,7 +261,7 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 			v.addComponentRef(base, componentRef)
 		}
 	}
-	if !Valid(isUpdate) || mountAll {
+	if !dom.Valid(isUpdate) || mountAll {
 		//TODO mounts.unshift(component);
 	} else if !skip {
 		// Ensure that pending componentDidMount() hooks of child components
@@ -315,9 +316,9 @@ func sameConstructor(a, b Component) bool {
 // To work around this, a simple reference counting is used to decide what
 // componen's to keep around long enough.
 func (v *Vected) findComponent(node Element) Component {
-	if Valid(node) {
+	if dom.Valid(node) {
 		id := node.Get(componentKey)
-		if IsNumber(id) {
+		if dom.IsNumber(id) {
 			i := id.Int()
 			if c, ok := v.cache[i]; ok {
 				return c
@@ -329,9 +330,9 @@ func (v *Vected) findComponent(node Element) Component {
 
 // removeComponentRef removes the reference to a component from the dom element.
 func (v *Vected) removeComponentRef(e Element) {
-	if Valid(e) {
+	if dom.Valid(e) {
 		id := e.Get(componentKey)
-		if IsNumber(id) {
+		if dom.IsNumber(id) {
 			i := id.Int()
 			v.refs[i]--
 		}
@@ -340,7 +341,7 @@ func (v *Vected) removeComponentRef(e Element) {
 }
 
 func (v *Vected) addComponentRef(e Element, cmp Component) {
-	if Valid(e) {
+	if dom.Valid(e) {
 		e.Set(componentKey, cmp.core().id)
 		e.Set(componentConstructor, cmp.core().constructor)
 		v.refs[cmp.core().id]++
@@ -354,7 +355,7 @@ func (v *Vected) unmountComponent(cmp Component) {
 	if wm, ok := cmp.(WillUnmount); ok {
 		wm.ComponentWillUnmount()
 	}
-	core.base = Null()
+	core.base = dom.Null()
 	if core.component != nil {
 		v.unmountComponent(core.component)
 	} else if !base.IsNull() {
@@ -367,7 +368,7 @@ func (v *Vected) unmountComponent(cmp Component) {
 func (v *Vected) removeChildren(node Element) {
 	node = node.Get("lastChild")
 	for {
-		if !Valid(node) {
+		if !dom.Valid(node) {
 			break
 		}
 		next := node.Get("previousSibling")

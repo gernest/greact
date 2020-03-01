@@ -1,6 +1,6 @@
 // +build !js
 
-package greact
+package dom
 
 import (
 	"fmt"

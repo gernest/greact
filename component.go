@@ -230,12 +230,12 @@ func (v *Vected) renderComponent(cmp Component, mode RenderMode, mountAll bool, 
 			}
 		}
 		if dom.Valid(initialBase) &&
-			!dom.IsEqual(base, initialBase) {
+			!base.Equal(initialBase) {
 			// TODO: add inst!==initialChildComponent to the if condition
 			// Go doesnt support that operation on structs so I will need to use
 			// reflection for that or comeup with something else.
 			baseParent := initialBase.Get("parentNode")
-			if dom.Valid(baseParent) && !dom.IsEqual(base, baseParent) {
+			if dom.Valid(baseParent) && !base.Equal(baseParent) {
 				baseParent.Call("replaceChild", base, initialBase)
 				if toUnmount == nil {
 					v.removeComponentRef(initialBase)

@@ -143,6 +143,11 @@ func (v Value) float(method string) float64 {
 func (v Value) Int() int {
 	return int(v.float("Value.Int"))
 }
+
+func (v Value) Equal(n Value) bool {
+	return v.typ == n.typ
+}
+
 func ValueOf(x interface{}) Value {
 	switch e := x.(type) {
 	case Value:
@@ -233,14 +238,6 @@ func (v Value) Index(i int) Value {
 
 func (v Value) IsUndefined() bool {
 	return v.typ == TypeUndefined
-}
-
-// IsEqual returns true if the ywo elements are equal
-func IsEqual(a, b Value) bool {
-	if !Valid(a) || !Valid(b) {
-		return false
-	}
-	return a.Call("isEqualNode", b).Bool()
 }
 
 // Valid returns true if value is not null or undefined.

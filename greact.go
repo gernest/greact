@@ -488,7 +488,7 @@ func (v *Vected) diff(ctx context.Context, elem Element, node *node.Node, parent
 
 	// append the element if its a new parent
 	if dom.Valid(parent) &&
-		!dom.IsEqual(ret.Get("parentNode"), parent) {
+		!ret.Get("parentNode").Equal(parent) {
 		parent.Call("appendChild", ret)
 	}
 	v.diffLevel--
@@ -614,7 +614,7 @@ func (v *Vected) buildComponentFromVNode(ctx context.Context, elem Element, node
 		}
 		v.setProps(ctx, c, props, Sync, mountAll)
 		elem = c.core().base
-		if !oldElem.IsNull() && !dom.IsEqual(elem, oldElem) {
+		if !oldElem.IsNull() && !elem.Equal(oldElem) {
 			//TODO dereference the component.
 			oldElem.Set(componentKey, 0)
 			v.recollectNodeTree(oldElem, false)
@@ -682,10 +682,10 @@ func (v *Vected) innerDiffMode(ctx context.Context, elem Element, vchildrens []*
 		}
 		child = v.idiff(ctx, child, vchild, mountAll, false)
 		f := original.Index(i)
-		if dom.Valid(child) && !dom.IsEqual(child, elem) && !dom.IsEqual(child, f) {
+		if dom.Valid(child) && !child.Equal(elem) && !child.Equal(f) {
 			if !dom.Valid(f) {
 				elem.Call("appendChild", child)
-			} else if dom.IsEqual(child, f.Get("nextSibling")) {
+			} else if child.Equal(f.Get("nextSibling")) {
 				RemoveNode(f)
 			} else {
 				elem.Call("insertBefore", child, f)

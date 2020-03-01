@@ -1,6 +1,10 @@
 package node
 
-import "github.com/gernest/greact/expr"
+import (
+	"context"
+
+	"github.com/gernest/greact/expr"
+)
 
 // A NodeType is the type of a Node.
 type NodeType uint32
@@ -54,6 +58,10 @@ type Node struct {
 	Namespace string
 	Attr      []Attribute
 	Children  []*Node
+}
+
+type Component interface {
+	Render(context.Context, Props, State) *Node
 }
 
 // New is a wrapper for creating new node. If children are provided adjacent
